@@ -1,0 +1,101 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Save inputs",
+  "States": {
+    "Save inputs": {
+      "Type": "Pass",
+      "Next": "Get default parameters",
+      "Assign": {
+        "dragenWgtsDnaReadyEventDetail": "{% $states.input %}"
+      }
+    },
+    "Get default parameters": {
+      "Type": "Parallel",
+      "Next": "Convert Dragen WGTS DNA Ready Event to ICAv2 WES Event",
+      "Branches": [
+        {
+          "StartAt": "Get Default Project ID",
+          "States": {
+            "Get Default Project ID": {
+              "Type": "Task",
+              "Arguments": {
+                "Name": "${__default_project_id_ssm_parameter_name__}"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:ssm:getParameter",
+              "End": true,
+              "Output": {
+                "defaultProjectId": "{% $states.result.Parameter.Value %}"
+              }
+            }
+          }
+        },
+        {
+          "StartAt": "Get Default Pipeline Id for Workflow Version",
+          "States": {
+            "Get Default Pipeline Id for Workflow Version": {
+              "Type": "Task",
+              "Arguments": {
+                "Name": "{% '${__workflow_id_to_pipeline_id_ssm_parameter_path_prefix__}' & $dragenWgtsDnaReadyEventDetail.workflowVersion %}"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:ssm:getParameter",
+              "End": true,
+              "Output": {
+                "defaultPipelineId": "{% $states.result.Parameter.Value %}"
+              }
+            }
+          }
+        }
+      ],
+      "Output": {
+        "defaultProjectId": "{% $states.result.[0].defaultProjectId %}",
+        "defaultPipelineId": "{% $states.result.[1].defaultProjectId %}"
+      }
+    },
+    "Convert Dragen WGTS DNA Ready Event to ICAv2 WES Event": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "${__dragen_wgts_dna_ready_to_icav2_wes_request_lambda_function_arn__}",
+        "Payload": {
+          "dragenWgtsDnaReadyEventDetail": "{% $dragenWgtsDnaReadyEventDetail %}",
+          "defaultPipelineId": "{% $states.input.defaultPipelineId %}",
+          "defaultProjectId": "{% $states.input.defaultProjectId %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Push WES Event",
+      "Output": {
+        "icav2WesRequestEventDetail": "{% $states.result.icav2WesRequestEventDetail %}"
+      }
+    },
+    "Push WES Event": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::events:putEvents",
+      "Arguments": {
+        "Entries": [
+          {
+            "Detail": "{% $states.input.icav2WesRequestEventDetail %}",
+            "DetailType": "${__icav2_wes_request_detail_type__}",
+            "EventBusName": "${__event_bus_name__}",
+            "Source": "${__event_source__}"
+          }
+        ]
+      },
+      "End": true
+    }
+  },
+  "QueryLanguage": "JSONata"
+}
