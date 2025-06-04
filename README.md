@@ -40,8 +40,8 @@ Service Description
 
 ### API Endpoints
 
-This service provides a RESTful API following OpenAPI conventions. 
-The Swagger documentation of the production endpoint is available here: 
+This service provides a RESTful API following OpenAPI conventions.
+The Swagger documentation of the production endpoint is available here:
 
 
 ### Consumed Events
@@ -74,7 +74,7 @@ E.g. Manual tagging of git commits following Semantic Versioning (semver) guidel
 The service employs a fully automated CI/CD pipeline that automatically builds and releases all changes to the `main` code branch.
 
 
-Infrastructure & Deployment 
+Infrastructure & Deployment
 --------------------------------------------------------------------------------
 
 Short description with diagrams where appropriate.
@@ -211,7 +211,7 @@ make fix
 ### Testing
 
 
-Unit tests are available for most of the business logic. Test code is hosted alongside business in `/tests/` directories.  
+Unit tests are available for most of the business logic. Test code is hosted alongside business in `/tests/` directories.
 
 ```sh
 make test
@@ -228,4 +228,3 @@ Service specific terms:
 |-----------|--------------------------------------------------|
 | Foo | ... |
 | Bar | ... |
-

@@ -1,0 +1,50 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Convert ICAv2 WES event to WRSC Event",
+  "States": {
+    "Convert ICAv2 WES event to WRSC Event": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Output": {
+        "workflowRunStateChangeEvent": "{% $states.result.Payload.workflowRunStateChangeEvent %}"
+      },
+      "Arguments": {
+        "FunctionName": "${__convert_icav2_wes_state_change_event_to_wrsc_event_lambda_function_arn__}",
+        "Payload": {
+          "icav2WesStateChangeEvent": "{% $states.input %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Push WRSC Event"
+    },
+    "Push WRSC Event": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::events:putEvents",
+      "Arguments": {
+        "Entries": [
+          {
+            "Detail": "{% $states.input.workflowRunStateChangeEvent %}",
+            "DetailType": "${__workflow_run_state_change_event_detail_type__}",
+            "EventBusName": "${__event_bus_name__}",
+            "Source": "${__event_source__}"
+          }
+        ]
+      },
+      "End": true
+    }
+  },
+  "QueryLanguage": "JSONata"
+}
