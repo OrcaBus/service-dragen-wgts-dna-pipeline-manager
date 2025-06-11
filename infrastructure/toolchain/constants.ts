@@ -1,1 +1,1 @@
-export const REPO_NAME = 'dragen-wgts-dna-pipeline-manager';
+export const REPO_NAME = 'service-dragen-wgts-dna-pipeline-manager';
