@@ -1,7 +1,7 @@
 import { LambdaInput, lambdaNameList, LambdaObject, lambdaRequirementsMap } from './interfaces';
 import { PythonUvFunction } from '@orcabus/platform-cdk-constructs/lambda';
 import path from 'path';
-import { LAMBDA_DIR } from '../constants';
+import { LAMBDA_DIR, WORKFLOW_NAME, WORKFLOW_VERSION } from '../constants';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Duration } from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
@@ -10,6 +10,7 @@ import { camelCaseToSnakeCase } from '../utils';
 
 function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
   const lambdaNameToSnakeCase = camelCaseToSnakeCase(props.lambdaName);
+  const lambdaRequirements = lambdaRequirementsMap[props.lambdaName];
 
   // Create the lambda function
   const lambdaFunction = new PythonUvFunction(scope, props.lambdaName, {
@@ -20,7 +21,7 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
     handler: 'handler',
     timeout: Duration.seconds(60),
     memorySize: 2048,
-    includeOrcabusApiToolsLayer: lambdaRequirementsMap[props.lambdaName].needsOrcabusApiTools,
+    includeOrcabusApiToolsLayer: lambdaRequirements.needsOrcabusApiTools,
   });
 
   // AwsSolutions-L1 - We'll migrate to PYTHON_3_13 ASAP, soz
@@ -35,6 +36,15 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
     ],
     true
   );
+
+  /*
+  Special if the lambdaName is 'generateWorkflowRunNameAndPortalRunId'
+  We need to add a specific environment variable for this lambda
+   */
+  if (props.lambdaName === 'generateWorkflowRunNameAndPortalRunId') {
+    lambdaFunction.addEnvironment('WORKFLOW_NAME', WORKFLOW_NAME);
+    lambdaFunction.addEnvironment('WORKFLOW_VERSION', WORKFLOW_VERSION);
+  }
 
   /* Return the function */
   return {
