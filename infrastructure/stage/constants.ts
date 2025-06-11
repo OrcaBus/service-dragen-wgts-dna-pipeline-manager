@@ -15,9 +15,9 @@ export const WORKFLOW_OUTPUT_PREFIX = `s3://{__CACHE_BUCKET__}/{__CACHE_PREFIX__
 /* We extend this every time we release a new version of the workflow */
 /* This is added into our SSM Parameter Store to allow us to map workflow versions to pipeline IDs */
 export const WORKFLOW_VERSION_TO_DEFAULT_ICAV2_PIPELINE_ID_MAP: Record<string, string> = {
-  // FIXME!!
+  // FIXME!! - Pipeline ID is right, but we don't have a tagged release for this version yet.
   // https://github.com/umccr/cwl-ica/releases/tag/bclconvert-interop-qc%2F1.3.1--1.25.2__20250414112602
-  '4.4.4': '355dc03f-31a3-4162-a96f-f8f954b1f63e',
+  '4.4.4': '5009335a-8425-48a8-83c4-17c54607b44a',
 };
 
 /* SSM Parameter Paths */

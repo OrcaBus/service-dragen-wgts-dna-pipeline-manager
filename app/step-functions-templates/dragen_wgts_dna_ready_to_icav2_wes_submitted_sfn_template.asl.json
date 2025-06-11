@@ -47,8 +47,8 @@
         }
       ],
       "Output": {
-        "defaultProjectId": "{% $states.result.[0].defaultProjectId %}",
-        "defaultPipelineId": "{% $states.result.[1].defaultProjectId %}"
+        "defaultProjectId": "{% $states.result[0].defaultProjectId %}",
+        "defaultPipelineId": "{% $states.result[1].defaultPipelineId %}"
       }
     },
     "Convert Dragen WGTS DNA Ready Event to ICAv2 WES Event": {
@@ -78,7 +78,7 @@
       ],
       "Next": "Push WES Event",
       "Output": {
-        "icav2WesRequestEventDetail": "{% $states.result.icav2WesRequestEventDetail %}"
+        "icav2WesRequestEventDetail": "{% $states.result.Payload.icav2WesRequestEventDetail %}"
       }
     },
     "Push WES Event": {

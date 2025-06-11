@@ -10,10 +10,9 @@ export class StatefulApplicationStack extends cdk.Stack {
     super(scope, id, props);
 
     /**
-     * Define your stack to be deployed in stages here
+     * SSM Stack here
      *
-     * TODO: Rename the class to match the service name and stateless/stateful stack
-     */
+     * */
 
     // Workflow name
     new ssm.StringParameter(this, props.workflowName, {
