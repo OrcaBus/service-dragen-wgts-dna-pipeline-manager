@@ -6,7 +6,8 @@ import { PythonUvFunction } from '@orcabus/platform-cdk-constructs/lambda';
 export type LambdaNameList =
   | 'dragenWgtsDnaReadyToIcav2WesRequest'
   | 'convertIcav2WesStateChangeEventToWrscEvent'
-  | 'generateWorkflowRunNameAndPortalRunId';
+  | 'generateWorkflowRunNameAndPortalRunId'
+  | 'validateDragenWgtsDnaWrscReady';
 
 export const lambdaNameList: LambdaNameList[] = [
   'dragenWgtsDnaReadyToIcav2WesRequest',
@@ -26,6 +27,7 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
   convertIcav2WesStateChangeEventToWrscEvent: { needsOrcabusApiTools: true },
   // Needs Orcabus API tools to generate the workflow run name and portal run ID
   generateWorkflowRunNameAndPortalRunId: { needsOrcabusApiTools: true },
+  validateDragenWgtsDnaWrscReady: { needsOrcabusApiTools: false },
 };
 
 export interface LambdaInput {
