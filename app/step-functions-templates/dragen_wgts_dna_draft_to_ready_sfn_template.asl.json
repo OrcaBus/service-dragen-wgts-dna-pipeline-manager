@@ -1,0 +1,233 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Get workflow inputs",
+  "States": {
+    "Get workflow inputs": {
+      "Type": "Pass",
+      "Next": "Get Engine Parameters"
+    },
+    "Get Engine Parameters": {
+      "Type": "Task",
+      "Arguments": {
+        "Names": ["MyData"]
+      },
+      "Resource": "arn:aws:states:::aws-sdk:ssm:getParameters",
+      "Next": "Get tags"
+    },
+    "Get tags": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "Get fastq list rgids from normal libraries",
+          "States": {
+            "Get fastq list rgids from normal libraries": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Output": "{% $states.result.Payload %}",
+              "Arguments": {
+                "FunctionName": "",
+                "Payload": "{% $states.input %}"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Has tumor library tag (tags)",
+          "States": {
+            "Has tumor library tag (tags)": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Next": "Get fastq list rgids from tumor libraries"
+                }
+              ],
+              "Default": "Pass"
+            },
+            "Get fastq list rgids from tumor libraries": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Output": "{% $states.result.Payload %}",
+              "Arguments": {
+                "FunctionName": "",
+                "Payload": "{% $states.input %}"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "End": true
+            },
+            "Pass": {
+              "Type": "Pass",
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Get subject and library id tags",
+          "States": {
+            "Get subject and library id tags": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Output": "{% $states.result.Payload %}",
+              "Arguments": {
+                "FunctionName": "",
+                "Payload": "{% $states.input %}"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "Get Inputs"
+    },
+    "Get Inputs": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "Get fastq list rows",
+          "States": {
+            "Get fastq list rows": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Output": "{% $states.result.Payload %}",
+              "Arguments": {
+                "FunctionName": "",
+                "Payload": "{% $states.input %}"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Has tumor rgid list",
+          "States": {
+            "Has tumor rgid list": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Next": "Get tumor fastq list rows"
+                }
+              ],
+              "Default": "Pass (1)"
+            },
+            "Get tumor fastq list rows": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Output": "{% $states.result.Payload %}",
+              "Arguments": {
+                "FunctionName": "",
+                "Payload": "{% $states.input %}"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "End": true
+            },
+            "Pass (1)": {
+              "Type": "Pass",
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Get reference tarballs",
+          "States": {
+            "Get reference tarballs": {
+              "Type": "Task",
+              "Arguments": {
+                "Names": ["MyData"]
+              },
+              "Resource": "arn:aws:states:::aws-sdk:ssm:getParameters",
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "Push READY Event"
+    },
+    "Push READY Event": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::events:putEvents.waitForTaskToken",
+      "Arguments": {
+        "Entries": [
+          {
+            "Detail": {
+              "Message": "Hello from Step Functions!",
+              "TaskToken": "{% $states.context.Task.Token %}"
+            },
+            "DetailType": "MyDetailType",
+            "EventBusName": "MyEventBusName",
+            "Source": "MySource"
+          }
+        ]
+      },
+      "End": true
+    }
+  },
+  "QueryLanguage": "JSONata"
+}
