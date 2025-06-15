@@ -14,8 +14,11 @@ import { NagSuppressions } from 'cdk-nag';
 import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import path from 'path';
 import {
+  DEFAULT_ORA_VERSION,
   EVENT_SOURCE,
+  FASTQ_SYNC_DETAIL_TYPE,
   ICAV2_WES_REQUEST_DETAIL_TYPE,
+  READY_STATUS,
   STEP_FUNCTIONS_DIR,
   WORKFLOW_RUN_STATE_CHANGE_DETAIL_TYPE,
 } from '../constants';
@@ -47,19 +50,33 @@ function createStateMachineDefinitionSubstitutions(props: BuildStepFunctionProps
       WORKFLOW_RUN_STATE_CHANGE_DETAIL_TYPE;
     definitionSubstitutions['__event_source__'] = EVENT_SOURCE;
     definitionSubstitutions['__icav2_wes_request_detail_type__'] = ICAV2_WES_REQUEST_DETAIL_TYPE;
+    definitionSubstitutions['__fastq_sync_detail_type__'] = FASTQ_SYNC_DETAIL_TYPE;
+    definitionSubstitutions['__stack_source__'] = EVENT_SOURCE;
+    definitionSubstitutions['__ready_event_status__'] = READY_STATUS;
   }
 
   if (sfnRequirements.needsSsmParameterStoreAccess) {
     definitionSubstitutions['__default_project_id_ssm_parameter_name__'] =
       props.ssmParameterPaths.icav2ProjectId;
     definitionSubstitutions['__workflow_name_ssm_parameter_name__'] =
-      props.ssmParameterPaths.workflowName;
+      props.ssmParameterPaths.workflowName; // Not currently used
     definitionSubstitutions['__workflow_version_ssm_parameter_name__'] =
-      props.ssmParameterPaths.workflowVersion;
-    definitionSubstitutions['__workflow_outputs_prefix_ssm_parameter_name__'] =
+      props.ssmParameterPaths.workflowVersion; // Not currently used
+    definitionSubstitutions['__default_output_uri_prefix_ssm_parameter_name__'] =
       props.ssmParameterPaths.outputPrefix;
+    definitionSubstitutions['__default_logs_uri_prefix_ssm_parameter_name__'] =
+      props.ssmParameterPaths.logsPrefix;
+    // Path to mapping workflow version to ICAv2 Pipeline ID
     definitionSubstitutions['__workflow_id_to_pipeline_id_ssm_parameter_path_prefix__'] =
       props.ssmParameterPaths.prefixPipelineIdsByWorkflowVersion;
+    // Reference SSM prefixes
+    definitionSubstitutions['__default_reference_ssm_parameter_prefix__'] =
+      props.ssmParameterPaths.referenceSsmRootPrefix;
+    definitionSubstitutions['__default_somatic_reference_ssm_parameter_prefix__'] =
+      props.ssmParameterPaths.somaticReferenceSsmRootPrefix;
+    definitionSubstitutions['__default_ora_reference_ssm_parameter_prefix__'] =
+      props.ssmParameterPaths.oraCompressionSsmRootPrefix;
+    definitionSubstitutions['__default_ora_version__'] = DEFAULT_ORA_VERSION;
   }
 
   return definitionSubstitutions;

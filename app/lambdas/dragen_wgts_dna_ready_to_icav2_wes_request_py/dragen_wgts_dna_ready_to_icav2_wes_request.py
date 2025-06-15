@@ -151,8 +151,6 @@ def handler(event, context) -> Dict[str, Any]:
     :return:
     """
     event_detail_body = event['dragenWgtsDnaReadyEventDetail']
-    default_pipeline_id = event['defaultPipelineId']
-    default_project_id = event['defaultProjectId']
 
     # Get inputs
     inputs = event_detail_body['payload']['data']['inputs']
@@ -176,7 +174,7 @@ def handler(event, context) -> Dict[str, Any]:
             lambda fqlr_iter_: dict(map(
                 lambda fqlr_item: (
                     (update_fqlr_input_name(fqlr_item[0]), cwlify_file(fqlr_item[1]))
-                    if not update_fqlr_input_name(fqlr_item[0]) == fqlr_iter_[0]
+                    if not update_fqlr_input_name(fqlr_item[0]) == fqlr_item[0]
                     else
                     (fqlr_item[0], fqlr_item[1])  # Keep the original key if it is not read1FileUri or read2FileUri
                 ),
@@ -203,16 +201,10 @@ def handler(event, context) -> Dict[str, Any]:
                 "outputUri": event_detail_body['payload']['data']['engineParameters']['outputUri'],
                 "logsUri": event_detail_body['payload']['data']['engineParameters']['logsUri'],
                 "projectId": (
-                    event_detail_body['payload']['data']['engineParameters'].get(
-                        "projectId",
-                        default_project_id
-                    )
+                    event_detail_body['payload']['data']['engineParameters']['projectId']
                 ),
                 "pipelineId": (
-                    event_detail_body['payload']['data']['engineParameters'].get(
-                        "pipelineId",
-                        default_pipeline_id
-                    )
+                    event_detail_body['payload']['data']['engineParameters']['pipelineId']
                 ),
             },
             "tags": {

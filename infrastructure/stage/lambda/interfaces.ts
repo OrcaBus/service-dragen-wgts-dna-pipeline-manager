@@ -4,15 +4,36 @@ import { PythonUvFunction } from '@orcabus/platform-cdk-constructs/lambda';
  * Lambda function interface.
  */
 export type LambdaNameList =
-  | 'dragenWgtsDnaReadyToIcav2WesRequest'
-  | 'convertIcav2WesStateChangeEventToWrscEvent'
+  // Pre-Draft Lambda functions
   | 'generateWorkflowRunNameAndPortalRunId'
-  | 'validateDragenWgtsDnaWrscReady';
+  // Pre-ready Lambda functions
+  | 'getMetadataTags'
+  | 'getFastqListRowsFromRgidList'
+  | 'getFastqRgidsFromLibraryId'
+  | 'getFastqSetIdsFromRgidList'
+  | 'getQcSummaryStatsFromRgidList'
+  | 'checkNtsmInternal'
+  | 'checkNtsmExternal'
+  // Pre-submission Lambda functions
+  | 'dragenWgtsDnaReadyToIcav2WesRequest'
+  // Post-submission Lambda functions/
+  | 'convertIcav2WesStateChangeEventToWrscEvent';
 
 export const lambdaNameList: LambdaNameList[] = [
-  'dragenWgtsDnaReadyToIcav2WesRequest',
-  'convertIcav2WesStateChangeEventToWrscEvent',
+  // Pre-Draft Lambda functions
   'generateWorkflowRunNameAndPortalRunId',
+  // Pre-ready Lambda functions
+  'getMetadataTags',
+  'getFastqListRowsFromRgidList',
+  'getFastqRgidsFromLibraryId',
+  'getFastqSetIdsFromRgidList',
+  'getQcSummaryStatsFromRgidList',
+  'checkNtsmInternal',
+  'checkNtsmExternal',
+  // Pre-submission Lambda functions
+  'dragenWgtsDnaReadyToIcav2WesRequest',
+  // Post-submission Lambda functions/
+  'convertIcav2WesStateChangeEventToWrscEvent',
 ];
 
 // Requirements interface for Lambda functions
@@ -22,12 +43,33 @@ export interface LambdaRequirements {
 
 // Lambda requirements mapping
 export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> = {
+  // Needs Orcabus API tools to generate the workflow run name and portal run ID
+  generateWorkflowRunNameAndPortalRunId: { needsOrcabusApiTools: true },
+  // Pre-ready Lambda functions
+  getMetadataTags: {
+    needsOrcabusApiTools: true,
+  },
+  getFastqListRowsFromRgidList: {
+    needsOrcabusApiTools: true,
+  },
+  getFastqRgidsFromLibraryId: {
+    needsOrcabusApiTools: true,
+  },
+  getFastqSetIdsFromRgidList: {
+    needsOrcabusApiTools: true,
+  },
+  getQcSummaryStatsFromRgidList: {
+    needsOrcabusApiTools: true,
+  },
+  checkNtsmInternal: {
+    needsOrcabusApiTools: true,
+  },
+  checkNtsmExternal: {
+    needsOrcabusApiTools: true,
+  },
   dragenWgtsDnaReadyToIcav2WesRequest: {},
   // Needs Orcabus API tools to fetch the existing workflow run state
   convertIcav2WesStateChangeEventToWrscEvent: { needsOrcabusApiTools: true },
-  // Needs Orcabus API tools to generate the workflow run name and portal run ID
-  generateWorkflowRunNameAndPortalRunId: { needsOrcabusApiTools: true },
-  validateDragenWgtsDnaWrscReady: { needsOrcabusApiTools: false },
 };
 
 export interface LambdaInput {

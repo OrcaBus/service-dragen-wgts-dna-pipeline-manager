@@ -63,6 +63,10 @@ We then parse ICAv2 Analysis State Change events to update the state of the work
 
 ### Draft Event Example
 
+<details>
+
+<summary>Click to expand</summary>
+
 ```json5
 {
   "EventBusName": "OrcaBusMain",
@@ -189,7 +193,13 @@ We then parse ICAv2 Analysis State Change events to update the state of the work
 }
 ```
 
+</details>
+
 Draft minimal example
+
+<details>
+
+<summary>Click to expand</summary>
 
 ```json5
 {
@@ -238,9 +248,14 @@ Draft minimal example
 }
 ```
 
+</details>
+
 
 ### Ready Event example
 
+<details>
+
+<summary>Click to expand</summary>
 
 ```json5
 {
@@ -367,6 +382,18 @@ Draft minimal example
   }
 }
 ```
+
+</details>
+
+
+#### Manually Validating Schemas,
+
+We have generated JSON Schemas for both the draft and ready events. You can find them in the [`./app/event-schemas`](app/event-schemas) directory.
+
+You can interactively check if your DRAFT or READY event matches the schema using the following links:
+
+- [Draft Event Schema Page](https://www.jsonschemavalidator.net/s/auxIl15h)
+- [Ready Event Schema Page](https://www.jsonschemavalidator.net/s/74jG3Bru)
 
 #### Release management
 

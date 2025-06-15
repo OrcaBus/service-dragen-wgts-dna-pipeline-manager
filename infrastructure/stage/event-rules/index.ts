@@ -1,5 +1,6 @@
 /* Event Bridge Rules */
 import {
+  BuildDragenWgtsDnaDraftRuleProps,
   BuildDragenWgtsDnaReadyRuleProps,
   BuildIcav2AnalysisStateChangeRuleProps,
   eventBridgeRuleNameList,
@@ -11,6 +12,7 @@ import { EventPattern, Rule } from 'aws-cdk-lib/aws-events';
 import * as events from 'aws-cdk-lib/aws-events';
 import { Construct } from 'constructs';
 import {
+  DRAFT_STATUS,
   ICAV2_WES_EVENT_SOURCE,
   ICAV2_WES_STATE_CHANGE_DETAIL_TYPE,
   READY_STATUS,
@@ -33,6 +35,17 @@ function buildIcav2AnalysisStateChangeEventPattern(): EventPattern {
           wildcard: `*--${WORKFLOW_NAME}--*`,
         },
       ],
+    },
+  };
+}
+
+function buildWorkflowManagerDraftEventPattern(): EventPattern {
+  return {
+    detailType: [WORKFLOW_RUN_STATE_CHANGE_DETAIL_TYPE],
+    source: [WORKFLOW_MANAGER_EVENT_SOURCE],
+    detail: {
+      workflowName: [WORKFLOW_NAME],
+      status: [DRAFT_STATUS],
     },
   };
 }
@@ -67,6 +80,17 @@ function buildIcav2WesAnalysisStateChangeRule(
   });
 }
 
+function buildWorkflowRunStateChangeDragenWgtsDnaDraftEventRule(
+  scope: Construct,
+  props: BuildDragenWgtsDnaDraftRuleProps
+): Rule {
+  return buildEventRule(scope, {
+    ruleName: props.ruleName,
+    eventPattern: buildWorkflowManagerDraftEventPattern(),
+    eventBus: props.eventBus,
+  });
+}
+
 function buildWorkflowRunStateChangeDragenWgtsDnaReadyEventRule(
   scope: Construct,
   props: BuildDragenWgtsDnaReadyRuleProps
@@ -87,6 +111,16 @@ export function buildAllEventRules(
   // Iterate over the eventBridgeNameList and create the event rules
   for (const ruleName of eventBridgeRuleNameList) {
     switch (ruleName) {
+      case 'dragenWgtsDnaWrscDraft': {
+        eventBridgeRuleObjects.push({
+          ruleName: ruleName,
+          ruleObject: buildWorkflowRunStateChangeDragenWgtsDnaDraftEventRule(scope, {
+            ruleName: ruleName,
+            eventBus: props.eventBus,
+          }),
+        });
+        break;
+      }
       case 'dragenWgtsDnaWrscReady': {
         eventBridgeRuleObjects.push({
           ruleName: ruleName,

@@ -8,11 +8,19 @@ import { LambdaNameList, LambdaObject } from '../lambda/interfaces';
  * Step Function Interfaces
  */
 export type StateMachineNameList =
+  // Draft-to-Ready
+  | 'dragenWgtsDnaDraftToReady'
+  // Ready-to-Submitted
   | 'dragenWgtsDnaReadyToIcav2WesSubmitted'
+  // Post-submission event conversion
   | 'icav2WesEventToWrscEvent';
 
 export const stateMachineNameList: StateMachineNameList[] = [
+  // Draft-to-Ready
+  'dragenWgtsDnaDraftToReady',
+  // Ready-to-Submitted
   'dragenWgtsDnaReadyToIcav2WesSubmitted',
+  // Post-submission event conversion
   'icav2WesEventToWrscEvent',
 ];
 
@@ -45,6 +53,10 @@ export type BuildStepFunctionsProps = Omit<BuildStepFunctionProps, 'stateMachine
 
 export const stepFunctionsRequirementsMap: Record<StateMachineNameList, StepFunctionRequirements> =
   {
+    dragenWgtsDnaDraftToReady: {
+      needsEventPutPermission: true,
+      needsSsmParameterStoreAccess: true,
+    },
     dragenWgtsDnaReadyToIcav2WesSubmitted: {
       needsEventPutPermission: true,
       needsSsmParameterStoreAccess: true,
@@ -55,6 +67,15 @@ export const stepFunctionsRequirementsMap: Record<StateMachineNameList, StepFunc
   };
 
 export const stepFunctionToLambdasMap: Record<StateMachineNameList, LambdaNameList[]> = {
+  dragenWgtsDnaDraftToReady: [
+    'getMetadataTags',
+    'getFastqListRowsFromRgidList',
+    'getFastqRgidsFromLibraryId',
+    'getFastqSetIdsFromRgidList',
+    'getQcSummaryStatsFromRgidList',
+    'checkNtsmInternal',
+    'checkNtsmExternal',
+  ],
   dragenWgtsDnaReadyToIcav2WesSubmitted: ['dragenWgtsDnaReadyToIcav2WesRequest'],
   icav2WesEventToWrscEvent: ['convertIcav2WesStateChangeEventToWrscEvent'],
 };
