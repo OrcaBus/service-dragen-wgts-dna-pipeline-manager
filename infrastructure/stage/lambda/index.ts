@@ -1,42 +1,42 @@
 import { LambdaInput, lambdaNameList, LambdaObject, lambdaRequirementsMap } from './interfaces';
 import { PythonUvFunction } from '@orcabus/platform-cdk-constructs/lambda';
-import { LAMBDA_DIR, WORKFLOW_NAME, WORKFLOW_VERSION } from '../constants';
+import { LAMBDA_DIR, WORKFLOW_NAME, DEFAULT_WORKFLOW_VERSION } from '../constants';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Duration } from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { camelCaseToSnakeCase } from '../utils';
 import * as path from 'path';
-import { ICommandHooks } from '@aws-cdk/aws-lambda-python-alpha';
+// import { ICommandHooks } from '@aws-cdk/aws-lambda-python-alpha';
 
 function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
   const lambdaNameToSnakeCase = camelCaseToSnakeCase(props.lambdaName);
   const lambdaRequirements = lambdaRequirementsMap[props.lambdaName];
 
   // Set command hooks
-  let commandHooks: ICommandHooks = {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    beforeBundling(inputDir: string, outputDir: string): string[] {
-      return [];
-    },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    afterBundling: function (inputDir: string, outputDir: string): string[] {
-      return [];
-    },
-  };
-  if (props.lambdaName === 'validateDragenWgtsDnaWrscReady') {
-    commandHooks = {
-      beforeBundling(inputDir: string, outputDir: string): string[] {
-        return [
-          `cp ${path.join(inputDir, '../../event-schemas/dragen-wgts-dna-wrsc-ready-schema.json')} ${outputDir}`,
-        ];
-      },
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      afterBundling: function (inputDir: string, outputDir: string): string[] {
-        return [];
-      },
-    };
-  }
+  // let commandHooks: ICommandHooks = {
+  //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //   beforeBundling(inputDir: string, outputDir: string): string[] {
+  //     return [];
+  //   },
+  //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //   afterBundling: function (inputDir: string, outputDir: string): string[] {
+  //     return [];
+  //   },
+  // };
+  // if (props.lambdaName === 'validateDragenWgtsDnaWrscReady') {
+  //   commandHooks = {
+  //     beforeBundling(inputDir: string, outputDir: string): string[] {
+  //       return [
+  //         `cp ${path.join(inputDir, '../../event-schemas/dragen-wgts-dna-wrsc-ready-schema.json')} ${outputDir}`,
+  //       ];
+  //     },
+  //     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //     afterBundling: function (inputDir: string, outputDir: string): string[] {
+  //       return [];
+  //     },
+  //   };
+  // }
 
   // Create the lambda function
   const lambdaFunction = new PythonUvFunction(scope, props.lambdaName, {
@@ -47,9 +47,6 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
     handler: 'handler',
     timeout: Duration.seconds(60),
     memorySize: 2048,
-    bundling: {
-      commandHooks: commandHooks,
-    },
     includeOrcabusApiToolsLayer: lambdaRequirements.needsOrcabusApiTools,
   });
 
@@ -72,7 +69,7 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
      */
   if (props.lambdaName === 'generateWorkflowRunNameAndPortalRunId') {
     lambdaFunction.addEnvironment('WORKFLOW_NAME', WORKFLOW_NAME);
-    lambdaFunction.addEnvironment('WORKFLOW_VERSION', WORKFLOW_VERSION);
+    lambdaFunction.addEnvironment('WORKFLOW_VERSION', DEFAULT_WORKFLOW_VERSION);
   }
 
   /* Return the function */

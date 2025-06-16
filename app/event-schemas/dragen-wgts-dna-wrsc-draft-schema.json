@@ -7,7 +7,7 @@
     },
     "status": {
       "type": "string",
-      "enum": ["READY"]
+      "enum": ["DRAFT"]
     },
     "structure": {
       "type": "string",
@@ -143,7 +143,7 @@
           "$ref": "#/$defs/s3Uri"
         }
       },
-      "required": ["sampleName", "sequenceData", "reference"],
+      "required": [],
       "allowAdditionalProperties": true
     },
     "tags": {
@@ -207,7 +207,7 @@
           "$ref": "#/$defs/engineParameters"
         }
       },
-      "required": ["inputs", "engineParameters"]
+      "required": ["inputs", "tags"]
     },
     "payload": {
       "type": "object",

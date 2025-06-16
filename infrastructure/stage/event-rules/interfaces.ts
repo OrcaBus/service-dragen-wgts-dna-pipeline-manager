@@ -4,11 +4,19 @@ import { EventPattern, IEventBus, Rule } from 'aws-cdk-lib/aws-events';
  * EventBridge Rules Interfaces
  */
 export type EventBridgeRuleNameList =
+  // Pre-draft
+  | 'dragenWgtsDnaWrscDraft'
+  // Pre-ready
   | 'dragenWgtsDnaWrscReady'
+  // Post-submitted
   | 'dragenWgtsDnaIcav2WesAnalysisStateChange';
 
 export const eventBridgeRuleNameList: EventBridgeRuleNameList[] = [
+  // Pre-draft
+  'dragenWgtsDnaWrscDraft',
+  // Pre-ready
   'dragenWgtsDnaWrscReady',
+  // Post-submitted
   'dragenWgtsDnaIcav2WesAnalysisStateChange',
 ];
 
@@ -28,4 +36,5 @@ export interface EventBridgeRuleObject {
 }
 
 export type BuildIcav2AnalysisStateChangeRuleProps = Omit<EventBridgeRuleProps, 'eventPattern'>;
+export type BuildDragenWgtsDnaDraftRuleProps = Omit<EventBridgeRuleProps, 'eventPattern'>;
 export type BuildDragenWgtsDnaReadyRuleProps = Omit<EventBridgeRuleProps, 'eventPattern'>;
