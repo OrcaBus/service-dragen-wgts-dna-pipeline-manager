@@ -392,8 +392,8 @@ We have generated JSON Schemas for both the draft and ready events. You can find
 
 You can interactively check if your DRAFT or READY event matches the schema using the following links:
 
-- [Draft Event Schema Page](https://www.jsonschemavalidator.net/s/auxIl15h)
-- [Ready Event Schema Page](https://www.jsonschemavalidator.net/s/74jG3Bru)
+- [Draft Event Schema Page](https://www.jsonschemavalidator.net/s/GmdC43wQ)
+- [Ready Event Schema Page](https://www.jsonschemavalidator.net/s/GsoMQr9B)
 
 #### Release management
 

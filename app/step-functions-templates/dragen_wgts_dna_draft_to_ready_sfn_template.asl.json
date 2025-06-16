@@ -504,7 +504,7 @@
               "Type": "Task",
               "Resource": "arn:aws:states:::lambda:invoke",
               "Output": {
-                "tumorFastqListRows": "{% $states.result.Payload.fastqListRows %}"
+                "fastqListRows": "{% $states.result.Payload.fastqListRows %}"
               },
               "Arguments": {
                 "FunctionName": "${__get_fastq_list_rows_from_rgid_list_lambda_function_arn__}",
@@ -530,14 +530,15 @@
             },
             "tumorFastqListRowsIsEmpty": {
               "Type": "Pass",
-              "End": true
+              "End": true,
+              "Output": null
             }
           }
         }
       ],
       "Next": "Add reference data",
       "Assign": {
-        "inputs": "{% [\n  /* Start with the draft inputs */\n  $draftInputs,\n  /* Combine the states results */\n  {\n      \"sequenceData\": $merge($states.result)\n  }\n]\n/* Combine old and new */\n~> $merge\n/* Sift out inputs with null values */\n~> $sift(function($v, $k){ $v != null }) %}"
+        "inputs": "{% [\n  /* Start with the draft inputs */\n  $draftInputs,\n  /* Combine the states results */\n  {\n      \"sequenceData\": $states.result[0],\n      \"tumorSequenceData\": $states.result[1]\n  },\n  /* Add in the required sampleName and tumorSampleName */\n  /* These must match the value of the library id */\n  {\n    \"sampleName\": $draftTags.libraryId,\n    \"tumorSampleName\": $draftTags.tumorLibraryId ? $draftTags.tumorLibraryId : null\n  }\n]\n/* Combine old and new */\n~> $merge\n/* Sift out inputs with null values */\n~> $sift(function($v, $k){ $v != null }) %}"
       }
     },
     "Add reference data": {

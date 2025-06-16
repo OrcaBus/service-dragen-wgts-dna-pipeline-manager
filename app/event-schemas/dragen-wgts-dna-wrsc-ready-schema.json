@@ -7,10 +7,14 @@
     },
     "status": {
       "type": "string",
-      "enum": ["DRAFT"]
+      "enum": ["READY"]
+    },
+    "structure": {
+      "type": "string",
+      "enum": ["linear", "graph"]
     },
     "timestamp": {
-      "pattern": "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z"
+      "pattern": "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:.[0-9]{3})?Z"
     },
     "workflowName": {
       "type": "string",
@@ -36,69 +40,207 @@
     },
     "s3Uri": {
       "pattern": "^s3://[a-zA-Z0-9_-]*/[a-zA-Z0-9_/-]*"
-    }
-  },
-  "type": "object",
-  "properties": {
-    "EventBusName": {
-      "type": "string"
     },
-    "Source": {
-      "type": "string"
+    "s3UriDirectory": {
+      "pattern": "^s3://[a-zA-Z0-9_-]*/[a-zA-Z0-9_/-]*/$"
     },
-    "DetailType": {
-      "type": "string",
-      "allOf": [
-        {
-          "$ref": "#/$defs/detailType"
+    "reference": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "structure": {
+          "$ref": "#/$defs/structure"
+        },
+        "tarball": {
+          "$ref": "#/$defs/s3Uri"
         }
-      ]
+      }
     },
-    "Detail": {
+    "fastqListRow": {
+      "type": "object",
+      "properties": {
+        "rgid": {
+          "type": "string"
+        },
+        "rglb": {
+          "type": "string"
+        },
+        "rgsm": {
+          "type": "string"
+        },
+        "lane": {
+          "type": "integer"
+        },
+        "rgcn": {
+          "type": "string"
+        },
+        "rgds": {
+          "type": "string"
+        },
+        "rgdt": {
+          "type": "string"
+        },
+        "rgpl": {
+          "type": "string"
+        },
+        "read1FileUri": {
+          "$ref": "#/$defs/s3Uri"
+        },
+        "read2FileUri": {
+          "$ref": "#/$defs/s3Uri"
+        }
+      },
+      "required": ["rgid", "rgsm", "read1FileUri"]
+    },
+    "sequenceData": {
+      "type": "object",
+      "properties": {
+        "fastqListRows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fastqListRow"
+          }
+        }
+      },
+      "required": ["fastqListRows"]
+    },
+    "inputs": {
+      "type": "object",
+      "properties": {
+        "sampleName": {
+          "type": "string"
+        },
+        "tumorSampleName": {
+          "type": "string"
+        },
+        "alignmentOptions": {
+          "type": "object",
+          "allowAdditionalProperties": true
+        },
+        "targetedCallerOptions": {
+          "type": "object",
+          "allowAdditionalProperties": true
+        },
+        "snvVariantCallerOptions": {
+          "type": "object",
+          "allowAdditionalProperties": true
+        },
+        "sequenceData": {
+          "$ref": "#/$defs/sequenceData"
+        },
+        "tumorSequenceData": {
+          "$ref": "#/$defs/sequenceData"
+        },
+        "reference": {
+          "$ref": "#/$defs/reference"
+        },
+        "somaticReference": {
+          "$ref": "#/$defs/reference"
+        },
+        "oraReference": {
+          "$ref": "#/$defs/s3Uri"
+        }
+      },
+      "required": ["sampleName", "sequenceData", "reference"],
+      "allowAdditionalProperties": true
+    },
+    "tags": {
+      "type": "object",
+      "properties": {
+        "libraryId": {
+          "type": "string"
+        },
+        "tumorLibraryId": {
+          "type": "string"
+        },
+        "fastqRgidList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tumorFastqRgidList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "subjectId": {
+          "type": "string"
+        },
+        "individualId": {
+          "type": "string"
+        }
+      },
+      "required": ["libraryId"]
+    },
+    "engineParameters": {
+      "type": "object",
+      "properties": {
+        "projectId": {
+          "type": "string"
+        },
+        "pipelineId": {
+          "type": "string"
+        },
+        "outputUri": {
+          "$ref": "#/$defs/s3UriDirectory"
+        },
+        "logsUri": {
+          "$ref": "#/$defs/s3UriDirectory"
+        }
+      },
+      "allowAdditionalProperties": true
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "inputs": {
+          "$ref": "#/$defs/inputs"
+        },
+        "tags": {
+          "$ref": "#/$defs/tags"
+        },
+        "engineParameters": {
+          "$ref": "#/$defs/engineParameters"
+        }
+      },
+      "required": ["inputs", "engineParameters"]
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/data"
+        }
+      },
+      "required": ["version", "data"]
+    },
+    "detail": {
       "type": "object",
       "properties": {
         "status": {
-          "type": "string",
-          "allOf": [
-            {
-              "$ref": "#/$defs/status"
-            }
-          ]
+          "$ref": "#/$defs/status"
         },
         "timestamp": {
-          "type": "string",
-          "allOf": [
-            {
-              "$ref": "#/$defs/timestamp"
-            }
-          ]
+          "$ref": "#/$defs/timestamp"
         },
         "workflowName": {
-          "type": "string",
-          "allOf": [
-            {
-              "$ref": "#/$defs/workflowName"
-            }
-          ]
+          "$ref": "#/$defs/workflowName"
         },
         "workflowVersion": {
-          "type": "string",
-          "allOf": [
-            {
-              "$ref": "#/$defs/workflowVersion"
-            }
-          ]
+          "$ref": "#/$defs/workflowVersion"
         },
         "workflowRunName": {
           "type": "string"
         },
         "portalRunId": {
-          "type": "string",
-          "allOf": [
-            {
-              "$ref": "#/$defs/portalRunId"
-            }
-          ]
+          "$ref": "#/$defs/portalRunId"
         },
         "linkedLibraries": {
           "type": "array",
@@ -107,96 +249,7 @@
           }
         },
         "payload": {
-          "type": "object",
-          "properties": {
-            "version": {
-              "type": "string"
-            },
-            "data": {
-              "type": "object",
-              "properties": {
-                "inputs": {
-                  "type": "object",
-                  "properties": {
-                    "alignmentOptions": {
-                      "type": "object",
-                      "allowAdditionalProperties": true
-                    },
-                    "targetedCallerOptions": {
-                      "type": "object",
-                      "allowAdditionalProperties": true
-                    },
-                    "snvVariantCallerOptions": {
-                      "type": "object",
-                      "allowAdditionalProperties": true
-                    }
-                  },
-                  "required": [],
-                  "allowAdditionalProperties": true
-                },
-                "tags": {
-                  "type": "object",
-                  "properties": {
-                    "libraryId": {
-                      "type": "string"
-                    },
-                    "tumorLibraryId": {
-                      "type": "string"
-                    },
-                    "fastqRgidList": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "tumorFastqRgidList": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "subjectId": {
-                      "type": "string"
-                    },
-                    "individualId": {
-                      "type": "string"
-                    }
-                  },
-                  "required": ["libraryId"]
-                },
-                "engineParameters": {
-                  "type": "object",
-                  "properties": {
-                    "projectId": {
-                      "type": "string"
-                    },
-                    "pipelineId": {
-                      "type": "string"
-                    },
-                    "outputUri": {
-                      "type": "string",
-                      "allOf": [
-                        {
-                          "$ref": "#/$defs/s3Uri"
-                        }
-                      ]
-                    },
-                    "logsUri": {
-                      "type": "string",
-                      "allOf": [
-                        {
-                          "$ref": "#/$defs/s3Uri"
-                        }
-                      ]
-                    }
-                  },
-                  "allowAdditionalProperties": true
-                }
-              },
-              "required": ["inputs", "tags"]
-            }
-          },
-          "required": ["version", "data"]
+          "$ref": "#/$defs/payload"
         }
       },
       "required": [
@@ -209,6 +262,21 @@
         "linkedLibraries",
         "payload"
       ]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "EventBusName": {
+      "type": "string"
+    },
+    "Source": {
+      "type": "string"
+    },
+    "DetailType": {
+      "$ref": "#/$defs/detailType"
+    },
+    "Detail": {
+      "$ref": "#/$defs/detail"
     }
   },
   "required": ["EventBusName", "Source", "DetailType", "Detail"]
