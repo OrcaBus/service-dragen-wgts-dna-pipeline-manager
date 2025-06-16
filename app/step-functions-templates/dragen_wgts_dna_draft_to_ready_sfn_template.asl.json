@@ -115,7 +115,7 @@
               "Resource": "arn:aws:states:::aws-sdk:ssm:getParameter",
               "End": true,
               "Output": {
-                "outputUri": "{% $states.result.Parameter.Value & $draftDetail.portalRunId %}"
+                "outputUri": "{% $states.result.Parameter.Value & $draftDetail.portalRunId & '/' %}"
               }
             }
           }
@@ -149,7 +149,7 @@
               "Resource": "arn:aws:states:::aws-sdk:ssm:getParameter",
               "End": true,
               "Output": {
-                "logsUri": "{% $states.result.Parameter.Value & $draftDetail.portalRunId %}"
+                "logsUri": "{% $states.result.Parameter.Value & $draftDetail.portalRunId & '/' %}"
               }
             }
           }
