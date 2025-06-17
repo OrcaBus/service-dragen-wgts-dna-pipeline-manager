@@ -18,9 +18,8 @@ export const WORKFLOW_OUTPUT_PREFIX = `s3://{__CACHE_BUCKET__}/{__CACHE_PREFIX__
 /* We extend this every time we release a new version of the workflow */
 /* This is added into our SSM Parameter Store to allow us to map workflow versions to pipeline IDs */
 export const WORKFLOW_VERSION_TO_DEFAULT_ICAV2_PIPELINE_ID_MAP: Record<string, string> = {
-  // FIXME!! - Pipeline ID is right, but we don't have a tagged release for this version yet.
-  // https://github.com/umccr/cwl-ica/releases/tag/bclconvert-interop-qc%2F1.3.1--1.25.2__20250414112602
-  '4.4.4': '5009335a-8425-48a8-83c4-17c54607b44a',
+  // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20250617224149
+  '4.4.4': 'd3228141-3753-40bc-8d22-ac91f1e37e75',
 };
 
 export const WORKFLOW_VERSION_TO_DEFAULT_REFERENCE_PATHS_MAP: Record<string, Reference> = {
