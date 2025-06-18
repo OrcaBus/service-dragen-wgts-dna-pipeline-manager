@@ -273,6 +273,7 @@
             },
             "tumorFastqRgidList is Empty": {
               "Type": "Pass",
+              "Output": {},
               "End": true
             }
           }
