@@ -173,7 +173,7 @@ def handler(event, context):
         multiqc_report_name = f"{inputs['sampleName']}_multiqc_report.html"
 
         # Check if the somatic variant calling is enabled
-        if inputs['tumorSampleName'] is not None:
+        if inputs.get('tumorSampleName', None) is not None:
             # Get the tumor reference
             if inputs.get('somaticReference', None) is not None:
                 somatic_reference = inputs['somaticReference']
@@ -209,19 +209,19 @@ def handler(event, context):
         outputs = dict(filter(
             lambda kv_iter_: kv_iter_[1] is not None,
             {
-                'dragenGermlineAlignmentOutputUri': germline_alignment_output_uri,
-                'dragenGermlineAlignmentOutputBamUri': germline_alignment_output_bam_uri,
-                'dragenGermlineVariantCallingOutputUri': germline_variant_calling_output_uri,
-                'dragenGermlineVariantCallingOutputSnvVcfUri': germline_variant_calling_output_snv_vcf_uri,
-                'dragenGermlineAlignmentToSomaticReferenceOutputUri': germline_alignment_to_somatic_reference_output_uri,
-                'dragenGermlineAlignmentToSomaticReferenceOutputBamUri': germline_alignment_to_somatic_reference_output_bam_uri,
-                'dragenSomaticAlignmentOutputUri': somatic_alignment_output_uri,
-                'dragenSomaticAlignmentOutputBamUri': somatic_alignment_output_bam_uri,
-                'dragenSomaticVariantCallingOutputUri': somatic_variant_calling_output_uri,
-                'dragenSomaticVariantCallingOutputSnvVcfUri': somatic_variant_calling_output_snv_vcf_uri,
+                'dragenGermlineAlignmentOutputRelPath': germline_alignment_output_uri,
+                'dragenGermlineAlignmentOutputBamRelPath': germline_alignment_output_bam_uri,
+                'dragenGermlineVariantCallingOutputRelPath': germline_variant_calling_output_uri,
+                'dragenGermlineVariantCallingOutputSnvVcfRelPath': germline_variant_calling_output_snv_vcf_uri,
+                'dragenGermlineAlignmentToSomaticReferenceOutputRelPath': germline_alignment_to_somatic_reference_output_uri,
+                'dragenGermlineAlignmentToSomaticReferenceOutputBamRelPath': germline_alignment_to_somatic_reference_output_bam_uri,
+                'dragenSomaticAlignmentOutputRelPath': somatic_alignment_output_uri,
+                'dragenSomaticAlignmentOutputBamRelPath': somatic_alignment_output_bam_uri,
+                'dragenSomaticVariantCallingOutputRelPath': somatic_variant_calling_output_uri,
+                'dragenSomaticVariantCallingOutputSnvVcfRelPath': somatic_variant_calling_output_snv_vcf_uri,
                 'multiQcOutputDir': multiqc_output_dir,
                 'multiQcHtmlReportUri': multiqc_output_dir + multiqc_report_name
-            }
+            }.items()
         ))
     else:
         outputs = None
@@ -253,3 +253,186 @@ def handler(event, context):
             }
         }
     }
+
+
+# if __name__ == "__main__":
+#     import json
+#     from os import environ
+#     environ['AWS_PROFILE'] = 'umccr-production'
+#     environ['AWS_REGION'] = 'ap-southeast-2'
+#     environ['HOSTNAME_SSM_PARAMETER_NAME'] = '/hosted_zone/umccr/name'
+#     environ['ORCABUS_TOKEN_SECRET_ID'] = 'orcabus/token-service-jwt'
+#
+#     print(json.dumps(
+#         handler(
+#             {
+#                 "icav2WesStateChangeEvent": {
+#                     "id": "iwa.01JY07DV46QMQJWH1J1Y8YFR27",
+#                     "name": "umccr--automated--dragen-wgts-dna--4-4-4--20250617ac346b29",
+#                     "inputs": {
+#                         "alignment_options": {
+#                             "enable_duplicate_marking": True
+#                         },
+#                         "targeted_caller_options": {
+#                             "enable_targeted": [
+#                                 "cyp2d6"
+#                             ]
+#                         },
+#                         "snv_variant_caller_options": {
+#                             "qc_detect_contamination": True,
+#                             "vc_mnv_emit_component_calls": True,
+#                             "vc_combine_phased_variants_distance": 2,
+#                             "vc_combine_phased_variants_distance_snvs_only": 2
+#                         },
+#                         "sequence_data": {
+#                             "fastq_list_rows": [
+#                                 {
+#                                     "rgid": "CTGCTTCC+GATCTATC.4.250328_A01052_0258_AHFGM7DSXF",
+#                                     "rglb": "L2500373",
+#                                     "rgsm": "L2500373",
+#                                     "lane": 4,
+#                                     "rgcn": "UMCCR",
+#                                     "rgds": "Library ID: L2500373, Sequenced on 28 Mar, 2025 at UMCCR, Phenotype: normal, Assay: TsqNano, Type: WGS",
+#                                     "rgdt": "2025-03-28T00:00:00",
+#                                     "rgpl": "Illumina",
+#                                     "read_1": {
+#                                         "class": "File",
+#                                         "location": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/ora-compression/250328_A01052_0258_AHFGM7DSXF/20250402ebfe2c3d/Samples/Lane_4/L2500373/L2500373_S28_L004_R1_001.fastq.ora"
+#                                     },
+#                                     "read_2": {
+#                                         "class": "File",
+#                                         "location": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/ora-compression/250328_A01052_0258_AHFGM7DSXF/20250402ebfe2c3d/Samples/Lane_4/L2500373/L2500373_S28_L004_R2_001.fastq.ora"
+#                                     }
+#                                 }
+#                             ]
+#                         },
+#                         "sample_name": "L2500373",
+#                         "reference": {
+#                             "name": "hg38",
+#                             "structure": "graph",
+#                             "tarball": {
+#                                 "class": "File",
+#                                 "location": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/reference-data/dragen-hash-tables/v11-r5/hg38-alt_masked-cnv-graph-hla-methyl_cg-rna/hg38-alt_masked.cnv.graph.hla.methyl_cg.rna-11-r5.0-1.tar.gz"
+#                             }
+#                         },
+#                         "ora_reference": {
+#                             "class": "File",
+#                             "location": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/reference-data/dragen-ora/v2/ora_reference_v2.tar.gz"
+#                         }
+#                     },
+#                     "engineParameters": {
+#                         "pipelineId": "d3228141-3753-40bc-8d22-ac91f1e37e75",
+#                         "projectId": "eba5c946-1677-441d-bbce-6a11baadecbb",
+#                         "outputUri": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/analysis/dragen-wgts-dna/20250617ac346b29/",
+#                         "logsUri": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/logs/dragen-wgts-dna/20250617ac346b29/"
+#                     },
+#                     "tags": {
+#                         "libraryId": "L2500373",
+#                         "fastqRgidList": [
+#                             "CTGCTTCC+GATCTATC.4.250328_A01052_0258_AHFGM7DSXF"
+#                         ],
+#                         "subjectId": "AIRSPACE-194-5",
+#                         "individualId": "SBJ06472",
+#                         "preLaunchCoverageEst": 34.79,
+#                         "preLaunchDupFracEst": 0.26,
+#                         "preLaunchInsertSizeEst": 286,
+#                         "portalRunId": "20250617ac346b29"  # pragma: allowlist secret
+#                     },
+#                     "status": "SUCCEEDED",
+#                     "submissionTime": "2025-06-18T00:36:06.918455",
+#                     "stepsLaunchExecutionArn": "arn:aws:states:ap-southeast-2:472057503814:execution:icav2-wes-launchIcav2Analysis:8a76fee5-8d1a-43e6-9ad6-3deb368a87ba",
+#                     "icav2AnalysisId": "72f51fcd-ab9c-4f61-80ca-e483f8dc58b6",
+#                     "startTime": "2025-06-18T00:36:07.154707+00:00",
+#                     "endTime": "2025-06-18T02:46:32.146135+00:00"
+#                 }
+#             },
+#             None
+#         ),
+#         indent=4
+#     ))
+#
+#     # {
+#     #     "workflowRunStateChangeEvent": {
+#     #         "status": "SUCCEEDED",
+#     #         "timestamp": "2025-06-18T06:51:12Z",
+#     #         "portalRunId": "20250617ac346b29",  # pragma: allowlist secret
+#     #         "workflowName": "dragen-wgts-dna",
+#     #         "workflowVersion": "4.4.4",
+#     #         "workflowRunName": "umccr--automated--dragen-wgts-dna--4-4-4--20250617ac346b29",
+#     #         "linkedLibraries": [
+#     #             {
+#     #                 "orcabusId": "lib.01JQ6MK7RZK96ZFH1C812FGCWJ",
+#     #                 "libraryId": "L2500373"
+#     #             }
+#     #         ],
+#     #         "payload": {
+#     #             "version": "2025.06.06",
+#     #             "data": {
+#     #                 "tags": {
+#     #                     "libraryId": "L2500373",
+#     #                     "subjectId": "AIRSPACE-194-5",
+#     #                     "individualId": "SBJ06472",
+#     #                     "fastqRgidList": [
+#     #                         "CTGCTTCC+GATCTATC.4.250328_A01052_0258_AHFGM7DSXF"
+#     #                     ],
+#     #                     "preLaunchDupFracEst": 0.26,
+#     #                     "preLaunchCoverageEst": 34.79,
+#     #                     "preLaunchInsertSizeEst": 286
+#     #                 },
+#     #                 "inputs": {
+#     #                     "reference": {
+#     #                         "name": "hg38",
+#     #                         "tarball": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/reference-data/dragen-hash-tables/v11-r5/hg38-alt_masked-cnv-graph-hla-methyl_cg-rna/hg38-alt_masked.cnv.graph.hla.methyl_cg.rna-11-r5.0-1.tar.gz",
+#     #                         "structure": "graph"
+#     #                     },
+#     #                     "sampleName": "L2500373",
+#     #                     "oraReference": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/reference-data/dragen-ora/v2/ora_reference_v2.tar.gz",
+#     #                     "sequenceData": {
+#     #                         "fastqListRows": [
+#     #                             {
+#     #                                 "lane": 4,
+#     #                                 "rgcn": "UMCCR",
+#     #                                 "rgds": "Library ID: L2500373, Sequenced on 28 Mar, 2025 at UMCCR, Phenotype: normal, Assay: TsqNano, Type: WGS",
+#     #                                 "rgdt": "2025-03-28T00:00:00",
+#     #                                 "rgid": "CTGCTTCC+GATCTATC.4.250328_A01052_0258_AHFGM7DSXF",
+#     #                                 "rglb": "L2500373",
+#     #                                 "rgpl": "Illumina",
+#     #                                 "rgsm": "L2500373",
+#     #                                 "read1FileUri": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/ora-compression/250328_A01052_0258_AHFGM7DSXF/20250402ebfe2c3d/Samples/Lane_4/L2500373/L2500373_S28_L004_R1_001.fastq.ora",
+#     #                                 "read2FileUri": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/ora-compression/250328_A01052_0258_AHFGM7DSXF/20250402ebfe2c3d/Samples/Lane_4/L2500373/L2500373_S28_L004_R2_001.fastq.ora"
+#     #                             }
+#     #                         ]
+#     #                     },
+#     #                     "alignmentOptions": {
+#     #                         "enableDuplicateMarking": true
+#     #                     },
+#     #                     "targetedCallerOptions": {
+#     #                         "enableTargeted": [
+#     #                             "cyp2d6"
+#     #                         ]
+#     #                     },
+#     #                     "snvVariantCallerOptions": {
+#     #                         "qcDetectContamination": true,
+#     #                         "vcMnvEmitComponentCalls": true,
+#     #                         "vcCombinePhasedVariantsDistance": 2,
+#     #                         "vcCombinePhasedVariantsDistanceSnvsOnly": 2
+#     #                     }
+#     #                 },
+#     #                 "engineParameters": {
+#     #                     "logsUri": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/logs/dragen-wgts-dna/20250617ac346b29/",
+#     #                     "outputUri": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/analysis/dragen-wgts-dna/20250617ac346b29/",
+#     #                     "projectId": "eba5c946-1677-441d-bbce-6a11baadecbb",
+#     #                     "pipelineId": "d3228141-3753-40bc-8d22-ac91f1e37e75"
+#     #                 },
+#     #                 "outputs": {
+#     #                     "dragenGermlineAlignmentOutputRelPath": "L2500373__hg38__graph__dragen_alignment/",
+#     #                     "dragenGermlineAlignmentOutputBamRelPath": "L2500373__hg38__graph__dragen_alignment/L2500373.bam",
+#     #                     "dragenGermlineVariantCallingOutputRelPath": "L2500373__hg38__graph__dragen_variant_calling/",
+#     #                     "dragenGermlineVariantCallingOutputSnvVcfRelPath": "L2500373__hg38__graph__dragen_variant_calling/L2500373.hard-filtered.vcf.gz",
+#     #                     "multiQcOutputDir": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/analysis/dragen-wgts-dna/20250617ac346b29/L2500373_multiqc/",
+#     #                     "multiQcHtmlReportUri": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/analysis/dragen-wgts-dna/20250617ac346b29/L2500373_multiqc/L2500373_multiqc_report.html"
+#     #                 }
+#     #             }
+#     #         }
+#     #     }
+#     # }
