@@ -395,6 +395,187 @@ You can interactively check if your DRAFT or READY event matches the schema usin
 - [Draft Event Schema Page](https://www.jsonschemavalidator.net/s/GmdC43wQ)
 - [Ready Event Schema Page](https://www.jsonschemavalidator.net/s/GsoMQr9B)
 
+
+#### Making your own draft events with BASH / JQ
+
+<details>
+
+<summary>Click to expand</summary>
+
+```shell
+# Globals
+EVENT_BUS_NAME="OrcaBusMain"
+DETAIL_TYPE="WorkflowRunStateChange"
+SOURCE="orcabus.manual"
+
+WORKFLOW_NAME="dragen-wgts-dna"
+WORKFLOW_VERSION="4.4.4"
+
+PAYLOAD_VERSION="2025.06.06"
+
+# Glocals
+LIBRARY_ID="L2301197"
+TUMOR_LIBRARY_ID="L2301198"
+
+# Functions
+get_hostname_from_ssm(){
+  aws ssm get-parameter \
+    --name "/hosted_zone/umccr/name" \
+    --output json | \
+  jq --raw-output \
+    '.Parameter.Value'
+}
+
+get_orcabus_token(){
+  aws secretsmanager get-secret-value \
+    --secret-id orcabus/token-service-jwt \
+    --output json \
+    --query SecretString | \
+  jq --raw-output \
+    'fromjson | .id_token'
+}
+
+get_library_obj_from_library_id(){
+  local library_id="$1"
+  curl --silent --fail --show-error --location \
+    --header "Authorization: Bearer $(get_orcabus_token)" \
+    --url "https://metadata.$(get_hostname_from_ssm)/api/v1/library?libraryId=${library_id}" | \
+  jq --raw-output \
+    '
+      .results[0] |
+      {
+        "libraryId": .libraryId,
+        "orcabusId": .orcabusId
+      }
+    '
+}
+
+generate_portal_run_id(){
+  echo "$(date -u +'%Y%m%d')$(openssl rand -hex 4)"
+}
+
+get_standard_inputs(){
+  jq --null-input --raw-output \
+    '
+      {
+        "alignmentOptions": {
+          "enableDuplicateMarking": true
+        },
+        "targetedCallerOptions": {
+          "enableTargeted": [
+            "cyp2d6"
+          ]
+        },
+        "snvVariantCallerOptions": {
+          "qcDetectContamination": true,
+          "vcMnvEmitComponentCalls": true,
+          "vcCombinePhasedVariantsDistance": 2,
+          "vcCombinePhasedVariantsDistanceSnvsOnly": 2
+        }
+      }
+    '
+}
+
+get_tags(){
+  local library_id="$1"
+  local tumor_library_id="${2-}"
+
+  jq --null-input --raw-output \
+    --arg libraryId "$library_id" \
+    --arg tumorLibraryId "$tumor_library_id" \
+    '
+      {
+        "libraryId": $libraryId,
+        "tumorLibraryId": $tumorLibraryId,
+      } |
+      # Filter out empty values, tumorLibraryId is optional
+      # Then write back to JSON
+      to_entries |
+      map(select(.value == "" | not)) |
+      from_entries
+    '
+}
+
+get_linked_libraries(){
+  local library_id="$1"
+  local tumor_library_id="${2-}"
+
+  linked_library_obj=$(get_library_obj_from_library_id "$library_id")
+
+  if [ -n "$tumor_library_id" ]; then
+    tumor_linked_library_obj=$(get_library_obj_from_library_id "$tumor_library_id")
+  else
+    tumor_linked_library_obj="{}"
+  fi
+
+  jq --null-input --raw-output \
+    --argjson libraryObj "$linked_library_obj" \
+    --argjson tumorLibraryObj "$tumor_linked_library_obj" \
+    '
+      [
+          $libraryObj,
+          $tumorLibraryObj
+      ] |
+      # Filter out empty values, tumorLibraryId is optional
+      # Then write back to JSON
+      map(select(length > 0))
+    '
+}
+
+# Generate the event
+event_cli_json="$( \
+  jq --null-input --raw-output \
+    --arg eventBusName "$EVENT_BUS_NAME" \
+    --arg detailType "$DETAIL_TYPE" \
+    --arg source "$SOURCE" \
+    --arg workflowName "$WORKFLOW_NAME" \
+    --arg workflowVersion "${WORKFLOW_VERSION//./-}" \
+    --arg payloadVersion "$PAYLOAD_VERSION" \
+    --arg portalRunId "$(generate_portal_run_id)" \
+    --argjson linkedLibraries "$(get_linked_libraries "$LIBRARY_ID" "$TUMOR_LIBRARY_ID")" \
+    --argjson standardInputs "$(get_standard_inputs)" \
+    --argjson tags "$(get_tags "$LIBRARY_ID" "$TUMOR_LIBRARY_ID")" \
+    '
+      {
+        # Standard fields for the event
+        "EventBusName": $eventBusName,
+        "DetailType": $detailType,
+        "Source": $source,
+        # Detail must be a JSON object in string format
+        "Detail": (
+          {
+            "status": "DRAFT",
+            "timestamp": (now | todateiso8601),
+            "workflowName": $workflowName,
+            "workflowVersion": $workflowVersion,
+            "workflowRunName": ("umccr--automated--" + $workflowName + "--" + $workflowVersion + "--" + $portalRunId),
+            "portalRunId": $portalRunId,
+            "linkedLibraries": $linkedLibraries,
+            "payload": {
+              "version": $payloadVersion,
+              "data": {
+                "inputs": $standardInputs,
+                "tags": $tags
+              }
+            }
+          } |
+          tojson
+        )
+      } |
+      # Now wrap into an "entry" for the CLI
+      {
+        "Entries": [
+          .
+        ]
+      }
+    ' \
+)"
+
+aws events put-events --no-cli-pager --cli-input-json "${event_cli_json}"
+```
+
+</details>
+
 #### Release management
 
 The service employs a fully automated CI/CD pipeline that automatically builds and releases all changes to the `main` code branch.
