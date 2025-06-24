@@ -6,8 +6,8 @@ Get the fastq set ids from the rgid list
 Given the rgid list, return the fastq set ids that are associated with these rgids.
 """
 
-from orcabus_api_tools.fastq import get_fastqs_in_instrument_run_id, get_fastq_list_rows_in_fastq_set
-from orcabus_api_tools.fastq.models import FastqListRow, BoolAllEnum
+from orcabus_api_tools.fastq import get_fastqs_in_instrument_run_id
+from orcabus_api_tools.fastq.models import FastqListRow
 
 def get_rgid_from_fastq_obj(fastq_obj: FastqListRow):
     return ".".join([
