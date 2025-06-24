@@ -529,7 +529,7 @@ event_cli_json="$( \
     --arg detailType "$DETAIL_TYPE" \
     --arg source "$SOURCE" \
     --arg workflowName "$WORKFLOW_NAME" \
-    --arg workflowVersion "${WORKFLOW_VERSION//./-}" \
+    --arg workflowVersion "${WORKFLOW_VERSION}" \
     --arg payloadVersion "$PAYLOAD_VERSION" \
     --arg portalRunId "$(generate_portal_run_id)" \
     --argjson linkedLibraries "$(get_linked_libraries "$LIBRARY_ID" "$TUMOR_LIBRARY_ID")" \
@@ -548,7 +548,7 @@ event_cli_json="$( \
             "timestamp": (now | todateiso8601),
             "workflowName": $workflowName,
             "workflowVersion": $workflowVersion,
-            "workflowRunName": ("umccr--automated--" + $workflowName + "--" + $workflowVersion + "--" + $portalRunId),
+            "workflowRunName": ("umccr--automated--" + $workflowName + "--" + ($workflowVersion | gsub("\\."; "-")) + "--" + $portalRunId),
             "portalRunId": $portalRunId,
             "linkedLibraries": $linkedLibraries,
             "payload": {
