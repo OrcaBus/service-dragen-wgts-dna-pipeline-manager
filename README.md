@@ -486,7 +486,7 @@ get_tags(){
     '
       {
         "libraryId": $libraryId,
-        "tumorLibraryId": $tumorLibraryId,
+        "tumorLibraryId": $tumorLibraryId
       } |
       # Filter out empty values, tumorLibraryId is optional
       # Then write back to JSON
