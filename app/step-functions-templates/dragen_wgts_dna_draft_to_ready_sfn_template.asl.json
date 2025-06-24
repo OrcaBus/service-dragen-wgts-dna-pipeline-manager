@@ -373,7 +373,8 @@
                               "hasQc": true,
                               "hasFingerprint": true,
                               "hasActiveReadSet": true
-                            }
+                            },
+                            "forceUnarchiving": true
                           },
                           "DetailType": "${__fastq_sync_detail_type__}",
                           "EventBusName": "${__event_bus_name__}",
@@ -483,7 +484,8 @@
                               "hasQc": true,
                               "hasFingerprint": true,
                               "hasActiveReadSet": true
-                            }
+                            },
+                            "forceUnarchiving": true
                           },
                           "DetailType": "${__fastq_sync_detail_type__}",
                           "EventBusName": "${__event_bus_name__}",
