@@ -41,7 +41,7 @@ export class StatelessApplicationStack extends cdk.Stack {
     });
 
     // Add event targets
-    buildAllEventBridgeTargets(this, {
+    buildAllEventBridgeTargets({
       eventBridgeRuleObjects: eventRules,
       stepFunctionObjects: stateMachines,
     });

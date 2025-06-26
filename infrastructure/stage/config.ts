@@ -24,6 +24,8 @@ import {
   WORKFLOW_VERSION_TO_DEFAULT_REFERENCE_PATHS_MAP,
   WORKFLOW_VERSION_TO_DEFAULT_SOMATIC_REFERENCE_PATHS_MAP,
   ORA_VERSION_TO_DEFAULT_ORA_REFERENCE_PATHS_MAP,
+  SSM_PARAMETER_PATH_PREFIX_INPUTS_BY_WORKFLOW_VERSION,
+  DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP,
 } from './constants';
 import { StatefulApplicationStackConfig, StatelessApplicationStackConfig } from './interfaces';
 import { StageName } from '@orcabus/platform-cdk-constructs/shared-config/accounts';
@@ -40,31 +42,35 @@ import {
  */
 export const getStatefulStackProps = (stage: StageName): StatefulApplicationStackConfig => {
   return {
-    // Values
-    // Detail
-    workflowName: WORKFLOW_NAME,
-    workflowVersion: DEFAULT_WORKFLOW_VERSION,
+    ssmParameterValues: {
+      // Values
+      // Detail
+      workflowName: WORKFLOW_NAME,
+      workflowVersion: DEFAULT_WORKFLOW_VERSION,
 
-    // Payload
-    payloadVersion: DEFAULT_PAYLOAD_VERSION,
+      // Payload
+      payloadVersion: DEFAULT_PAYLOAD_VERSION,
 
-    // Engine Parameters
-    pipelineIdsByWorkflowVersionMap: WORKFLOW_VERSION_TO_DEFAULT_ICAV2_PIPELINE_ID_MAP,
-    icav2ProjectId: ICAV2_PROJECT_ID[stage],
-    logsPrefix: WORKFLOW_LOGS_PREFIX.replace(
-      /{__CACHE_BUCKET__}/g,
-      PIPELINE_CACHE_BUCKET[stage]
-    ).replace(/{__CACHE_PREFIX__}/g, PIPELINE_CACHE_PREFIX[stage]),
-    outputPrefix: WORKFLOW_OUTPUT_PREFIX.replace(
-      /{__CACHE_BUCKET__}/g,
-      PIPELINE_CACHE_BUCKET[stage]
-    ).replace(/{__CACHE_PREFIX__}/g, PIPELINE_CACHE_PREFIX[stage]),
+      // Inputs
+      inputsByWorkflowVersionMap: DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP,
 
-    // References
-    referenceByWorkflowVersionMap: WORKFLOW_VERSION_TO_DEFAULT_REFERENCE_PATHS_MAP,
-    somaticReferenceByWorkflowVersionMap: WORKFLOW_VERSION_TO_DEFAULT_SOMATIC_REFERENCE_PATHS_MAP,
-    oraReferenceByOraVersionMap: ORA_VERSION_TO_DEFAULT_ORA_REFERENCE_PATHS_MAP,
+      // Engine Parameters
+      pipelineIdsByWorkflowVersionMap: WORKFLOW_VERSION_TO_DEFAULT_ICAV2_PIPELINE_ID_MAP,
+      icav2ProjectId: ICAV2_PROJECT_ID[stage],
+      logsPrefix: WORKFLOW_LOGS_PREFIX.replace(
+        /{__CACHE_BUCKET__}/g,
+        PIPELINE_CACHE_BUCKET[stage]
+      ).replace(/{__CACHE_PREFIX__}/g, PIPELINE_CACHE_PREFIX[stage]),
+      outputPrefix: WORKFLOW_OUTPUT_PREFIX.replace(
+        /{__CACHE_BUCKET__}/g,
+        PIPELINE_CACHE_BUCKET[stage]
+      ).replace(/{__CACHE_PREFIX__}/g, PIPELINE_CACHE_PREFIX[stage]),
 
+      // References
+      referenceByWorkflowVersionMap: WORKFLOW_VERSION_TO_DEFAULT_REFERENCE_PATHS_MAP,
+      somaticReferenceByWorkflowVersionMap: WORKFLOW_VERSION_TO_DEFAULT_SOMATIC_REFERENCE_PATHS_MAP,
+      oraCompressionByWorkflowVersionMap: ORA_VERSION_TO_DEFAULT_ORA_REFERENCE_PATHS_MAP,
+    },
     // Keys
     ssmParameterPaths: {
       // Top level prefix
@@ -73,6 +79,9 @@ export const getStatefulStackProps = (stage: StageName): StatefulApplicationStac
       // Detail
       workflowName: SSM_PARAMETER_PATH_WORKFLOW_NAME,
       workflowVersion: SSM_PARAMETER_PATH_DEFAULT_WORKFLOW_VERSION,
+
+      // Inputs
+      prefixDefaultInputsByWorkflowVersion: SSM_PARAMETER_PATH_PREFIX_INPUTS_BY_WORKFLOW_VERSION,
 
       // Payload
       payloadVersion: SSM_PARAMETER_PATH_PAYLOAD_VERSION,
@@ -104,6 +113,9 @@ export const getStatelessStackProps = (): StatelessApplicationStackConfig => {
       // Detail
       workflowName: SSM_PARAMETER_PATH_WORKFLOW_NAME,
       workflowVersion: SSM_PARAMETER_PATH_DEFAULT_WORKFLOW_VERSION,
+
+      // Inputs
+      prefixDefaultInputsByWorkflowVersion: SSM_PARAMETER_PATH_PREFIX_INPUTS_BY_WORKFLOW_VERSION,
 
       // Payload
       payloadVersion: SSM_PARAMETER_PATH_PAYLOAD_VERSION,

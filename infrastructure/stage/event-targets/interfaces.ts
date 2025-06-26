@@ -7,12 +7,20 @@ import { StepFunctionObject } from '../step-functions/interfaces';
  * EventBridge Target Interfaces
  */
 export type EventBridgeTargetNameList =
-  | 'dragenWgtsDnaDraftToDraftToReadySfnTarget'
+  | 'dragenWgtsDnaDraftLegacyToCompleteDraftSfnTarget'
+  | 'dragenWgtsDnaDraftToCompleteDraftSfnTarget'
+  | 'dragenWgtsDnaDraftLegacyToValidateDraftAndReadySfnTarget'
+  | 'dragenWgtsDnaDraftToValidateDraftAndReadySfnTarget'
+  | 'dragenWgtsDnaReadyLegacyToIcav2WesSubmittedSfnTarget'
   | 'dragenWgtsDnaReadyToIcav2WesSubmittedSfnTarget'
   | 'icav2WesAnalysisStateChangeEventToWrscSfnTarget';
 
 export const eventBridgeTargetsNameList: EventBridgeTargetNameList[] = [
-  'dragenWgtsDnaDraftToDraftToReadySfnTarget',
+  'dragenWgtsDnaDraftLegacyToCompleteDraftSfnTarget',
+  'dragenWgtsDnaDraftToCompleteDraftSfnTarget',
+  'dragenWgtsDnaDraftLegacyToValidateDraftAndReadySfnTarget',
+  'dragenWgtsDnaDraftToValidateDraftAndReadySfnTarget',
+  'dragenWgtsDnaReadyLegacyToIcav2WesSubmittedSfnTarget',
   'dragenWgtsDnaReadyToIcav2WesSubmittedSfnTarget',
   'icav2WesAnalysisStateChangeEventToWrscSfnTarget',
 ];

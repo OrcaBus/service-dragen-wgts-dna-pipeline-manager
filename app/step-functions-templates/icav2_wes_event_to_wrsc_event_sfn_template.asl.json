@@ -28,9 +28,20 @@
           "JitterStrategy": "FULL"
         }
       ],
-      "Next": "Push WRSC Event"
+      "Next": "New WFM has been deployed"
     },
-    "Push WRSC Event": {
+    "New WFM has been deployed": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Push WRSC Event (new)",
+          "Condition": "{% /* FIXME REMOVE ONCE WFM IS REDEPLOYED */\n${__new_workflow_manager_is_deployed__} %}",
+          "Comment": "New WFM Has Been Deployed"
+        }
+      ],
+      "Default": "Push WRSC Event"
+    },
+    "Push WRSC Event (new)": {
       "Type": "Task",
       "Resource": "arn:aws:states:::events:putEvents",
       "Arguments": {
@@ -39,7 +50,22 @@
             "Detail": "{% $states.input.workflowRunStateChangeEvent %}",
             "DetailType": "${__workflow_run_state_change_event_detail_type__}",
             "EventBusName": "${__event_bus_name__}",
-            "Source": "${__event_source__}"
+            "Source": "${__stack_source__}"
+          }
+        ]
+      },
+      "End": true
+    },
+    "Push WRSC Event": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::events:putEvents",
+      "Arguments": {
+        "Entries": [
+          {
+            "Detail": "{% $states.input.workflowRunStateChangeEvent ~>\n/* Renamed libraries to linkedLibraries using the transform method */\n| $ | {\"linkedLibraries\": libraries}, [\"libraries\"] | ~>\n/* Renamed workflowName and workflowVersion using the transform method */\n| $ | {\"workflowName\": workflow.name, \"workflowVersion\": workflow.version}, [\"workflow\"] | %}",
+            "DetailType": "${__workflow_run_state_change_event_detail_type__}",
+            "EventBusName": "${__event_bus_name__}",
+            "Source": "${__stack_source__}"
           }
         ]
       },

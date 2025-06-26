@@ -6,7 +6,9 @@ import { PythonUvFunction } from '@orcabus/platform-cdk-constructs/lambda';
 export type LambdaNameList =
   // Pre-Draft Lambda functions
   | 'generateWorkflowRunNameAndPortalRunId'
-  // Pre-ready Lambda functions
+  // Pre-Draft-complete Lambda functions
+  | 'validateDraftCompleteSchema'
+  | 'getLibraries'
   | 'getMetadataTags'
   | 'getFastqListRowsFromRgidList'
   | 'getFastqRgidsFromLibraryId'
@@ -14,6 +16,7 @@ export type LambdaNameList =
   | 'getQcSummaryStatsFromRgidList'
   | 'checkNtsmInternal'
   | 'checkNtsmExternal'
+  // Pre-READY Lambda functions
   // Pre-submission Lambda functions
   | 'dragenWgtsDnaReadyToIcav2WesRequest'
   // Post-submission Lambda functions/
@@ -23,6 +26,8 @@ export const lambdaNameList: LambdaNameList[] = [
   // Pre-Draft Lambda functions
   'generateWorkflowRunNameAndPortalRunId',
   // Pre-ready Lambda functions
+  'validateDraftCompleteSchema',
+  'getLibraries',
   'getMetadataTags',
   'getFastqListRowsFromRgidList',
   'getFastqRgidsFromLibraryId',
@@ -39,14 +44,19 @@ export const lambdaNameList: LambdaNameList[] = [
 // Requirements interface for Lambda functions
 export interface LambdaRequirements {
   needsOrcabusApiTools?: boolean;
+  needsSsmParametersAccess?: boolean;
+  needsSchemaRegistryAccess?: boolean;
 }
 
 // Lambda requirements mapping
 export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> = {
   // Needs Orcabus API tools to generate the workflow run name and portal run ID
   generateWorkflowRunNameAndPortalRunId: { needsOrcabusApiTools: true },
-  // Pre-ready Lambda functions
+  // Pre-draft-complete Lambda functions
   getMetadataTags: {
+    needsOrcabusApiTools: true,
+  },
+  getLibraries: {
     needsOrcabusApiTools: true,
   },
   getFastqListRowsFromRgidList: {
@@ -67,6 +77,12 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
   checkNtsmExternal: {
     needsOrcabusApiTools: true,
   },
+  // Pre-ready-complete lambda functions
+  validateDraftCompleteSchema: {
+    needsSchemaRegistryAccess: true,
+    needsSsmParametersAccess: true,
+  },
+  // Pre-submission Lambda functions
   dragenWgtsDnaReadyToIcav2WesRequest: {},
   // Needs Orcabus API tools to fetch the existing workflow run state
   convertIcav2WesStateChangeEventToWrscEvent: { needsOrcabusApiTools: true },
