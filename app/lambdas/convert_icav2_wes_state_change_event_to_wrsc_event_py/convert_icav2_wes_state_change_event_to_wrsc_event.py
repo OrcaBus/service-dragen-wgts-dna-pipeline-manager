@@ -98,7 +98,7 @@ TO
   }
 }
 """
-
+from copy import deepcopy
 # Standard imports
 from datetime import datetime, timezone
 
@@ -230,6 +230,13 @@ def handler(event, context):
     if outputs:
         latest_payload['data']['outputs'] = outputs
 
+    # Update the workflow object to contain 'name' and 'version'
+    workflow = dict(deepcopy(workflow_run['workflow']))
+    if 'workflowName' in workflow:
+        workflow['name'] = workflow.pop('workflowName')
+    if 'workflowVersion' in workflow:
+        workflow['version'] = workflow.pop('workflowVersion')
+
     # Prepare the WRSC Event payload
     return {
         "workflowRunStateChangeEvent": {
@@ -240,11 +247,10 @@ def handler(event, context):
             # Portal Run ID
             "portalRunId": portal_run_id,
             # Workflow details
-            "workflowName": workflow_run['workflow']['workflowName'],
-            "workflowVersion": workflow_run['workflow']['workflowVersion'],
+            "workflow": workflow,
             "workflowRunName": workflow_run['workflowRunName'],
             # Linked libraries in workflow run
-            "linkedLibraries": workflow_run['libraries'],
+            "libraries": workflow_run['libraries'],
             # Payload containing the original inputs and engine parameters
             # But with the updated outputs if available
             "payload": {
@@ -354,12 +360,17 @@ def handler(event, context):
 #     # {
 #     #     "workflowRunStateChangeEvent": {
 #     #         "status": "SUCCEEDED",
-#     #         "timestamp": "2025-06-18T06:51:12Z",
-#     #         "portalRunId": "20250617ac346b29",  # pragma: allowlist secret
-#     #         "workflowName": "dragen-wgts-dna",
-#     #         "workflowVersion": "4.4.4",
-#     #         "workflowRunName": "umccr--automated--dragen-wgts-dna--4-4-4--20250617ac346b29",
-#     #         "linkedLibraries": [
+#     #         "timestamp": "2025-06-26T06:34:51Z",
+#     #         "portalRunId": "20250617ac346b29",  // pragma: allowlist secret
+#     #         "workflow": {
+#     #             "orcabusId": "wfl.01JY07D115NZ0F4G1RKXMFEH46",
+#     #             "workflowName": "dragen-wgts-dna",
+#     #             "workflowVersion": "4.4.4",
+#     #             "executionEngine": "Unknown",
+#     #             "executionEnginePipelineId": "Unknown"
+#     #         },
+#     #         "workflowRunName": "umccr--automated--dragen-wgts-dna--4-4-4--20250617ac346b29",  // pragma: allowlist secret
+#     #         "libraries": [
 #     #             {
 #     #                 "orcabusId": "lib.01JQ6MK7RZK96ZFH1C812FGCWJ",
 #     #                 "libraryId": "L2500373"
@@ -418,19 +429,19 @@ def handler(event, context):
 #     #                         "vcCombinePhasedVariantsDistanceSnvsOnly": 2
 #     #                     }
 #     #                 },
-#     #                 "engineParameters": {
-#     #                     "logsUri": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/logs/dragen-wgts-dna/20250617ac346b29/",
-#     #                     "outputUri": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/analysis/dragen-wgts-dna/20250617ac346b29/",
-#     #                     "projectId": "eba5c946-1677-441d-bbce-6a11baadecbb",
-#     #                     "pipelineId": "d3228141-3753-40bc-8d22-ac91f1e37e75"
-#     #                 },
 #     #                 "outputs": {
 #     #                     "dragenGermlineAlignmentOutputRelPath": "L2500373__hg38__graph__dragen_alignment/",
 #     #                     "dragenGermlineAlignmentOutputBamRelPath": "L2500373__hg38__graph__dragen_alignment/L2500373.bam",
 #     #                     "dragenGermlineVariantCallingOutputRelPath": "L2500373__hg38__graph__dragen_variant_calling/",
 #     #                     "dragenGermlineVariantCallingOutputSnvVcfRelPath": "L2500373__hg38__graph__dragen_variant_calling/L2500373.hard-filtered.vcf.gz",
-#     #                     "multiQcOutputDir": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/analysis/dragen-wgts-dna/20250617ac346b29/L2500373_multiqc/",
-#     #                     "multiQcHtmlReportUri": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/analysis/dragen-wgts-dna/20250617ac346b29/L2500373_multiqc/L2500373_multiqc_report.html"
+#     #                     "multiQcOutputDir": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/analysis/dragen-wgts-dna/20250617ac346b29/L2500373_multiqc/",  // pragma: allowlist secret
+#     #                     "multiQcHtmlReportUri": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/analysis/dragen-wgts-dna/20250617ac346b29/L2500373_multiqc/L2500373_multiqc_report.html"  // pragma: allowlist secret
+#     #                 },
+#     #                 "engineParameters": {
+#     #                     "logsUri": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/logs/dragen-wgts-dna/20250617ac346b29/",  // pragma: allowlist secret
+#     #                     "outputUri": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/analysis/dragen-wgts-dna/20250617ac346b29/",  // pragma: allowlist secret
+#     #                     "projectId": "eba5c946-1677-441d-bbce-6a11baadecbb",
+#     #                     "pipelineId": "d3228141-3753-40bc-8d22-ac91f1e37e75"
 #     #                 }
 #     #             }
 #     #         }

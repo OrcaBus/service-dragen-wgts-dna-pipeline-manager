@@ -1,23 +1,27 @@
 import { IEventBus } from 'aws-cdk-lib/aws-events';
 import { StateMachine } from 'aws-cdk-lib/aws-stepfunctions';
 
-import { SsmParameterPaths } from '../interfaces';
 import { LambdaNameList, LambdaObject } from '../lambda/interfaces';
+import { SsmParameterPaths } from '../ssm/interfaces';
 
 /**
  * Step Function Interfaces
  */
 export type StateMachineNameList =
+  // Draft-to-Draft-Complete
+  | 'dragenWgtsDnaCompleteDraftSchema'
   // Draft-to-Ready
-  | 'dragenWgtsDnaDraftToReady'
+  | 'dragenWgtsDnaValidateDraftAndPutReadyEvent'
   // Ready-to-Submitted
   | 'dragenWgtsDnaReadyToIcav2WesSubmitted'
   // Post-submission event conversion
   | 'icav2WesEventToWrscEvent';
 
 export const stateMachineNameList: StateMachineNameList[] = [
-  // Draft-to-Ready
-  'dragenWgtsDnaDraftToReady',
+  // Draft-to-Completed Draft
+  'dragenWgtsDnaCompleteDraftSchema',
+  // Completed Draft-to-Ready
+  'dragenWgtsDnaValidateDraftAndPutReadyEvent',
   // Ready-to-Submitted
   'dragenWgtsDnaReadyToIcav2WesSubmitted',
   // Post-submission event conversion
@@ -53,9 +57,12 @@ export type BuildStepFunctionsProps = Omit<BuildStepFunctionProps, 'stateMachine
 
 export const stepFunctionsRequirementsMap: Record<StateMachineNameList, StepFunctionRequirements> =
   {
-    dragenWgtsDnaDraftToReady: {
+    dragenWgtsDnaCompleteDraftSchema: {
       needsEventPutPermission: true,
       needsSsmParameterStoreAccess: true,
+    },
+    dragenWgtsDnaValidateDraftAndPutReadyEvent: {
+      needsEventPutPermission: true,
     },
     dragenWgtsDnaReadyToIcav2WesSubmitted: {
       needsEventPutPermission: true,
@@ -67,7 +74,9 @@ export const stepFunctionsRequirementsMap: Record<StateMachineNameList, StepFunc
   };
 
 export const stepFunctionToLambdasMap: Record<StateMachineNameList, LambdaNameList[]> = {
-  dragenWgtsDnaDraftToReady: [
+  dragenWgtsDnaCompleteDraftSchema: [
+    'validateDraftCompleteSchema',
+    'getLibraries',
     'getMetadataTags',
     'getFastqListRowsFromRgidList',
     'getFastqRgidsFromLibraryId',
@@ -76,6 +85,7 @@ export const stepFunctionToLambdasMap: Record<StateMachineNameList, LambdaNameLi
     'checkNtsmInternal',
     'checkNtsmExternal',
   ],
+  dragenWgtsDnaValidateDraftAndPutReadyEvent: ['validateDraftCompleteSchema'],
   dragenWgtsDnaReadyToIcav2WesSubmitted: ['dragenWgtsDnaReadyToIcav2WesRequest'],
   icav2WesEventToWrscEvent: ['convertIcav2WesStateChangeEventToWrscEvent'],
 };

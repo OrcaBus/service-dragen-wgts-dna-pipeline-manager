@@ -46,7 +46,7 @@
             "Detail": "{% $states.input.icav2WesRequestEventDetail %}",
             "DetailType": "${__icav2_wes_request_detail_type__}",
             "EventBusName": "${__event_bus_name__}",
-            "Source": "${__event_source__}"
+            "Source": "${__stack_source__}"
           }
         ]
       },

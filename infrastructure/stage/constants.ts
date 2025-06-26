@@ -5,6 +5,7 @@ import { Reference } from './interfaces';
 export const APP_ROOT = path.join(__dirname, '../../app');
 export const LAMBDA_DIR = path.join(APP_ROOT, 'lambdas');
 export const STEP_FUNCTIONS_DIR = path.join(APP_ROOT, 'step-functions-templates');
+export const EVENT_SCHEMAS_DIR = path.join(APP_ROOT, 'event-schemas');
 
 /* Workflow constants */
 export const WORKFLOW_NAME = 'dragen-wgts-dna';
@@ -45,21 +46,70 @@ export const ORA_VERSION_TO_DEFAULT_ORA_REFERENCE_PATHS_MAP: Record<string, stri
     's3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/reference-data/dragen-ora/v2/ora_reference_v2.tar.gz',
 };
 
+export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<string, object> = {
+  '4.4.4': {
+    alignmentOptions: {
+      enableDuplicateMarking: true,
+    },
+    targetedCallerOptions: {
+      enableTargeted: ['cyp2d6'],
+    },
+    snvVariantCallerOptions: {
+      qcDetectContamination: true,
+      vcMnvEmitComponentCalls: true,
+      vcCombinePhasedVariantsDistance: 2,
+      vcCombinePhasedVariantsDistanceSnvsOnly: 2,
+    },
+  },
+};
+
 /* SSM Parameter Paths */
 export const SSM_PARAMETER_PATH_PREFIX = '/orcabus/workflows/dragen-wgts-dna/';
 // Workflow Parameters
-export const SSM_PARAMETER_PATH_WORKFLOW_NAME = `${SSM_PARAMETER_PATH_PREFIX}workflow-name`;
-export const SSM_PARAMETER_PATH_DEFAULT_WORKFLOW_VERSION = `${SSM_PARAMETER_PATH_PREFIX}default-workflow-version`;
+export const SSM_PARAMETER_PATH_WORKFLOW_NAME = path.join(
+  SSM_PARAMETER_PATH_PREFIX,
+  'workflow-name'
+);
+export const SSM_PARAMETER_PATH_DEFAULT_WORKFLOW_VERSION = path.join(
+  SSM_PARAMETER_PATH_PREFIX,
+  'default-workflow-version'
+);
+// Input parameters
+export const SSM_PARAMETER_PATH_PREFIX_INPUTS_BY_WORKFLOW_VERSION = path.join(
+  SSM_PARAMETER_PATH_PREFIX,
+  'inputs-by-workflow-version'
+);
 // Engine Parameters
-export const SSM_PARAMETER_PATH_PREFIX_PIPELINE_IDS_BY_WORKFLOW_VERSION = `${SSM_PARAMETER_PATH_PREFIX}pipeline-ids-by-workflow-version/`;
-export const SSM_PARAMETER_PATH_ICAV2_PROJECT_ID = `${SSM_PARAMETER_PATH_PREFIX}icav2-project-id`;
-export const SSM_PARAMETER_PATH_PAYLOAD_VERSION = `${SSM_PARAMETER_PATH_PREFIX}payload-version`;
-export const SSM_PARAMETER_PATH_LOGS_PREFIX = `${SSM_PARAMETER_PATH_PREFIX}logs-prefix`;
-export const SSM_PARAMETER_PATH_OUTPUT_PREFIX = `${SSM_PARAMETER_PATH_PREFIX}output-prefix`;
+export const SSM_PARAMETER_PATH_PREFIX_PIPELINE_IDS_BY_WORKFLOW_VERSION = path.join(
+  SSM_PARAMETER_PATH_PREFIX,
+  'pipeline-ids-by-workflow-version'
+);
+export const SSM_PARAMETER_PATH_ICAV2_PROJECT_ID = path.join(
+  SSM_PARAMETER_PATH_PREFIX,
+  'icav2-project-id'
+);
+export const SSM_PARAMETER_PATH_PAYLOAD_VERSION = path.join(
+  SSM_PARAMETER_PATH_PREFIX,
+  'payload-version'
+);
+export const SSM_PARAMETER_PATH_LOGS_PREFIX = path.join(SSM_PARAMETER_PATH_PREFIX, 'logs-prefix');
+export const SSM_PARAMETER_PATH_OUTPUT_PREFIX = path.join(
+  SSM_PARAMETER_PATH_PREFIX,
+  'output-prefix'
+);
 // Reference Parameters
-export const SSM_PARAMETER_PATH_PREFIX_REFERENCE_PATHS_BY_WORKFLOW_VERSION = `${SSM_PARAMETER_PATH_PREFIX}default-reference-paths-by-workflow-version/`;
-export const SSM_PARAMETER_PATH_PREFIX_SOMATIC_REFERENCE_PATHS_BY_WORKFLOW_VERSION = `${SSM_PARAMETER_PATH_PREFIX}default-somatic-reference-paths-by-workflow-version/`;
-export const SSM_PARAMETER_PATH_PREFIX_ORA_REFERENCE_PATHS_BY_WORKFLOW_VERSION = `${SSM_PARAMETER_PATH_PREFIX}ora-reference-paths-by-ora-version/`;
+export const SSM_PARAMETER_PATH_PREFIX_REFERENCE_PATHS_BY_WORKFLOW_VERSION = path.join(
+  SSM_PARAMETER_PATH_PREFIX,
+  'default-reference-paths-by-workflow-version'
+);
+export const SSM_PARAMETER_PATH_PREFIX_SOMATIC_REFERENCE_PATHS_BY_WORKFLOW_VERSION = path.join(
+  SSM_PARAMETER_PATH_PREFIX,
+  'default-somatic-reference-paths-by-workflow-version'
+);
+export const SSM_PARAMETER_PATH_PREFIX_ORA_REFERENCE_PATHS_BY_WORKFLOW_VERSION = path.join(
+  SSM_PARAMETER_PATH_PREFIX,
+  'ora-reference-paths-by-ora-version'
+);
 
 /* Event Constants */
 export const EVENT_BUS_NAME = 'OrcaBusMain';
@@ -75,3 +125,10 @@ export const FASTQ_SYNC_DETAIL_TYPE = 'fastqSync';
 /* Event rule constants */
 export const DRAFT_STATUS = 'DRAFT';
 export const READY_STATUS = 'READY';
+
+/* Schema constants */
+export const SCHEMA_REGISTRY_NAME = EVENT_SOURCE;
+export const SSM_SCHEMA_ROOT = path.join(SSM_PARAMETER_PATH_PREFIX, 'schemas');
+
+/* Future proofing */
+export const NEW_WORKFLOW_MANAGER_IS_DEPLOYED = false;

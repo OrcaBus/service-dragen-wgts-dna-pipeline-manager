@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "structure": {
+      "type": "string",
+      "enum": ["linear", "graph"]
+    },
+    "s3Uri": {
+      "pattern": "^s3://[a-zA-Z0-9_-]*/[a-zA-Z0-9_/-]*"
+    },
+    "s3UriDirectory": {
+      "pattern": "^s3://[a-zA-Z0-9_-]*/[a-zA-Z0-9_/-]*/$"
+    },
+    "reference": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "structure": {
+          "$ref": "#/$defs/structure"
+        },
+        "tarball": {
+          "$ref": "#/$defs/s3Uri"
+        }
+      },
+      "required": ["name", "structure", "tarball"]
+    },
+    "fastqListRow": {
+      "type": "object",
+      "properties": {
+        "rgid": {
+          "type": "string"
+        },
+        "rglb": {
+          "type": "string"
+        },
+        "rgsm": {
+          "type": "string"
+        },
+        "lane": {
+          "type": "integer"
+        },
+        "rgcn": {
+          "type": "string"
+        },
+        "rgds": {
+          "type": "string"
+        },
+        "rgdt": {
+          "type": "string"
+        },
+        "rgpl": {
+          "type": "string"
+        },
+        "read1FileUri": {
+          "$ref": "#/$defs/s3Uri"
+        },
+        "read2FileUri": {
+          "$ref": "#/$defs/s3Uri"
+        }
+      },
+      "required": ["rgid", "rgsm", "read1FileUri"]
+    },
+    "sequenceData": {
+      "type": "object",
+      "properties": {
+        "fastqListRows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fastqListRow"
+          }
+        }
+      },
+      "required": ["fastqListRows"]
+    },
+    "inputs": {
+      "type": "object",
+      "properties": {
+        "sampleName": {
+          "type": "string"
+        },
+        "tumorSampleName": {
+          "type": "string"
+        },
+        "alignmentOptions": {
+          "type": "object",
+          "allowAdditionalProperties": true
+        },
+        "targetedCallerOptions": {
+          "type": "object",
+          "allowAdditionalProperties": true
+        },
+        "snvVariantCallerOptions": {
+          "type": "object",
+          "allowAdditionalProperties": true
+        },
+        "sequenceData": {
+          "$ref": "#/$defs/sequenceData"
+        },
+        "tumorSequenceData": {
+          "$ref": "#/$defs/sequenceData"
+        },
+        "reference": {
+          "$ref": "#/$defs/reference"
+        },
+        "somaticReference": {
+          "$ref": "#/$defs/reference"
+        },
+        "oraReference": {
+          "$ref": "#/$defs/s3Uri"
+        }
+      },
+      "required": ["sampleName", "sequenceData", "reference"],
+      "allowAdditionalProperties": true
+    },
+    "tags": {
+      "type": "object",
+      "properties": {
+        "libraryId": {
+          "type": "string"
+        },
+        "tumorLibraryId": {
+          "type": "string"
+        },
+        "fastqRgidList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tumorFastqRgidList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "subjectId": {
+          "type": "string"
+        },
+        "individualId": {
+          "type": "string"
+        }
+      },
+      "required": ["libraryId"]
+    },
+    "engineParameters": {
+      "type": "object",
+      "properties": {
+        "projectId": {
+          "type": "string"
+        },
+        "pipelineId": {
+          "type": "string"
+        },
+        "outputUri": {
+          "$ref": "#/$defs/s3UriDirectory"
+        },
+        "logsUri": {
+          "$ref": "#/$defs/s3UriDirectory"
+        }
+      },
+      "required": ["projectId", "pipelineId", "outputUri", "logsUri"],
+      "allowAdditionalProperties": true
+    }
+  },
+  "type": "object",
+  "properties": {
+    "inputs": {
+      "$ref": "#/$defs/inputs"
+    },
+    "tags": {
+      "$ref": "#/$defs/tags"
+    },
+    "engineParameters": {
+      "$ref": "#/$defs/engineParameters"
+    }
+  },
+  "required": ["inputs", "tags", "engineParameters"]
+}

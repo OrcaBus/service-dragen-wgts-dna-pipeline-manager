@@ -1,0 +1,96 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Save Event Vars",
+  "States": {
+    "Save Event Vars": {
+      "Type": "Pass",
+      "Next": "Validate Draft Complete Event",
+      "Assign": {
+        "detail": "{% $states.input %}"
+      }
+    },
+    "Validate Draft Complete Event": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Output": {
+        "isValid": "{% $states.result.Payload.isValid %}"
+      },
+      "Arguments": {
+        "FunctionName": "${__validate_draft_complete_schema_lambda_function_arn__}",
+        "Payload": "{% $detail.payload.data %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Is Draft Event Complete?"
+    },
+    "Is Draft Event Complete?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "New workflow manager is deployed",
+          "Condition": "{% $states.input.isValid %}",
+          "Comment": "Draft is Valid"
+        }
+      ],
+      "Default": "Pass"
+    },
+    "New workflow manager is deployed": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Push READY Event (new)",
+          "Condition": "{% /* FIXME REMOVE ONCE WFM IS REDEPLOYED */\n${__new_workflow_manager_is_deployed__} %}",
+          "Comment": "New workflow manager is deployed"
+        }
+      ],
+      "Default": "Push READY Event"
+    },
+    "Push READY Event (new)": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::events:putEvents",
+      "Arguments": {
+        "Entries": [
+          {
+            "Detail": "{% $merge(\n  $detail,\n  {\n    \"timestamp\": $now(),\n    \"status\": \"${__ready_event_status__}\"\n  }\n) %}",
+            "DetailType": "${__workflow_run_state_change_event_detail_type__}",
+            "EventBusName": "${__event_bus_name__}",
+            "Source": "${__stack_source__}"
+          }
+        ]
+      },
+      "End": true
+    },
+    "Push READY Event": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::events:putEvents",
+      "Arguments": {
+        "Entries": [
+          {
+            "Detail": "{% $merge([\n  $detail,\n  {\n    \"timestamp\": $now(),\n    \"status\": \"${__ready_event_status__}\"\n  }\n]) ~>\n/* Renamed libraries to linkedLibraries using the transform method */\n| $ | {\"linkedLibraries\": libraries}, [\"libraries\"] | ~>\n/* Renamed workflowName and workflowVersion using the transform method */\n| $ | {\"workflowName\": workflow.name, \"workflowVersion\": workflow.version}, [\"workflow\"] | %}",
+            "DetailType": "${__workflow_run_state_change_event_detail_type__}",
+            "EventBusName": "${__event_bus_name__}",
+            "Source": "${__stack_source__}"
+          }
+        ]
+      },
+      "End": true
+    },
+    "Pass": {
+      "Type": "Pass",
+      "End": true
+    }
+  },
+  "QueryLanguage": "JSONata"
+}
