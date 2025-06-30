@@ -79,7 +79,7 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
       new iam.PolicyStatement({
         actions: ['ssm:GetParameter'],
         resources: [
-          `arn:aws:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter${SSM_SCHEMA_ROOT}*`,
+          `arn:aws:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter${SSM_SCHEMA_ROOT}/*`,
         ],
       })
     );

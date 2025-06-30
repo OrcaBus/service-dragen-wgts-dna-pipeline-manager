@@ -64,7 +64,7 @@ export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<string, object> = {
 };
 
 /* SSM Parameter Paths */
-export const SSM_PARAMETER_PATH_PREFIX = '/orcabus/workflows/dragen-wgts-dna/';
+export const SSM_PARAMETER_PATH_PREFIX = path.join('/orcabus/workflows/dragen-wgts-dna/');
 // Workflow Parameters
 export const SSM_PARAMETER_PATH_WORKFLOW_NAME = path.join(
   SSM_PARAMETER_PATH_PREFIX,
