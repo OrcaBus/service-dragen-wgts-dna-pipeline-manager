@@ -12,7 +12,7 @@ export type LambdaNameList =
   | 'getMetadataTags'
   | 'getFastqListRowsFromRgidList'
   | 'getFastqRgidsFromLibraryId'
-  | 'getFastqSetIdsFromRgidList'
+  | 'getFastqIdListFromRgidList'
   | 'getQcSummaryStatsFromRgidList'
   | 'checkNtsmInternal'
   | 'checkNtsmExternal'
@@ -31,7 +31,7 @@ export const lambdaNameList: LambdaNameList[] = [
   'getMetadataTags',
   'getFastqListRowsFromRgidList',
   'getFastqRgidsFromLibraryId',
-  'getFastqSetIdsFromRgidList',
+  'getFastqIdListFromRgidList',
   'getQcSummaryStatsFromRgidList',
   'checkNtsmInternal',
   'checkNtsmExternal',
@@ -65,7 +65,7 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
   getFastqRgidsFromLibraryId: {
     needsOrcabusApiTools: true,
   },
-  getFastqSetIdsFromRgidList: {
+  getFastqIdListFromRgidList: {
     needsOrcabusApiTools: true,
   },
   getQcSummaryStatsFromRgidList: {

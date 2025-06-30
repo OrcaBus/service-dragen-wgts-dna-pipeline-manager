@@ -412,21 +412,21 @@
                   "Condition": "{% $draftInputs.sequenceData ? true : false %}"
                 }
               ],
-              "Default": "Get fastq set ids from rgid list"
+              "Default": "Get fastq ids from rgid list"
             },
             "Keep Original sequence data": {
               "Type": "Pass",
               "End": true,
               "Output": "{% $draftInputs.sequenceData %}"
             },
-            "Get fastq set ids from rgid list": {
+            "Get fastq ids from rgid list": {
               "Type": "Task",
               "Resource": "arn:aws:states:::lambda:invoke",
               "Output": {
-                "fastqSetIdList": "{% $states.result.Payload.fastqSetIdList %}"
+                "fastqIdList": "{% $states.result.Payload.fastqIdList %}"
               },
               "Arguments": {
-                "FunctionName": "${__get_fastq_set_ids_from_rgid_list_lambda_function_arn__}",
+                "FunctionName": "${__get_fastq_id_list_from_rgid_list_lambda_function_arn__}",
                 "Payload": {
                   "fastqRgidList": "{% $tags.fastqRgidList %}"
                 }
@@ -445,47 +445,33 @@
                   "JitterStrategy": "FULL"
                 }
               ],
-              "Next": "Wait for fastqs"
+              "Next": "Wait for fastq"
             },
-            "Wait for fastqs": {
-              "Type": "Map",
-              "ItemProcessor": {
-                "ProcessorConfig": {
-                  "Mode": "INLINE"
-                },
-                "StartAt": "Wait for fastq",
-                "States": {
-                  "Wait for fastq": {
-                    "Type": "Task",
-                    "Resource": "arn:aws:states:::events:putEvents.waitForTaskToken",
-                    "Arguments": {
-                      "Entries": [
-                        {
-                          "Detail": {
-                            "taskToken": "{% $states.context.Task.Token %}",
-                            "fastqSetId": "{% $states.input.fastqSetIdMapIter %}",
-                            "requirements": {
-                              "hasQc": true,
-                              "hasFingerprint": true,
-                              "hasActiveReadSet": true
-                            },
-                            "forceUnarchiving": true
-                          },
-                          "DetailType": "${__fastq_sync_detail_type__}",
-                          "EventBusName": "${__event_bus_name__}",
-                          "Source": "${__stack_source__}"
-                        }
-                      ]
+            "Wait for fastq": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::events:putEvents.waitForTaskToken",
+              "Arguments": {
+                "Entries": [
+                  {
+                    "Detail": {
+                      "taskToken": "{% $states.context.Task.Token %}",
+                      "payload": {
+                        "fastqIdList": "{% $states.input.fastqIdList %}",
+                        "requirements": {
+                          "hasQc": true,
+                          "hasFingerprint": true,
+                          "hasActiveReadSet": true
+                        },
+                        "forceUnarchiving": true
+                      }
                     },
-                    "End": true
+                    "DetailType": "${__fastq_sync_detail_type__}",
+                    "EventBusName": "${__event_bus_name__}",
+                    "Source": "${__stack_source__}"
                   }
-                }
+                ]
               },
-              "Next": "Get fastq list rows from rgid list",
-              "Items": "{% $states.input.fastqSetIdList %}",
-              "ItemSelector": {
-                "fastqSetIdMapIter": "{% $states.context.Map.Item.Value %}"
-              }
+              "Next": "Get fastq list rows from rgid list"
             },
             "Get fastq list rows from rgid list": {
               "Type": "Task",
@@ -539,21 +525,21 @@
                   "Comment": "Has tumor sequence data inputs"
                 }
               ],
-              "Default": "Get tumor fastq set ids from rgid list"
+              "Default": "Get tumor ids from rgid list"
             },
             "Keep Original tumor sequence data": {
               "Type": "Pass",
               "End": true,
               "Output": "{% $draftInputs.tumorSequenceData %}"
             },
-            "Get tumor fastq set ids from rgid list": {
+            "Get tumor ids from rgid list": {
               "Type": "Task",
               "Resource": "arn:aws:states:::lambda:invoke",
               "Output": {
-                "fastqSetIdList": "{% $states.result.Payload.fastqSetIdList %}"
+                "fastqIdList": "{% $states.result.Payload.fastqIdList %}"
               },
               "Arguments": {
-                "FunctionName": "${__get_fastq_set_ids_from_rgid_list_lambda_function_arn__}",
+                "FunctionName": "${__get_fastq_id_list_from_rgid_list_lambda_function_arn__}",
                 "Payload": {
                   "fastqRgidList": "{% $tags.tumorFastqRgidList %}"
                 }
@@ -575,44 +561,30 @@
               "Next": "Wait for tumor fastqs"
             },
             "Wait for tumor fastqs": {
-              "Type": "Map",
-              "ItemProcessor": {
-                "ProcessorConfig": {
-                  "Mode": "INLINE"
-                },
-                "StartAt": "Wait for tumor fastq",
-                "States": {
-                  "Wait for tumor fastq": {
-                    "Type": "Task",
-                    "Resource": "arn:aws:states:::events:putEvents.waitForTaskToken",
-                    "Arguments": {
-                      "Entries": [
-                        {
-                          "Detail": {
-                            "taskToken": "{% $states.context.Task.Token %}",
-                            "fastqSetId": "{% $states.input.fastqSetIdMapIter %}",
-                            "requirements": {
-                              "hasQc": true,
-                              "hasFingerprint": true,
-                              "hasActiveReadSet": true
-                            },
-                            "forceUnarchiving": true
-                          },
-                          "DetailType": "${__fastq_sync_detail_type__}",
-                          "EventBusName": "${__event_bus_name__}",
-                          "Source": "${__stack_source__}"
-                        }
-                      ]
+              "Type": "Task",
+              "Resource": "arn:aws:states:::events:putEvents.waitForTaskToken",
+              "Arguments": {
+                "Entries": [
+                  {
+                    "Detail": {
+                      "taskToken": "{% $states.context.Task.Token %}",
+                      "payload": {
+                        "fastqIdList": "{% $states.input.fastqIdList %}",
+                        "requirements": {
+                          "hasQc": true,
+                          "hasFingerprint": true,
+                          "hasActiveReadSet": true
+                        },
+                        "forceUnarchiving": true
+                      }
                     },
-                    "End": true
+                    "DetailType": "${__fastq_sync_detail_type__}",
+                    "EventBusName": "${__event_bus_name__}",
+                    "Source": "${__stack_source__}"
                   }
-                }
+                ]
               },
-              "Next": "Get tumor fastq list rows from rgid list",
-              "Items": "{% $states.input.fastqSetIdList %}",
-              "ItemSelector": {
-                "fastqSetIdMapIter": "{% $states.context.Map.Item.Value %}"
-              }
+              "Next": "Get tumor fastq list rows from rgid list"
             },
             "Get tumor fastq list rows from rgid list": {
               "Type": "Task",

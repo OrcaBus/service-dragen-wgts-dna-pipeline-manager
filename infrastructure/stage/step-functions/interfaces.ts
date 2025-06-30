@@ -80,7 +80,7 @@ export const stepFunctionToLambdasMap: Record<StateMachineNameList, LambdaNameLi
     'getMetadataTags',
     'getFastqListRowsFromRgidList',
     'getFastqRgidsFromLibraryId',
-    'getFastqSetIdsFromRgidList',
+    'getFastqIdListFromRgidList',
     'getQcSummaryStatsFromRgidList',
     'checkNtsmInternal',
     'checkNtsmExternal',
