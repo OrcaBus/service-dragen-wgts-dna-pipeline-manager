@@ -79,7 +79,7 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
       new iam.PolicyStatement({
         actions: ['ssm:GetParameter'],
         resources: [
-          `arn:aws:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter${SSM_SCHEMA_ROOT}/*`,
+          `arn:aws:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter${path.join(SSM_SCHEMA_ROOT, '/*')}`,
         ],
       })
     );
@@ -95,7 +95,7 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
         actions: ['schemas:DescribeRegistry', 'schemas:DescribeSchema'],
         resources: [
           `arn:aws:schemas:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:registry/${SCHEMA_REGISTRY_NAME}`,
-          `arn:aws:schemas:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:schema/${SCHEMA_REGISTRY_NAME}/*`,
+          `arn:aws:schemas:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:schema/${path.join(SCHEMA_REGISTRY_NAME, '/*')}`,
         ],
       })
     );
