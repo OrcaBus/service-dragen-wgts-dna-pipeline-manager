@@ -50,7 +50,7 @@ We parse this to the ICAv2 WES Service to generate a ICAv2 WES workflow request.
 
 We then parse ICAv2 Analysis State Change events to update the state of the workflow in our service.
 
-![events-overview](docs/drawio-exports/dragen-tso-ctdna.drawio.svg)
+![events-overview](docs/drawio-exports/dragen-wgts-dna.drawio.svg)
 
 ### Consumed Events
 
