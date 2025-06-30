@@ -27,7 +27,7 @@ def handler(event, context):
     if len(libraries) == 1:
         # If only one library is provided, then we have a germline library
         return {
-            "library": libraries[0]['libraryId']
+            "libraryId": libraries[0]['libraryId']
         }
 
     # Get library metadata for both libraries
