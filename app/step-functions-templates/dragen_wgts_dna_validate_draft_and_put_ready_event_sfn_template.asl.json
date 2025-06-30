@@ -7,8 +7,8 @@
       "Next": "Validate Draft Complete Event",
       "Assign": {
         "detail": "{% $states.input %}",
-        "payload": "{% $states.input.detail.payload ? $states.input.detail.payload : {} %}",
-        "payloadData": "{% $states.input.detail.payload.data ? $states.input.detail.payload.data : {} %}"
+        "payload": "{% $states.input.payload ? $states.input.payload : {} %}",
+        "payloadData": "{% $states.input.payload.data ? $states.input.payload.data : {} %}"
       }
     },
     "Validate Draft Complete Event": {
