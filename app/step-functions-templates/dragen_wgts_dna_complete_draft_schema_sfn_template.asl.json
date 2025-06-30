@@ -7,7 +7,7 @@
       "Assign": {
         "draftDetail": "{% $states.input %}",
         "draftLibrariesList": "{% $states.input.libraries %}",
-        "draftPayload": "{% $states.input.payload ? $states.input.payload : {} %}",
+        "draftPayload": "{% (\n  $states.input.payload ? \n  $states.input.payload : {\n    \"version\": \"${__default_payload_version__}\"\n  }\n) %}",
         "draftData": "{% $states.input.payload.data ? $states.input.payload.data : {} %}",
         "draftEngineParameters": "{% $states.input.payload.engineParameters ? $states.input.payload.engineParameters : {} %}",
         "draftTags": "{% $states.input.payload.data.tags ? $states.input.payload.data.tags : {} %}",

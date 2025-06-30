@@ -15,6 +15,7 @@ import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import path from 'path';
 import {
   DEFAULT_ORA_VERSION,
+  DEFAULT_PAYLOAD_VERSION,
   DRAFT_STATUS,
   EVENT_SOURCE,
   FASTQ_SYNC_DETAIL_TYPE,
@@ -57,6 +58,7 @@ function createStateMachineDefinitionSubstitutions(props: BuildStepFunctionProps
     definitionSubstitutions['__draft_event_status__'] = DRAFT_STATUS;
     definitionSubstitutions['__new_workflow_manager_is_deployed__'] =
       NEW_WORKFLOW_MANAGER_IS_DEPLOYED.toString();
+    definitionSubstitutions['__default_payload_version__'] = DEFAULT_PAYLOAD_VERSION;
   }
 
   if (sfnRequirements.needsSsmParameterStoreAccess) {
