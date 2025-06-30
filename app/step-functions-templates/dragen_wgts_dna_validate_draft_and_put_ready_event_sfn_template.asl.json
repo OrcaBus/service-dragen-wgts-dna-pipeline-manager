@@ -6,7 +6,9 @@
       "Type": "Pass",
       "Next": "Validate Draft Complete Event",
       "Assign": {
-        "detail": "{% $states.input %}"
+        "detail": "{% $states.input %}",
+        "payload": "{% $states.input.detail.payload ? $states.input.detail.payload : {} %}",
+        "payloadData": "{% $states.input.detail.payload.data ? $states.input.detail.payload.data : {} %}"
       }
     },
     "Validate Draft Complete Event": {
@@ -17,7 +19,7 @@
       },
       "Arguments": {
         "FunctionName": "${__validate_draft_complete_schema_lambda_function_arn__}",
-        "Payload": "{% $detail.payload.data %}"
+        "Payload": "{% $payloadData %}"
       },
       "Retry": [
         {
