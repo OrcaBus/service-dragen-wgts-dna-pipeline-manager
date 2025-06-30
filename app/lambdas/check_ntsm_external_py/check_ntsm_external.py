@@ -12,43 +12,20 @@ We expect all fastq set ids to match all tumor fastq set ids.
 from itertools import product
 
 from orcabus_api_tools.fastq import (
-    get_fastqs_in_instrument_run_id,
+    get_fastq_by_rgid,
     validate_ntsm_external
 )
-from orcabus_api_tools.fastq.models import FastqListRow
-
-
-def get_rgid_from_fastq_obj(fastq_obj: FastqListRow):
-    return ".".join([
-        fastq_obj['index'],
-        str(fastq_obj['lane']),
-        fastq_obj['instrumentRunId']
-    ])
-
 
 def get_fastq_set_ids_from_rgid_list(fastq_rgid_list):
-    instrument_run_id_list = sorted(set(list(map(
-        lambda rgid_iter_: rgid_iter_.rsplit(".", 1)[-1],
-        fastq_rgid_list
-    ))))
-
-    all_fastqs = []
-    for instrument_run_id_iter_ in instrument_run_id_list:
-        all_fastqs = get_fastqs_in_instrument_run_id(instrument_run_id_iter_)
-
-    all_fastq_set_ids_filtered = []
-    for fastq_iter_ in all_fastqs:
-        if get_rgid_from_fastq_obj(fastq_iter_) in fastq_rgid_list:
-            all_fastq_set_ids_filtered.append(fastq_iter_.get('fastqSetId', None))
 
     # Remove any None values
-    all_fastq_set_ids_filtered = list(filter(
-        lambda fastq_set_id_iter_: fastq_set_id_iter_ is not None,
-        all_fastq_set_ids_filtered
+    all_fastq_set_ids = list(map(
+        lambda rgid_iter_: get_fastq_by_rgid(rgid_iter_)['fastqSetId'],
+        fastq_rgid_list
     ))
 
     # Remove duplicates
-    return sorted(set(all_fastq_set_ids_filtered))
+    return sorted(set(all_fastq_set_ids))
 
 
 def handler(event, context):

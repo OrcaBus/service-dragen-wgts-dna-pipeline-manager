@@ -7,13 +7,13 @@ Given a library id, use the fastq set endpoint to collect all rgids associated w
 
 Rgids are returned in the format '<index>+<index2>.<lane>.<instrument_run_id>'
 """
-import json
 
+# Layer imports
 from orcabus_api_tools.fastq import get_fastq_sets, get_fastq_list_rows_in_fastq_set
-from orcabus_api_tools.fastq.models import FastqListRow, BoolAllEnum
+from orcabus_api_tools.fastq.models import Fastq
 
 
-def get_rgid_from_fastq_obj(fastq_obj: FastqListRow):
+def get_rgid_from_fastq_obj(fastq_obj: Fastq):
     return ".".join([
         fastq_obj['index'],
         str(fastq_obj['lane']),
@@ -32,7 +32,8 @@ def handler(event, context):
 
     fastq_sets = get_fastq_sets(
         library=library_id,
-        currentFastqSet=json.dumps(BoolAllEnum.true.value)
+        currentFastqSet=True
+        # FIXME - why does this ask for __hash__
     )
 
     if len(fastq_sets) != 1:
