@@ -1,55 +1,52 @@
-import * as schemas from 'aws-cdk-lib/aws-eventschemas';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
-import { EVENT_SCHEMAS_DIR, SCHEMA_REGISTRY_NAME, SSM_SCHEMA_ROOT } from '../constants';
-import * as path from 'path';
-import * as fs from 'fs';
-import { schemaNames, SchemaNamesList } from './interfaces';
-import { Construct } from 'constructs';
-import { camelCaseToKebabCase } from '../utils';
+// infrastructure/stage/event-schemas/index.ts
 
-export function buildRegistry(scope: Construct, registryName: string): schemas.CfnRegistry {
-  return new schemas.CfnRegistry(scope, `${registryName}-registry`, {
-    registryName: registryName,
-  });
-}
+import { EventSchema } from "@orcabus/event-schema-registry"; // Adjust this import to match your actual schema lib
+import {
+  DecompressionStartedEvent,
+  DecompressionCompletedEvent,
+  DecompressionFailedEvent
+} from "./interfaces";
 
-export function buildSchema(scope: Construct, schemaName: SchemaNamesList): schemas.CfnSchema {
-  // Import the schema file from the schemas directory
-  const schemaPath = path.join(
-    EVENT_SCHEMAS_DIR,
-    camelCaseToKebabCase(schemaName) + '-schema.json'
-  );
-
-  // Create a new schema in the Event Schemas service
-  return new schemas.CfnSchema(scope, schemaName, {
-    type: 'JSONSchemaDraft4',
-    content: fs.readFileSync(schemaPath, 'utf-8'),
-    registryName: SCHEMA_REGISTRY_NAME,
-  });
-}
-
-export function buildSchemasAndRegistry(scope: Construct) {
-  // Build the registry
-  buildRegistry(scope, SCHEMA_REGISTRY_NAME);
-
-  // Add an ssm entry for the registry name
-  new ssm.StringParameter(scope, `${SCHEMA_REGISTRY_NAME}-ssm`, {
-    parameterName: path.join(SSM_SCHEMA_ROOT, 'registry'),
-    stringValue: SCHEMA_REGISTRY_NAME,
-  });
-
-  // Iterate over the schemas directory and create a schema for each file
-  for (const schemaName of schemaNames) {
-    const schemaObj = buildSchema(scope, schemaName);
-    // And also a latest ssm parameter for the schema
-    // Likely the one most commonly used
-    new ssm.StringParameter(scope, `${schemaName}-ssm-latest`, {
-      parameterName: path.join(SSM_SCHEMA_ROOT, camelCaseToKebabCase(schemaName), 'latest'),
-      stringValue: JSON.stringify({
-        registryName: schemaObj.registryName,
-        schemaName: schemaObj.attrSchemaName,
-        schemaVersion: schemaObj.attrSchemaVersion,
-      }),
-    });
+export const decompressionStarted: EventSchema<DecompressionStartedEvent> = {
+  name: "decompression.started",
+  version: 1,
+  schema: {
+    type: "object",
+    required: ["sampleId", "fileName", "timestamp"],
+    properties: {
+      sampleId: { type: "string" },
+      fileName: { type: "string" },
+      timestamp: { type: "string", format: "date-time" }
+    }
   }
-}
+};
+
+export const decompressionCompleted: EventSchema<DecompressionCompletedEvent> = {
+  name: "decompression.completed",
+  version: 1,
+  schema: {
+    type: "object",
+    required: ["sampleId", "outputLocation", "durationMs", "timestamp"],
+    properties: {
+      sampleId: { type: "string" },
+      outputLocation: { type: "string" },
+      durationMs: { type: "number" },
+      timestamp: { type: "string", format: "date-time" }
+    }
+  }
+};
+
+export const decompressionFailed: EventSchema<DecompressionFailedEvent> = {
+  name: "decompression.failed",
+  version: 1,
+  schema: {
+    type: "object",
+    required: ["sampleId", "errorMessage", "timestamp"],
+    properties: {
+      sampleId: { type: "string" },
+      errorMessage: { type: "string" },
+      errorCode: { type: "string" },
+      timestamp: { type: "string", format: "date-time" }
+    }
+  }
+};
