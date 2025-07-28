@@ -11,10 +11,10 @@ from orcabus_api_tools.fastq import get_fastq_by_rgid
 
 def handler(event, context):
     """
-    Given a library id, get the fastq rgids associated with the library.
-    :param event:
-    :param context:
-    :return:
+    Given a list of fastq RGIDs, return the corresponding fastq IDs.
+    :param event: A dictionary containing the key "fastqRgidList", which is a list of fastq RGIDs.
+    :param context: AWS Lambda context object (not used in this function).
+    :return: A dictionary with the key "fastqIdList", which is a list of fastq IDs corresponding to the input RGIDs.
     """
     fastq_rgid_list = event.get("fastqRgidList", [])
 
