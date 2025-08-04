@@ -26,15 +26,11 @@ export interface StatelessApplicationStackConfig {
   // SSM Parameter Keys
   ssmParameterPaths: SsmParameterPaths;
 
-  // We need the workflow name though for the event rules
-  workflowName: string;
-
   // Event Stuff
   eventBusName: string;
-  eventSource: string;
-  workflowRunStateChangeDetailType: string;
-  icav2WesRequestDetailType: string;
-  icav2WesStateChangeDetailType: string;
+
+  // Workflow manager stuff
+  isNewWorkflowManagerDeployed: boolean;
 }
 
 export interface Reference {

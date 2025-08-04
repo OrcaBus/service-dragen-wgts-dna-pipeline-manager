@@ -34,14 +34,14 @@
       "Type": "Choice",
       "Choices": [
         {
-          "Next": "Push WRSC Event (new)",
-          "Condition": "{% /* FIXME REMOVE ONCE WFM IS REDEPLOYED */\n${__new_workflow_manager_is_deployed__} %}",
+          "Next": "Push WRSC Event",
+          "Condition": "{% /* ${__new_workflow_manager_is_deployed__} */ false %}",
           "Comment": "New WFM Has Been Deployed"
         }
       ],
-      "Default": "Push WRSC Event"
+      "Default": "Push WRSC Event (legacy)"
     },
-    "Push WRSC Event (new)": {
+    "Push WRSC Event": {
       "Type": "Task",
       "Resource": "arn:aws:states:::events:putEvents",
       "Arguments": {
@@ -56,7 +56,7 @@
       },
       "End": true
     },
-    "Push WRSC Event": {
+    "Push WRSC Event (legacy)": {
       "Type": "Task",
       "Resource": "arn:aws:states:::events:putEvents",
       "Arguments": {

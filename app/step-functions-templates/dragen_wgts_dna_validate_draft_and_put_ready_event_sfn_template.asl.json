@@ -53,7 +53,7 @@
       "Choices": [
         {
           "Next": "Push READY Event (new)",
-          "Condition": "{% /* FIXME REMOVE ONCE WFM IS REDEPLOYED */\n${__new_workflow_manager_is_deployed__} %}",
+          "Condition": "{% /* ${__new_workflow_manager_is_deployed__} */ false %}",
           "Comment": "New workflow manager is deployed"
         }
       ],

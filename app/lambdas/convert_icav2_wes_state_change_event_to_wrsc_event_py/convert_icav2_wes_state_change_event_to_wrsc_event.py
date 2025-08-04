@@ -98,19 +98,16 @@ TO
   }
 }
 """
-from copy import deepcopy
 # Standard imports
+from copy import deepcopy
 from datetime import datetime, timezone
 
-from orcabus_api_tools.workflow.payload_helpers import get_latest_payload_from_workflow_run
-from orcabus_api_tools.workflow.workflow_run_helpers import get_workflow_run_from_portal_run_id
+# Layer helpers
+from orcabus_api_tools.workflow import (
+    get_latest_payload_from_workflow_run,
+    get_workflow_run_from_portal_run_id
+)
 
-
-# Custom imports
-# from orcabus_api_tools.workflow import (
-#     get_workflow_run_from_portal_run_id,
-#     get_latest_payload_from_workflow_run
-# )
 
 def handler(event, context):
     """

@@ -9,16 +9,8 @@ and average out the insert size estimates.
 """
 from typing import List
 
-from orcabus_api_tools.fastq import get_fastqs_in_instrument_run_id
-from orcabus_api_tools.fastq.models import FastqListRow
-
-
-def get_rgid_from_fastq_obj(fastq_obj: FastqListRow):
-    return ".".join([
-        fastq_obj['index'],
-        str(fastq_obj['lane']),
-        fastq_obj['instrumentRunId']
-    ])
+from orcabus_api_tools.fastq import get_fastq_by_rgid
+from orcabus_api_tools.fastq.models import Fastq
 
 
 def handler(event, context):
@@ -30,19 +22,11 @@ def handler(event, context):
     """
     fastq_rgid_list = event.get("fastqRgidList", [])
 
-    instrument_run_id_list = sorted(set(list(map(
-        lambda rgid_iter_: rgid_iter_.rsplit(".", 1)[-1],
+    fastq_obj_list: List[Fastq] = list(map(
+        lambda rgid_iter_: get_fastq_by_rgid(rgid_iter_),
         fastq_rgid_list
-    ))))
+    ))
 
-    all_fastqs = []
-    for instrument_run_id_iter_ in instrument_run_id_list:
-        all_fastqs = get_fastqs_in_instrument_run_id(instrument_run_id_iter_)
-
-    all_fastq_list_rows_filtered: List[FastqListRow] = []
-    for fastq_iter_ in all_fastqs:
-        if get_rgid_from_fastq_obj(fastq_iter_) in fastq_rgid_list:
-            all_fastq_list_rows_filtered.append(fastq_iter_)
 
     # Collect and return the qc coverage estimates
     return {
@@ -50,27 +34,27 @@ def handler(event, context):
             (
                 sum(list(map(
                     lambda fastq_iter_: fastq_iter_['qc']['rawWgsCoverageEstimate'],
-                    all_fastq_list_rows_filtered
+                    fastq_obj_list
                 )))
-            ) if all_fastq_list_rows_filtered else -1,
+            ) if fastq_obj_list else -1,
             2
         ),
         "dupFracAvg": round(
             (
                     sum(list(map(
                         lambda fastq_iter_: fastq_iter_['qc']['duplicationFractionEstimate'],
-                        all_fastq_list_rows_filtered
-                    ))) / len(all_fastq_list_rows_filtered)
-            ) if all_fastq_list_rows_filtered else -1,
+                        fastq_obj_list
+                    ))) / len(fastq_obj_list)
+            ) if fastq_obj_list else -1,
             2
         ),
         "insertSizeAvg": round(
             (
                     sum(list(map(
                         lambda fastq_iter_: fastq_iter_['qc']['insertSizeEstimate'],
-                        all_fastq_list_rows_filtered
-                    ))) / len(all_fastq_list_rows_filtered)
-            ) if all_fastq_list_rows_filtered else -1,
+                        fastq_obj_list
+                    ))) / len(fastq_obj_list)
+            ) if fastq_obj_list else -1,
             2
         )
     }

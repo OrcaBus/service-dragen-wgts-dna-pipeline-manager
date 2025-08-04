@@ -67,6 +67,10 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
         id: 'AwsSolutions-L1',
         reason: 'Will migrate to PYTHON_3_13 ASAP, soz',
       },
+      {
+        id: 'AwsSolutions-IAM4',
+        reason: 'We use the basic execution role for lambda functions',
+      },
     ],
     true
   );

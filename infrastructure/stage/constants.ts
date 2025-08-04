@@ -1,6 +1,7 @@
 /* Directory constants */
 import path from 'path';
 import { Reference } from './interfaces';
+import { StageName } from '@orcabus/platform-cdk-constructs/shared-config/accounts';
 
 export const APP_ROOT = path.join(__dirname, '../../app');
 export const LAMBDA_DIR = path.join(APP_ROOT, 'lambdas');
@@ -131,4 +132,8 @@ export const SCHEMA_REGISTRY_NAME = EVENT_SOURCE;
 export const SSM_SCHEMA_ROOT = path.join(SSM_PARAMETER_PATH_PREFIX, 'schemas');
 
 /* Future proofing */
-export const NEW_WORKFLOW_MANAGER_IS_DEPLOYED = false;
+export const NEW_WORKFLOW_MANAGER_IS_DEPLOYED: Record<StageName, boolean> = {
+  BETA: true,
+  GAMMA: false,
+  PROD: false,
+};

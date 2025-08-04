@@ -20,7 +20,6 @@ import {
   EVENT_SOURCE,
   FASTQ_SYNC_DETAIL_TYPE,
   ICAV2_WES_REQUEST_DETAIL_TYPE,
-  NEW_WORKFLOW_MANAGER_IS_DEPLOYED,
   READY_STATUS,
   STEP_FUNCTIONS_DIR,
   WORKFLOW_RUN_STATE_CHANGE_DETAIL_TYPE,
@@ -57,7 +56,7 @@ function createStateMachineDefinitionSubstitutions(props: BuildStepFunctionProps
     definitionSubstitutions['__ready_event_status__'] = READY_STATUS;
     definitionSubstitutions['__draft_event_status__'] = DRAFT_STATUS;
     definitionSubstitutions['__new_workflow_manager_is_deployed__'] =
-      NEW_WORKFLOW_MANAGER_IS_DEPLOYED.toString();
+      props.isNewWorkflowManagerDeployed.toString();
     definitionSubstitutions['__default_payload_version__'] = DEFAULT_PAYLOAD_VERSION;
   }
 
@@ -192,6 +191,7 @@ export function buildAllStepFunctions(
         lambdaObjects: props.lambdaObjects,
         eventBus: props.eventBus,
         ssmParameterPaths: props.ssmParameterPaths,
+        isNewWorkflowManagerDeployed: props.isNewWorkflowManagerDeployed,
       })
     );
   }
