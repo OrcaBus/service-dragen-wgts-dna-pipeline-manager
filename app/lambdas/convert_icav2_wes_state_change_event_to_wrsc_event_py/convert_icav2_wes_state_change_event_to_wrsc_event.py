@@ -98,19 +98,16 @@ TO
   }
 }
 """
-from copy import deepcopy
 # Standard imports
+from copy import deepcopy
 from datetime import datetime, timezone
 
-from orcabus_api_tools.workflow.payload_helpers import get_latest_payload_from_workflow_run
-from orcabus_api_tools.workflow.workflow_run_helpers import get_workflow_run_from_portal_run_id
+# Layer helpers
+from orcabus_api_tools.workflow import (
+    get_latest_payload_from_workflow_run,
+    get_workflow_run_from_portal_run_id
+)
 
-
-# Custom imports
-# from orcabus_api_tools.workflow import (
-#     get_workflow_run_from_portal_run_id,
-#     get_latest_payload_from_workflow_run
-# )
 
 def handler(event, context):
     """
@@ -143,84 +140,44 @@ def handler(event, context):
         # Get the inputs from the latest payload
         inputs = latest_payload['data']['inputs']
 
-        germline_alignment_output_uri = "__".join([
+        germline_variant_calling_output_rel_path = "__".join([
             inputs['sampleName'],
             inputs['reference']['name'],
             inputs['reference']['structure'],
-            "dragen_alignment"
+            "dragen_germline_variant_calling"
         ]) + "/"
-        germline_alignment_output_bam_uri = germline_alignment_output_uri + f"{inputs['sampleName']}.bam"
-
-        germline_variant_calling_output_uri = "__".join([
-            inputs['sampleName'],
-            inputs['reference']['name'],
-            inputs['reference']['structure'],
-            "dragen_variant_calling"
-        ]) + "/"
-        germline_variant_calling_output_snv_vcf_uri = germline_variant_calling_output_uri + f"{inputs['sampleName']}.hard-filtered.vcf.gz"
 
         # Set somatic outputs to None by default
-        germline_alignment_to_somatic_reference_output_uri = None
-        germline_alignment_to_somatic_reference_output_bam_uri = None
-        somatic_alignment_output_uri = None
-        somatic_alignment_output_bam_uri = None
-        somatic_variant_calling_output_uri = None
-        somatic_variant_calling_output_snv_vcf_uri = None
+        somatic_variant_calling_output_rel_path = None
 
         # Add multiqc report details
         # These will change if tumor sample name is provided
-        multiqc_output_dir = output_uri + f"{inputs['sampleName']}_multiqc/"
-        multiqc_report_name = f"{inputs['sampleName']}_multiqc_report.html"
+        multiqc_output_rel_path = f"{inputs['sampleName']}_multiqc/"
 
         # Check if the somatic variant calling is enabled
         if inputs.get('tumorSampleName', None) is not None:
             # Get the tumor reference
             if inputs.get('somaticReference', None) is not None:
                 somatic_reference = inputs['somaticReference']
-                germline_alignment_to_somatic_reference_output_uri = "__".join([
-                    inputs['sampleName'],
-                    somatic_reference['name'],
-                    somatic_reference['structure'],
-                    "dragen_alignment"
-                ])
-                germline_alignment_to_somatic_reference_output_bam_uri = germline_alignment_to_somatic_reference_output_uri + f"{inputs['sampleName']}.bam"
             else:
                 somatic_reference = inputs['reference']
-            somatic_alignment_output_uri = "__".join([
-                inputs['tumorSampleName'],
-                somatic_reference['name'],
-                somatic_reference['structure'],
-                "dragen_alignment"
-            ]) + "/"
-            somatic_alignment_output_bam_uri = somatic_alignment_output_uri + f"{inputs['tumorSampleName']}.bam"
-            somatic_variant_calling_output_uri = "__".join([
+            somatic_variant_calling_output_rel_path = "__".join([
                 inputs['tumorSampleName'],
                 inputs['sampleName'],
                 somatic_reference['name'],
                 somatic_reference['structure'],
-                "dragen_variant_calling"
+                "dragen_somatic_variant_calling"
             ]) + "/"
-            somatic_variant_calling_output_snv_vcf_uri = somatic_variant_calling_output_uri + f"{inputs['tumorSampleName']}.hard-filtered.vcf.gz"
 
             # Now redefine the multiqc report details
-            multiqc_output_dir = output_uri + f"{inputs['tumorSampleName']}_{inputs['sampleName']}_multiqc/"
-            multiqc_report_name = f"{inputs['tumorSampleName']}_{inputs['sampleName']}_multiqc_report.html"
+            multiqc_output_rel_path = f"{inputs['tumorSampleName']}__{inputs['sampleName']}__multiqc/"
 
         outputs = dict(filter(
             lambda kv_iter_: kv_iter_[1] is not None,
             {
-                'dragenGermlineAlignmentOutputRelPath': germline_alignment_output_uri,
-                'dragenGermlineAlignmentOutputBamRelPath': germline_alignment_output_bam_uri,
-                'dragenGermlineVariantCallingOutputRelPath': germline_variant_calling_output_uri,
-                'dragenGermlineVariantCallingOutputSnvVcfRelPath': germline_variant_calling_output_snv_vcf_uri,
-                'dragenGermlineAlignmentToSomaticReferenceOutputRelPath': germline_alignment_to_somatic_reference_output_uri,
-                'dragenGermlineAlignmentToSomaticReferenceOutputBamRelPath': germline_alignment_to_somatic_reference_output_bam_uri,
-                'dragenSomaticAlignmentOutputRelPath': somatic_alignment_output_uri,
-                'dragenSomaticAlignmentOutputBamRelPath': somatic_alignment_output_bam_uri,
-                'dragenSomaticVariantCallingOutputRelPath': somatic_variant_calling_output_uri,
-                'dragenSomaticVariantCallingOutputSnvVcfRelPath': somatic_variant_calling_output_snv_vcf_uri,
-                'multiQcOutputDir': multiqc_output_dir,
-                'multiQcHtmlReportUri': multiqc_output_dir + multiqc_report_name
+                'dragenGermlineVariantCallingOutputRelPath': germline_variant_calling_output_rel_path,
+                'dragenSomaticVariantCallingOutputRelPath': somatic_variant_calling_output_rel_path,
+                'multiQcOutputRelPath': multiqc_output_rel_path,
             }.items()
         ))
     else:

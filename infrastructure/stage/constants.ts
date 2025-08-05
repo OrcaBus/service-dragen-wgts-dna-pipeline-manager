@@ -1,6 +1,7 @@
 /* Directory constants */
 import path from 'path';
 import { Reference } from './interfaces';
+import { StageName } from '@orcabus/platform-cdk-constructs/shared-config/accounts';
 
 export const APP_ROOT = path.join(__dirname, '../../app');
 export const LAMBDA_DIR = path.join(APP_ROOT, 'lambdas');
@@ -19,8 +20,8 @@ export const WORKFLOW_OUTPUT_PREFIX = `s3://{__CACHE_BUCKET__}/{__CACHE_PREFIX__
 /* We extend this every time we release a new version of the workflow */
 /* This is added into our SSM Parameter Store to allow us to map workflow versions to pipeline IDs */
 export const WORKFLOW_VERSION_TO_DEFAULT_ICAV2_PIPELINE_ID_MAP: Record<string, string> = {
-  // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20250617224149
-  '4.4.4': 'd3228141-3753-40bc-8d22-ac91f1e37e75',
+  // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20250805055151
+  '4.4.4': '3dff2d05-569a-4b5a-88b8-bdca48a121bd',
 };
 
 export const WORKFLOW_VERSION_TO_DEFAULT_REFERENCE_PATHS_MAP: Record<string, Reference> = {
@@ -131,4 +132,8 @@ export const SCHEMA_REGISTRY_NAME = EVENT_SOURCE;
 export const SSM_SCHEMA_ROOT = path.join(SSM_PARAMETER_PATH_PREFIX, 'schemas');
 
 /* Future proofing */
-export const NEW_WORKFLOW_MANAGER_IS_DEPLOYED = false;
+export const NEW_WORKFLOW_MANAGER_IS_DEPLOYED: Record<StageName, boolean> = {
+  BETA: true,
+  GAMMA: false,
+  PROD: false,
+};

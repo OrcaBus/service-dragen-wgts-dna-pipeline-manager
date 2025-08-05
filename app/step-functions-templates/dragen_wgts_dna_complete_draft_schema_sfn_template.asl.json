@@ -9,7 +9,7 @@
         "draftLibrariesList": "{% $states.input.libraries %}",
         "draftPayload": "{% (\n  $states.input.payload ? \n  $states.input.payload : {\n    \"version\": \"${__default_payload_version__}\"\n  }\n) %}",
         "draftData": "{% $states.input.payload.data ? $states.input.payload.data : {} %}",
-        "draftEngineParameters": "{% $states.input.payload.engineParameters ? $states.input.payload.engineParameters : {} %}",
+        "draftEngineParameters": "{% $states.input.payload.data.engineParameters ? $states.input.payload.data.engineParameters : {} %}",
         "draftTags": "{% $states.input.payload.data.tags ? $states.input.payload.data.tags : {} %}",
         "draftInputs": "{% $states.input.payload.data.inputs ? $states.input.payload.data.inputs : {} %}"
       },
@@ -1011,7 +1011,7 @@
       "Choices": [
         {
           "Next": "Put DRAFT event (new)",
-          "Condition": "{% /* FIXME REMOVE ONCE WFM IS REDEPLOYED */\n${__new_workflow_manager_is_deployed__} %}",
+          "Condition": "{% /* ${__new_workflow_manager_is_deployed__} */ false %}",
           "Comment": "New Workflow Manager is Deployed"
         }
       ],
