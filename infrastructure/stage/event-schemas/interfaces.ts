@@ -1,9 +1,10 @@
-export type SchemaNamesList = 'dragenWgtsDnaCompleteDataDraft';
-// | 'dragenWgtsDnaWrscDraft'
-// | 'dragenWgtsDnaWrscReady';
+import * as schemas from 'aws-cdk-lib/aws-eventschemas';
 
-export const schemaNames: SchemaNamesList[] = [
-  'dragenWgtsDnaCompleteDataDraft',
-  // 'dragenWgtsDnaWrscDraft',
-  // 'dragenWgtsDnaWrscReady',
-];
+export type SchemaNames = 'completeDataDraft';
+
+export const schemaNamesList: SchemaNames[] = ['completeDataDraft'];
+
+export interface BuildSchemaProps {
+  registry: schemas.CfnRegistry;
+  schemaName: SchemaNames;
+}

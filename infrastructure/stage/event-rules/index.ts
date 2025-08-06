@@ -16,6 +16,7 @@ import {
   ICAV2_WES_EVENT_SOURCE,
   ICAV2_WES_STATE_CHANGE_DETAIL_TYPE,
   READY_STATUS,
+  STACK_PREFIX,
   WORKFLOW_MANAGER_EVENT_SOURCE,
   WORKFLOW_NAME,
   WORKFLOW_RUN_STATE_CHANGE_DETAIL_TYPE,
@@ -89,7 +90,7 @@ function buildWorkflowManagerReadyEventPattern(): EventPattern {
 
 function buildEventRule(scope: Construct, props: EventBridgeRuleProps): Rule {
   return new events.Rule(scope, props.ruleName, {
-    ruleName: props.ruleName,
+    ruleName: `${STACK_PREFIX}-${props.ruleName}`,
     eventPattern: props.eventPattern,
     eventBus: props.eventBus,
   });
@@ -159,7 +160,7 @@ export function buildAllEventRules(
   // Iterate over the eventBridgeNameList and create the event rules
   for (const ruleName of eventBridgeRuleNameList) {
     switch (ruleName) {
-      case 'dragenWgtsDnaWrscDraftLegacy': {
+      case 'wrscDraftLegacy': {
         eventBridgeRuleObjects.push({
           ruleName: ruleName,
           ruleObject: buildWorkflowRunStateChangeDragenWgtsDnaDraftLegacyEventRule(scope, {
@@ -169,7 +170,7 @@ export function buildAllEventRules(
         });
         break;
       }
-      case 'dragenWgtsDnaWrscDraft': {
+      case 'wrscDraft': {
         eventBridgeRuleObjects.push({
           ruleName: ruleName,
           ruleObject: buildWorkflowRunStateChangeDragenWgtsDnaDraftEventRule(scope, {
@@ -179,7 +180,7 @@ export function buildAllEventRules(
         });
         break;
       }
-      case 'dragenWgtsDnaWrscReadyLegacy': {
+      case 'wrscReadyLegacy': {
         eventBridgeRuleObjects.push({
           ruleName: ruleName,
           ruleObject: buildWorkflowRunStateChangeDragenWgtsDnaReadyLegacyEventRule(scope, {
@@ -189,7 +190,7 @@ export function buildAllEventRules(
         });
         break;
       }
-      case 'dragenWgtsDnaWrscReady': {
+      case 'wrscReady': {
         eventBridgeRuleObjects.push({
           ruleName: ruleName,
           ruleObject: buildWorkflowRunStateChangeDragenWgtsDnaReadyEventRule(scope, {
@@ -199,7 +200,7 @@ export function buildAllEventRules(
         });
         break;
       }
-      case 'dragenWgtsDnaIcav2WesAnalysisStateChange': {
+      case 'icav2WesAnalysisStateChange': {
         eventBridgeRuleObjects.push({
           ruleName: ruleName,
           ruleObject: buildIcav2WesAnalysisStateChangeRule(scope, {

@@ -3,29 +3,29 @@ import { EventPattern, IEventBus, Rule } from 'aws-cdk-lib/aws-events';
 /**
  * EventBridge Rules Interfaces
  */
-export type EventBridgeRuleNameList =
+export type EventBridgeRuleName =
   // Pre-draft
-  | 'dragenWgtsDnaWrscDraftLegacy'
-  | 'dragenWgtsDnaWrscDraft'
+  | 'wrscDraftLegacy'
+  | 'wrscDraft'
   // Pre-ready
-  | 'dragenWgtsDnaWrscReadyLegacy'
-  | 'dragenWgtsDnaWrscReady'
+  | 'wrscReadyLegacy'
+  | 'wrscReady'
   // Post-submitted
-  | 'dragenWgtsDnaIcav2WesAnalysisStateChange';
+  | 'icav2WesAnalysisStateChange';
 
-export const eventBridgeRuleNameList: EventBridgeRuleNameList[] = [
+export const eventBridgeRuleNameList: EventBridgeRuleName[] = [
   // Pre-draft
-  'dragenWgtsDnaWrscDraftLegacy',
-  'dragenWgtsDnaWrscDraft',
+  'wrscDraftLegacy',
+  'wrscDraft',
   // Pre-ready
-  'dragenWgtsDnaWrscReadyLegacy',
-  'dragenWgtsDnaWrscReady',
+  'wrscReadyLegacy',
+  'wrscReady',
   // Post-submitted
-  'dragenWgtsDnaIcav2WesAnalysisStateChange',
+  'icav2WesAnalysisStateChange',
 ];
 
 export interface EventBridgeRuleProps {
-  ruleName: EventBridgeRuleNameList;
+  ruleName: EventBridgeRuleName;
   eventBus: IEventBus;
   eventPattern: EventPattern;
 }
@@ -35,7 +35,7 @@ export interface EventBridgeRulesProps {
 }
 
 export interface EventBridgeRuleObject {
-  ruleName: EventBridgeRuleNameList;
+  ruleName: EventBridgeRuleName;
   ruleObject: Rule;
 }
 

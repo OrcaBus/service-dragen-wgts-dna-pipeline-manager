@@ -21,6 +21,7 @@ import {
   FASTQ_SYNC_DETAIL_TYPE,
   ICAV2_WES_REQUEST_DETAIL_TYPE,
   READY_STATUS,
+  STACK_PREFIX,
   STEP_FUNCTIONS_DIR,
   WORKFLOW_RUN_STATE_CHANGE_DETAIL_TYPE,
 } from '../constants';
@@ -140,7 +141,7 @@ function buildStepFunction(scope: Construct, props: BuildStepFunctionProps): Ste
 
   /* Create the state machine definition substitutions */
   const stateMachine = new sfn.StateMachine(scope, props.stateMachineName, {
-    stateMachineName: `dragen-wgts-dna-${props.stateMachineName}`,
+    stateMachineName: `${STACK_PREFIX}-${props.stateMachineName}`,
     definitionBody: sfn.DefinitionBody.fromFile(
       path.join(STEP_FUNCTIONS_DIR, sfnNameToSnakeCase + `_sfn_template.asl.json`)
     ),

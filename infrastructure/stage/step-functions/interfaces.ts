@@ -9,21 +9,21 @@ import { SsmParameterPaths } from '../ssm/interfaces';
  */
 export type StateMachineNameList =
   // Draft-to-Draft-Complete
-  | 'dragenWgtsDnaCompleteDraftSchema'
+  | 'populateDraftData'
   // Draft-to-Ready
-  | 'dragenWgtsDnaValidateDraftAndPutReadyEvent'
+  | 'validateDraftDataAndPutReadyEvent'
   // Ready-to-Submitted
-  | 'dragenWgtsDnaReadyToIcav2WesSubmitted'
+  | 'readyEventToIcav2WesRequestEvent'
   // Post-submission event conversion
   | 'icav2WesEventToWrscEvent';
 
 export const stateMachineNameList: StateMachineNameList[] = [
   // Draft-to-Completed Draft
-  'dragenWgtsDnaCompleteDraftSchema',
+  'populateDraftData',
   // Completed Draft-to-Ready
-  'dragenWgtsDnaValidateDraftAndPutReadyEvent',
+  'validateDraftDataAndPutReadyEvent',
   // Ready-to-Submitted
-  'dragenWgtsDnaReadyToIcav2WesSubmitted',
+  'readyEventToIcav2WesRequestEvent',
   // Post-submission event conversion
   'icav2WesEventToWrscEvent',
 ];
@@ -58,14 +58,14 @@ export type BuildStepFunctionsProps = Omit<BuildStepFunctionProps, 'stateMachine
 
 export const stepFunctionsRequirementsMap: Record<StateMachineNameList, StepFunctionRequirements> =
   {
-    dragenWgtsDnaCompleteDraftSchema: {
+    populateDraftData: {
       needsEventPutPermission: true,
       needsSsmParameterStoreAccess: true,
     },
-    dragenWgtsDnaValidateDraftAndPutReadyEvent: {
+    validateDraftDataAndPutReadyEvent: {
       needsEventPutPermission: true,
     },
-    dragenWgtsDnaReadyToIcav2WesSubmitted: {
+    readyEventToIcav2WesRequestEvent: {
       needsEventPutPermission: true,
       needsSsmParameterStoreAccess: true,
     },
@@ -75,7 +75,7 @@ export const stepFunctionsRequirementsMap: Record<StateMachineNameList, StepFunc
   };
 
 export const stepFunctionToLambdasMap: Record<StateMachineNameList, LambdaNameList[]> = {
-  dragenWgtsDnaCompleteDraftSchema: [
+  populateDraftData: [
     'validateDraftCompleteSchema',
     'getLibraries',
     'getMetadataTags',
@@ -86,7 +86,7 @@ export const stepFunctionToLambdasMap: Record<StateMachineNameList, LambdaNameLi
     'checkNtsmInternal',
     'checkNtsmExternal',
   ],
-  dragenWgtsDnaValidateDraftAndPutReadyEvent: ['validateDraftCompleteSchema'],
-  dragenWgtsDnaReadyToIcav2WesSubmitted: ['dragenWgtsDnaReadyToIcav2WesRequest'],
+  validateDraftDataAndPutReadyEvent: ['validateDraftCompleteSchema'],
+  readyEventToIcav2WesRequestEvent: ['dragenWgtsDnaReadyToIcav2WesRequest'],
   icav2WesEventToWrscEvent: ['convertIcav2WesStateChangeEventToWrscEvent'],
 };
