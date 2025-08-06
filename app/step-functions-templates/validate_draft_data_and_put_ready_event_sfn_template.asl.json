@@ -52,14 +52,14 @@
       "Type": "Choice",
       "Choices": [
         {
-          "Next": "Push READY Event (new)",
+          "Next": "Push READY Event",
           "Condition": "{% /* ${__new_workflow_manager_is_deployed__} */ false %}",
           "Comment": "New workflow manager is deployed"
         }
       ],
-      "Default": "Push READY Event"
+      "Default": "Push READY Event (legacy)"
     },
-    "Push READY Event (new)": {
+    "Push READY Event": {
       "Type": "Task",
       "Resource": "arn:aws:states:::events:putEvents",
       "Arguments": {
@@ -74,7 +74,7 @@
       },
       "End": true
     },
-    "Push READY Event": {
+    "Push READY Event (legacy)": {
       "Type": "Task",
       "Resource": "arn:aws:states:::events:putEvents",
       "Arguments": {

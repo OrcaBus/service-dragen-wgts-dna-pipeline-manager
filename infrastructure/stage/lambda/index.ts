@@ -15,7 +15,7 @@ import { camelCaseToKebabCase, camelCaseToSnakeCase } from '../utils';
 import * as cdk from 'aws-cdk-lib';
 import * as path from 'path';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import { SchemaNamesList } from '../event-schemas/interfaces';
+import { SchemaNames } from '../event-schemas/interfaces';
 
 function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
   const lambdaNameToSnakeCase = camelCaseToSnakeCase(props.lambdaName);
@@ -32,7 +32,7 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
   //     return [];
   //   },
   // };
-  // if (props.lambdaName === 'validateDragenWgtsDnaWrscReady') {
+  // if (props.lambdaName === 'validatewrscReady') {
   //   commandHooks = {
   //     beforeBundling(inputDir: string, outputDir: string): string[] {
   //       return [
@@ -132,7 +132,7 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
     to the REGISTRY_NAME and SCHEMA_NAME
    */
   if (props.lambdaName === 'validateDraftCompleteSchema') {
-    const draftSchemaName: SchemaNamesList = 'dragenWgtsDnaCompleteDataDraft';
+    const draftSchemaName: SchemaNames = 'completeDataDraft';
     lambdaFunction.addEnvironment('SSM_REGISTRY_NAME', path.join(SSM_SCHEMA_ROOT, 'registry'));
     lambdaFunction.addEnvironment(
       'SSM_SCHEMA_NAME',

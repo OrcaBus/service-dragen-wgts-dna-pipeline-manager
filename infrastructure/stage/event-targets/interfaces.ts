@@ -6,22 +6,22 @@ import { StepFunctionObject } from '../step-functions/interfaces';
 /**
  * EventBridge Target Interfaces
  */
-export type EventBridgeTargetNameList =
-  | 'dragenWgtsDnaDraftLegacyToCompleteDraftSfnTarget'
-  | 'dragenWgtsDnaDraftToCompleteDraftSfnTarget'
-  | 'dragenWgtsDnaDraftLegacyToValidateDraftAndReadySfnTarget'
-  | 'dragenWgtsDnaDraftToValidateDraftAndReadySfnTarget'
-  | 'dragenWgtsDnaReadyLegacyToIcav2WesSubmittedSfnTarget'
-  | 'dragenWgtsDnaReadyToIcav2WesSubmittedSfnTarget'
+export type EventBridgeTargetName =
+  | 'draftLegacyToCompleteDraftSfnTarget'
+  | 'draftToPopulateDraftSfnTarget'
+  | 'legacyDraftToValidateDraftAndReadySfnTarget'
+  | 'draftToValidateDraftAndReadySfnTarget'
+  | 'readyLegacyToIcav2WesSubmittedSfnTarget'
+  | 'readyToIcav2WesSubmittedSfnTarget'
   | 'icav2WesAnalysisStateChangeEventToWrscSfnTarget';
 
-export const eventBridgeTargetsNameList: EventBridgeTargetNameList[] = [
-  'dragenWgtsDnaDraftLegacyToCompleteDraftSfnTarget',
-  'dragenWgtsDnaDraftToCompleteDraftSfnTarget',
-  'dragenWgtsDnaDraftLegacyToValidateDraftAndReadySfnTarget',
-  'dragenWgtsDnaDraftToValidateDraftAndReadySfnTarget',
-  'dragenWgtsDnaReadyLegacyToIcav2WesSubmittedSfnTarget',
-  'dragenWgtsDnaReadyToIcav2WesSubmittedSfnTarget',
+export const eventBridgeTargetsNameList: EventBridgeTargetName[] = [
+  'draftLegacyToCompleteDraftSfnTarget',
+  'draftToPopulateDraftSfnTarget',
+  'legacyDraftToValidateDraftAndReadySfnTarget',
+  'draftToValidateDraftAndReadySfnTarget',
+  'readyLegacyToIcav2WesSubmittedSfnTarget',
+  'readyToIcav2WesSubmittedSfnTarget',
   'icav2WesAnalysisStateChangeEventToWrscSfnTarget',
 ];
 

@@ -8,6 +8,9 @@ export const LAMBDA_DIR = path.join(APP_ROOT, 'lambdas');
 export const STEP_FUNCTIONS_DIR = path.join(APP_ROOT, 'step-functions-templates');
 export const EVENT_SCHEMAS_DIR = path.join(APP_ROOT, 'event-schemas');
 
+/* Stack constants */
+export const STACK_PREFIX = 'orca-dragen-wgts-dna';
+
 /* Workflow constants */
 export const WORKFLOW_NAME = 'dragen-wgts-dna';
 export const DEFAULT_WORKFLOW_VERSION = '4.4.4';
