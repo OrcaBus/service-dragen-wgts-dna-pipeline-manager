@@ -40,14 +40,23 @@ Description
 This is the Dragen WGTS DNA Pipeline Management service,
 responsible for managing the Dragen WGTS DNA pipeline.
 
-The pipeline itself runs on ICAv2 through CWL :construction:
+The pipeline itself runs on ICAv2 through CWL
 
 ### Events Overview
 
-We listen to READY WRSC events where the workflow name is equal to `dragen-wgts-dna-pipeline`.
+**Draft Population**
+We listen to DRAFT WRSC events where the workflow name is equal to `dragen-wgts-dna`.
+We then try to populate the inputs for the workflow run, and generate a complete DRAFT event.
 
+**Draft Validation**
+We listen to DRAFT WRSC events where the workflow name is equal to `dragen-wgts-dna`.
+We then validate the DRAFT event against the schema, and if valid, we generate a READY event.
+
+**Ready Event**
+We listen to READY WRSC events where the workflow name is equal to `dragen-wgts-dna`.
 We parse this to the ICAv2 WES Service to generate a ICAv2 WES workflow request.
 
+**ICAv2 WES Analysis State Change**
 We then parse ICAv2 Analysis State Change events to update the state of the workflow in our service.
 
 ![events-overview](docs/drawio-exports/dragen-wgts-dna.drawio.svg)
@@ -289,9 +298,9 @@ This means if you specify the following in your data inputs payload
 
 #### Manually Validating Schemas,
 
-We have generated JSON Schemas for both the draft and ready events. You can find them in the [`./app/event-schemas`](app/event-schemas) directory.
+We have generated JSON Schemas for the complete draft event data which you can find in the [`./app/event-schemas`](app/event-schemas) directory.
 
-You can interactively check if your DRAFT or READY event matches the schema using the following links:
+You can interactively check if your DRAFT or READY event data payload matches the schema using the following links:
 
 - [Complete Draft Data Event Schema Page](https://www.jsonschemavalidator.net/s/wSuvwypw)
 
