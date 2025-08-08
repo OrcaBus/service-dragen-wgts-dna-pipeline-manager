@@ -64,6 +64,14 @@ export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<string, object> = {
       vcCombinePhasedVariantsDistance: 2,
       vcCombinePhasedVariantsDistanceSnvsOnly: 2,
     },
+    somaticCnvCallerOptions: {
+      enableCnv: true,
+      enableHrd: true,
+      cnvUseSomaticVcBaf: true,
+    },
+    somaticSvCallerOptions: {
+      enableSv: true,
+    },
   },
 };
 

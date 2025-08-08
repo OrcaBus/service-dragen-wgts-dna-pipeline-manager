@@ -504,9 +504,9 @@
           }
         },
         {
-          "StartAt": "Has tumor rgid list",
+          "StartAt": "Has tumor rgid list (get tumor rgid list)",
           "States": {
-            "Has tumor rgid list": {
+            "Has tumor rgid list (get tumor rgid list)": {
               "Type": "Choice",
               "Choices": [
                 {
@@ -630,8 +630,27 @@
                 "Name": "{% '${__default_inputs_ssm_parameter_prefix__}/' & $draftDetail.workflow.version %}"
               },
               "Resource": "arn:aws:states:::aws-sdk:ssm:getParameter",
+              "Output": "{% $parse($states.result.Parameter.Value) %}",
+              "Next": "Has tumor rgid list (filter default inputs)"
+            },
+            "Has tumor rgid list (filter default inputs)": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Next": "Pass (no action)",
+                  "Condition": "{% $tags.tumorFastqRgidList ? true : false %}"
+                }
+              ],
+              "Default": "Remove somatic defaults"
+            },
+            "Pass (no action)": {
+              "Type": "Pass",
+              "End": true
+            },
+            "Remove somatic defaults": {
+              "Type": "Pass",
               "End": true,
-              "Output": "{% $parse($states.result.Parameter.Value) %}"
+              "Output": "{% $states.input ~> $sift(function($v, $k){$k ~> /^(?!somatic)/}) %}"
             }
           }
         }
