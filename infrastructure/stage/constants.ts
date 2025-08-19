@@ -1,6 +1,6 @@
 /* Directory constants */
 import path from 'path';
-import { Reference } from './interfaces';
+import { OraReferenceVersionType, Reference, WorkflowVersionType } from './interfaces';
 import { StageName } from '@orcabus/platform-cdk-constructs/shared-config/accounts';
 
 export const APP_ROOT = path.join(__dirname, '../../app');
@@ -13,7 +13,7 @@ export const STACK_PREFIX = 'orca-dragen-wgts-dna';
 
 /* Workflow constants */
 export const WORKFLOW_NAME = 'dragen-wgts-dna';
-export const DEFAULT_WORKFLOW_VERSION = '4.4.4';
+export const DEFAULT_WORKFLOW_VERSION: WorkflowVersionType = '4.4.4';
 export const DEFAULT_PAYLOAD_VERSION = '2025.06.04';
 export const DEFAULT_ORA_VERSION = '2.7.0';
 
@@ -22,12 +22,18 @@ export const WORKFLOW_OUTPUT_PREFIX = `s3://{__CACHE_BUCKET__}/{__CACHE_PREFIX__
 
 /* We extend this every time we release a new version of the workflow */
 /* This is added into our SSM Parameter Store to allow us to map workflow versions to pipeline IDs */
-export const WORKFLOW_VERSION_TO_DEFAULT_ICAV2_PIPELINE_ID_MAP: Record<string, string> = {
+export const WORKFLOW_VERSION_TO_DEFAULT_ICAV2_PIPELINE_ID_MAP: Record<
+  WorkflowVersionType,
+  string
+> = {
   // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20250805055151
   '4.4.4': '3dff2d05-569a-4b5a-88b8-bdca48a121bd',
 };
 
-export const WORKFLOW_VERSION_TO_DEFAULT_REFERENCE_PATHS_MAP: Record<string, Reference> = {
+export const WORKFLOW_VERSION_TO_DEFAULT_REFERENCE_PATHS_MAP: Record<
+  WorkflowVersionType,
+  Reference
+> = {
   '4.4.4': {
     name: 'hg38',
     structure: 'graph',
@@ -36,7 +42,10 @@ export const WORKFLOW_VERSION_TO_DEFAULT_REFERENCE_PATHS_MAP: Record<string, Ref
   },
 };
 
-export const WORKFLOW_VERSION_TO_DEFAULT_SOMATIC_REFERENCE_PATHS_MAP: Record<string, Reference> = {
+export const WORKFLOW_VERSION_TO_DEFAULT_SOMATIC_REFERENCE_PATHS_MAP: Record<
+  WorkflowVersionType,
+  Reference
+> = {
   '4.4.4': {
     name: 'hg38',
     structure: 'linear',
@@ -45,12 +54,15 @@ export const WORKFLOW_VERSION_TO_DEFAULT_SOMATIC_REFERENCE_PATHS_MAP: Record<str
   },
 };
 
-export const ORA_VERSION_TO_DEFAULT_ORA_REFERENCE_PATHS_MAP: Record<string, string> = {
+export const ORA_VERSION_TO_DEFAULT_ORA_REFERENCE_PATHS_MAP: Record<
+  OraReferenceVersionType,
+  string
+> = {
   '2.7.0':
     's3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/reference-data/dragen-ora/v2/ora_reference_v2.tar.gz',
 };
 
-export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<string, object> = {
+export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<WorkflowVersionType, object> = {
   '4.4.4': {
     alignmentOptions: {
       enableDuplicateMarking: true,

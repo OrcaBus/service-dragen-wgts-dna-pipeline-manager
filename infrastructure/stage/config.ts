@@ -57,7 +57,7 @@ export const getSsmParameterValues = (stage: StageName) => {
     // References
     referenceByWorkflowVersionMap: WORKFLOW_VERSION_TO_DEFAULT_REFERENCE_PATHS_MAP,
     somaticReferenceByWorkflowVersionMap: WORKFLOW_VERSION_TO_DEFAULT_SOMATIC_REFERENCE_PATHS_MAP,
-    oraCompressionByWorkflowVersionMap: ORA_VERSION_TO_DEFAULT_ORA_REFERENCE_PATHS_MAP,
+    oraReferenceByOraVersionMap: ORA_VERSION_TO_DEFAULT_ORA_REFERENCE_PATHS_MAP,
   };
 };
 

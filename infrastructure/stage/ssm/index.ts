@@ -101,9 +101,7 @@ export function buildSsmParameters(scope: Construct, props: BuildSsmParameterPro
   }
 
   // Ora Reference by Ora version map
-  for (const [key, value] of Object.entries(
-    props.ssmParameterValues.oraCompressionByWorkflowVersionMap
-  )) {
+  for (const [key, value] of Object.entries(props.ssmParameterValues.oraReferenceByOraVersionMap)) {
     new ssm.StringParameter(scope, `ora-version-${key}`, {
       parameterName: path.join(props.ssmParameterPaths.oraCompressionSsmRootPrefix, key),
       stringValue: value,
