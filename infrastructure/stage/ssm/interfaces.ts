@@ -1,4 +1,4 @@
-import { Reference } from '../interfaces';
+import { OraReferenceVersionType, Reference, WorkflowVersionType } from '../interfaces';
 
 export interface SsmParameterValues {
   // Payload defaults
@@ -16,9 +16,9 @@ export interface SsmParameterValues {
   outputPrefix: string;
 
   // Reference defaults
-  referenceByWorkflowVersionMap: Record<string, Reference>;
-  somaticReferenceByWorkflowVersionMap: Record<string, Reference>;
-  oraCompressionByWorkflowVersionMap: Record<string, string>;
+  referenceByWorkflowVersionMap: Record<WorkflowVersionType, Reference>;
+  somaticReferenceByWorkflowVersionMap: Record<WorkflowVersionType, Reference>;
+  oraReferenceByOraVersionMap: Record<OraReferenceVersionType, string>;
 }
 
 export interface SsmParameterPaths {
