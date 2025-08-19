@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@aws-cdk/aws-lambda-python-alpha':
-        specifier: 2.208.0-alpha.0
-        version: 2.208.0-alpha.0(aws-cdk-lib@2.211.0(constructs@10.4.2))(constructs@10.4.2)
+        specifier: 2.211.0-alpha.0
+        version: 2.211.0-alpha.0(aws-cdk-lib@2.211.0(constructs@10.4.2))(constructs@10.4.2)
       '@orcabus/platform-cdk-constructs':
         specifier: 0.0.66
-        version: 0.0.66(@aws-cdk/aws-lambda-python-alpha@2.208.0-alpha.0(aws-cdk-lib@2.211.0(constructs@10.4.2))(constructs@10.4.2))(aws-cdk-lib@2.211.0(constructs@10.4.2))(constructs@10.4.2)
+        version: 0.0.66(@aws-cdk/aws-lambda-python-alpha@2.211.0-alpha.0(aws-cdk-lib@2.211.0(constructs@10.4.2))(constructs@10.4.2))(aws-cdk-lib@2.211.0(constructs@10.4.2))(constructs@10.4.2)
       aws-cdk-lib:
         specifier: ^2.211.0
         version: 2.211.0(constructs@10.4.2)
@@ -76,11 +76,11 @@ packages:
   '@aws-cdk/asset-node-proxy-agent-v6@2.1.0':
     resolution: {integrity: sha512-7bY3J8GCVxLupn/kNmpPc5VJz8grx+4RKfnnJiO1LG+uxkZfANZG3RMHhE+qQxxwkyQ9/MfPtTpf748UhR425A==}
 
-  '@aws-cdk/aws-lambda-python-alpha@2.208.0-alpha.0':
-    resolution: {integrity: sha512-23H3/LHE4elstbeqqX779+dOmg28GE3UTLkFzLWdLg2Tj2Lp8sjBr1TcL2sKL4NH+YBgpI36/AueFoo1lBe8gQ==}
-    engines: {node: '>= 14.15.0'}
+  '@aws-cdk/aws-lambda-python-alpha@2.211.0-alpha.0':
+    resolution: {integrity: sha512-5PLQnC6t0DQ69xKjnLzr52ixSX1i9WORelqciysD2Cj2jUwgH3hc/17RZgiDIrWO8QPkgRBOFZULDeqfxwWOkA==}
+    engines: {node: '>= 18.0.0'}
     peerDependencies:
-      aws-cdk-lib: ^2.208.0
+      aws-cdk-lib: ^2.211.0
       constructs: ^10.0.0
 
   '@aws-cdk/cloud-assembly-schema@48.4.0':
@@ -1710,7 +1710,7 @@ snapshots:
 
   '@aws-cdk/asset-node-proxy-agent-v6@2.1.0': {}
 
-  '@aws-cdk/aws-lambda-python-alpha@2.208.0-alpha.0(aws-cdk-lib@2.211.0(constructs@10.4.2))(constructs@10.4.2)':
+  '@aws-cdk/aws-lambda-python-alpha@2.211.0-alpha.0(aws-cdk-lib@2.211.0(constructs@10.4.2))(constructs@10.4.2)':
     dependencies:
       aws-cdk-lib: 2.211.0(constructs@10.4.2)
       constructs: 10.4.2
@@ -2170,9 +2170,9 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.19.1
 
-  '@orcabus/platform-cdk-constructs@0.0.66(@aws-cdk/aws-lambda-python-alpha@2.208.0-alpha.0(aws-cdk-lib@2.211.0(constructs@10.4.2))(constructs@10.4.2))(aws-cdk-lib@2.211.0(constructs@10.4.2))(constructs@10.4.2)':
+  '@orcabus/platform-cdk-constructs@0.0.66(@aws-cdk/aws-lambda-python-alpha@2.211.0-alpha.0(aws-cdk-lib@2.211.0(constructs@10.4.2))(constructs@10.4.2))(aws-cdk-lib@2.211.0(constructs@10.4.2))(constructs@10.4.2)':
     dependencies:
-      '@aws-cdk/aws-lambda-python-alpha': 2.208.0-alpha.0(aws-cdk-lib@2.211.0(constructs@10.4.2))(constructs@10.4.2)
+      '@aws-cdk/aws-lambda-python-alpha': 2.211.0-alpha.0(aws-cdk-lib@2.211.0(constructs@10.4.2))(constructs@10.4.2)
       aws-cdk-lib: 2.211.0(constructs@10.4.2)
       constructs: 10.4.2
 
