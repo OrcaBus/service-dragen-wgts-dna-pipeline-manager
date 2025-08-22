@@ -650,7 +650,7 @@
             "Remove somatic defaults": {
               "Type": "Pass",
               "End": true,
-              "Output": "{% $states.input ~> $sift(function($v, $k){$k ~> /^(?!somatic)/}) %}"
+              "Output": "{% $states.input ~> $sift(function($v, $k){$k ~> /^somatic/ ? false : true}) %}"
             }
           }
         }
