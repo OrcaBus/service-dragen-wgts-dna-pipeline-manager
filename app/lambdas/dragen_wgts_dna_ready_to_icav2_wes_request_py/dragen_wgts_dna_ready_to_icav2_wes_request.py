@@ -179,6 +179,13 @@ def handler(event, context) -> Dict[str, Any]:
     if 'somaticReference' in inputs:
         inputs['somaticReference']['tarball'] = cwlify_file(inputs['somaticReference']['tarball'])
 
+    if (
+            'somaticMsiOptions' in inputs and
+            'msiMicrosatellitesFile' in inputs['somaticMsiOptions']
+    ):
+        inputs['somaticMsiOptions']['msiMicrosatellitesFile'] = cwlify_file(inputs['somaticMsiOptions']['msiMicrosatellitesFile'])
+
+    # Convert all keys to snake_case recursively
     inputs = recursive_snake_case(inputs)
 
     # Extract the inputs from the event detail body
@@ -186,16 +193,7 @@ def handler(event, context) -> Dict[str, Any]:
         "icav2WesRequestEventDetail": {
             "name": event_detail_body['workflowRunName'],
             "inputs": inputs,
-            "engineParameters": {
-                "outputUri": event_detail_body['payload']['data']['engineParameters']['outputUri'],
-                "logsUri": event_detail_body['payload']['data']['engineParameters']['logsUri'],
-                "projectId": (
-                    event_detail_body['payload']['data']['engineParameters']['projectId']
-                ),
-                "pipelineId": (
-                    event_detail_body['payload']['data']['engineParameters']['pipelineId']
-                ),
-            },
+            "engineParameters": event_detail_body['payload']['data']['engineParameters'],
             "tags": {
                 # Copy all other tags from the event detail body
                 **event_detail_body['payload']['data']['tags'],

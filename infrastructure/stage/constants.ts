@@ -26,8 +26,8 @@ export const WORKFLOW_VERSION_TO_DEFAULT_ICAV2_PIPELINE_ID_MAP: Record<
   WorkflowVersionType,
   string
 > = {
-  // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20250805055151
-  '4.4.4': '3dff2d05-569a-4b5a-88b8-bdca48a121bd',
+  // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20250831041955
+  '4.4.4': 'c8a273d6-bd83-44de-b2b7-3df53d21b278',
 };
 
 export const WORKFLOW_VERSION_TO_DEFAULT_REFERENCE_PATHS_MAP: Record<
@@ -62,6 +62,11 @@ export const ORA_VERSION_TO_DEFAULT_ORA_REFERENCE_PATHS_MAP: Record<
     's3://reference-data-503977275616-ap-southeast-2/refdata/dragen-ora/v2/ora_reference_v2.tar.gz',
 };
 
+export const MSI_REFERENCE_PATH_MAP: Record<WorkflowVersionType, string> = {
+  '4.4.4':
+    's3://reference-data-503977275616-ap-southeast-2/refdata/dragen-msi/1-1-0/hg38/WGS_v1.1.0_hg38_microsatellites.list',
+};
+
 export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<WorkflowVersionType, object> = {
   '4.4.4': {
     alignmentOptions: {
@@ -83,6 +88,20 @@ export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<WorkflowVersionType,
     },
     somaticSvCallerOptions: {
       enableSv: true,
+    },
+    somaticMsiOptions: {
+      msiCommand: 'tumor-normal',
+      msiMicrosatellitesFile: MSI_REFERENCE_PATH_MAP['4.4.4'],
+      // 40 suggested here - https://help.dragen.illumina.com/product-guide/dragen-v4.4/dragen-recipes/dna-somatic-tumor-normal-solid-wgs#msi
+      msiCoverageThreshold: 40, // Default is 60 (allegedly) but it's not actually a default
+    },
+    // TMB Requires nirvana annotation data
+    somaticNirvanaAnnotationOptions: {
+      enableVariantAnnotation: true,
+      variantAnnotationAssembly: 'GRCh38',
+    },
+    somaticTmbOptions: {
+      enableTmb: true,
     },
   },
 };
@@ -139,6 +158,7 @@ export const SSM_PARAMETER_PATH_PREFIX_ORA_REFERENCE_PATHS_BY_WORKFLOW_VERSION =
 export const EVENT_BUS_NAME = 'OrcaBusMain';
 export const EVENT_SOURCE = 'orcabus.dragenwgtsdna';
 export const WORKFLOW_RUN_STATE_CHANGE_DETAIL_TYPE = 'WorkflowRunStateChange';
+export const WORKFLOW_RUN_UPDATE_DETAIL_TYPE = 'WorkflowRunUpdate';
 export const ICAV2_WES_REQUEST_DETAIL_TYPE = 'Icav2WesRequest';
 export const ICAV2_WES_STATE_CHANGE_DETAIL_TYPE = 'Icav2WesAnalysisStateChange';
 
