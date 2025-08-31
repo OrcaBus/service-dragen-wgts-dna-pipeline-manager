@@ -87,6 +87,18 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
         ],
       })
     );
+    /* Since we dont ask which schema, we give the lambda access to all schemas in the registry */
+    /* As such we need to add the wildcard to the resource */
+    NagSuppressions.addResourceSuppressions(
+      lambdaFunction,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'We need to give the lambda access to all schemas in the registry',
+        },
+      ],
+      true
+    );
   }
 
   /*

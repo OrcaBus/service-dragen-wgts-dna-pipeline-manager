@@ -60,7 +60,7 @@
       "Choices": [
         {
           "Next": "Get Engine parameters",
-          "Condition": "{% /* https://try.jsonata.org/XDJvywd0c */\n/* Compare the draft tags to the libraries */\n/* Get the draft tags */\n(\n    [ \n        $draftTags.(libraryId),\n        $draftTags.(tumorLibraryId)\n    ] ~> $sort\n)\n=\n/* Get the draft detail libraries */ \n(\n    [\n        $draftLibrariesList.(libraryId)\n    ]\n) %}",
+          "Condition": "{% /* https://try.jsonata.org/XDJvywd0c */\n/* Compare the draft tags to the libraries */\n/* Get the draft tags */\n(\n    [ \n        $draftTags.(libraryId),\n        $draftTags.(tumorLibraryId)\n    ] ~> $sort\n)\n=\n/* Get the draft detail libraries */ \n(\n    [\n        $draftLibrariesList.(libraryId)\n    ] ~> $sort \n) %}",
           "Comment": "All libraries in tags"
         }
       ],
@@ -140,7 +140,7 @@
               "Choices": [
                 {
                   "Next": "Use provided pipeline id",
-                  "Condition": "{% $draftEngineParameters.pipelineId ? true : false %}",
+                  "Condition": "{% ($draftEngineParameters.pipelineId ? $draftEngineParameters.pipelineId : $draftDetail.workflow.executionEnginePipelineId ) ? true : false %}",
                   "Comment": "Pipeline ID Provided"
                 }
               ],
@@ -150,7 +150,7 @@
               "Type": "Pass",
               "End": true,
               "Output": {
-                "pipelineId": "{% $draftEngineParameters.pipelineId %}"
+                "pipelineId": "{% $draftEngineParameters.pipelineId ? $draftEngineParameters.pipelineId : $draftDetail.workflow.executionEnginePipelineId %}"
               }
             },
             "Get default pipeline id": {
@@ -236,7 +236,7 @@
         }
       ],
       "Assign": {
-        "engineParameters": "{% /* https://try.jsonata.org/6nUH8BUBr */\n$merge($states.result) %}"
+        "engineParameters": "{% /* https://try.jsonata.org/6nUH8BUBr */\n [ $draftEngineParameters, $merge($states.result) ] ~> $merge  %}"
       }
     },
     "Get tags": {
@@ -393,9 +393,143 @@
           }
         }
       ],
-      "Next": "Get Inputs",
+      "Next": "Get libraries with readsets",
       "Assign": {
         "tags": "{% /* https://try.jsonata.org/05K2l3beH */\n/* List to merge together */\n[\n    /* Start with the draft tags */\n    $draftTags,\n    /* Merge the results list together */\n    $merge($states.result)\n] \n/* Then merge these initial tags with states.result  */\n~> $merge\n/* Remove any keys with values */\n~> $sift(function($v, $k){$v != null}) %}"
+      }
+    },
+    "Get libraries with readsets": {
+      "Type": "Parallel",
+      "Next": "Get Inputs",
+      "Branches": [
+        {
+          "StartAt": "For each rgid (readsets)",
+          "States": {
+            "For each rgid (readsets)": {
+              "Type": "Map",
+              "Items": "{% $tags.fastqRgidList ? $tags.fastqRgidList : [] %}",
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "INLINE"
+                },
+                "StartAt": "Get readset from rgid id",
+                "States": {
+                  "Get readset from rgid id": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Arguments": {
+                      "FunctionName": "${__get_fastq_id_list_from_rgid_list_lambda_function_arn__}",
+                      "Payload": {
+                        "fastqRgidList": "{% [$states.input] %}"
+                      }
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2,
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "End": true,
+                    "Output": {
+                      "orcabusId": "{% $states.result.Payload.fastqIdList[0] %}",
+                      "rgid": "{% $states.input %}"
+                    }
+                  }
+                }
+              },
+              "End": true,
+              "Output": {
+                "library": "{% [\n  /* Draft libraries list */\n  $draftLibrariesList ~>\n  $single(function($libraryIter){\n    $libraryIter.libraryId = $tags.libraryId\n  }),\n  {\n    \"readsets\": $states.result\n  }\n] ~>\n$merge %}"
+              }
+            }
+          }
+        },
+        {
+          "StartAt": "Has tumor library tag (readsets)",
+          "States": {
+            "Has tumor library tag (readsets)": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Next": "Has tumor fastq ids (readsets)",
+                  "Condition": "{% $tags.tumorLibraryId ? true : false %}"
+                }
+              ],
+              "Default": "tumor libraries is empty (readsets)"
+            },
+            "Has tumor fastq ids (readsets)": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Next": "For each tumor rgid (readsets)",
+                  "Condition": "{% $tags.tumorFastqRgidList ? true : false %}"
+                }
+              ],
+              "Default": "tumor libraries is empty (readsets)"
+            },
+            "For each tumor rgid (readsets)": {
+              "Type": "Map",
+              "Items": "{% $tags.tumorFastqRgidList ? $tags.tumorFastqRgidList : [] %}",
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "INLINE"
+                },
+                "StartAt": "Get tumor library readsets from fastq id list",
+                "States": {
+                  "Get tumor library readsets from fastq id list": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Output": {
+                      "orcabusId": "{% $states.result.Payload.fastqIdList[0] %}",
+                      "rgid": "{% $states.input %}"
+                    },
+                    "Arguments": {
+                      "FunctionName": "${__get_fastq_id_list_from_rgid_list_lambda_function_arn__}",
+                      "Payload": {
+                        "fastqRgidList": "{% [$states.input] %}"
+                      }
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2,
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "End": true
+                  }
+                }
+              },
+              "End": true,
+              "Output": {
+                "library": "{% [\n  /* Draft libraries list */\n  $draftLibrariesList ~>\n  $single(function($libraryIter){\n    $libraryIter.libraryId = $tags.tumorLibraryId \n  }),\n  {\n    \"readsets\": $states.result\n  }\n] ~>\n$merge %}"
+              }
+            },
+            "tumor libraries is empty (readsets)": {
+              "Type": "Pass",
+              "End": true,
+              "Output": {}
+            }
+          }
+        }
+      ],
+      "Assign": {
+        "libraries": "{% $states.result.(library) %}"
       }
     },
     "Get Inputs": {
@@ -1029,24 +1163,21 @@
       "Type": "Choice",
       "Choices": [
         {
-          "Next": "Put DRAFT event (new)",
-          "Condition": "{% /* ${__new_workflow_manager_is_deployed__} */ false %}",
+          "Next": "Put DRAFT update event",
+          "Condition": "{% ${__new_workflow_manager_is_deployed__} %}",
           "Comment": "New Workflow Manager is Deployed"
         }
       ],
-      "Default": "Push DRAFT Event"
+      "Default": "Push DRAFT Event (legacy)"
     },
-    "Put DRAFT event (new)": {
+    "Put DRAFT update event": {
       "Type": "Task",
       "Resource": "arn:aws:states:::events:putEvents",
       "Arguments": {
         "Entries": [
           {
-            "Detail": {
-              "Message": "Hello from Step Functions!",
-              "TaskToken": "{% $merge([\n  $draftDetail,\n  {\n    \"status\": \"${__draft_event_status__}\",\n    \"timestamp\": $states.context.State.EnteredTime,\n    \"payload\": (\n      $merge([\n        $draftPayload,\n        {\n          \"refId\": null,\n          \"data\": {\n            \"inputs\": $inputs,\n            \"engineParameters\": $engineParameters,\n            \"tags\": $tags\n          }\n        }\n      ])\n      /* Remove null inputs like refId */\n      ~> $sift(function($v, $k){$v != null})\n    )\n  }\n])\n %}"
-            },
-            "DetailType": "${__workflow_run_state_change_event_detail_type__}",
+            "Detail": "{% $merge([\n  $draftDetail,\n  {\n    \"id\": null,\n    \"status\": \"${__draft_event_status__}\",\n    \"timestamp\": $states.context.State.EnteredTime,\n    \"libraries\": $libraries,\n    \"payload\": (\n      $merge([\n        $draftPayload,\n        {\n          \"refId\": null,\n          \"data\": {\n            \"inputs\": $inputs,\n            \"engineParameters\": $engineParameters,\n            \"tags\": $tags\n          }\n        }\n      ])\n      /* Remove null inputs like refId */\n      ~> $sift(function($v, $k){$v != null})\n    )\n  }\n])\n/* Remove null inputs like id */\n~> $sift(function($v, $k){$v != null}) %}",
+            "DetailType": "${__workflow_run_update_event_detail_type__}",
             "EventBusName": "${__event_bus_name__}",
             "Source": "${__stack_source__}"
           }
@@ -1054,13 +1185,13 @@
       },
       "End": true
     },
-    "Push DRAFT Event": {
+    "Push DRAFT Event (legacy)": {
       "Type": "Task",
       "Resource": "arn:aws:states:::events:putEvents",
       "Arguments": {
         "Entries": [
           {
-            "Detail": "{% /* https://try.jsonata.org/r0aCmiix- */\n$merge([\n  $draftDetail,\n  {\n    \"status\": \"${__draft_event_status__}\",\n    \"timestamp\": $states.context.State.EnteredTime,\n    \"payload\": (\n      $merge([\n        $draftPayload,\n        {\n          \"refId\": null,\n          \"data\": {\n            \"inputs\": $inputs,\n            \"engineParameters\": $engineParameters,\n            \"tags\": $tags\n          }\n        }\n      ])\n      /* Remove null inputs like refId */\n      ~> $sift(function($v, $k){$v != null})\n    )\n  }\n]) ~>\n/* Renamed libraries to linkedLibraries using the transform method */\n| $ | {\"linkedLibraries\": libraries}, [\"libraries\"] | ~>\n/* Renamed workflowName and workflowVersion using the transform method */\n| $ | {\"workflowName\": workflow.name, \"workflowVersion\": workflow.version}, [\"workflow\"] | %}",
+            "Detail": "{% /* https://try.jsonata.org/r0aCmiix- */\n$merge([\n  $draftDetail,\n  {\n    \"status\": \"${__draft_event_status__}\",\n    \"timestamp\": $states.context.State.EnteredTime,\n    \"libraries\": ($libraries ~> | $ | {}, [\"readsets\"] |),\n    \"payload\": (\n      $merge([\n        $draftPayload,\n        {\n          \"refId\": null,\n          \"data\": {\n            \"inputs\": $inputs,\n            \"engineParameters\": $engineParameters,\n            \"tags\": $tags\n          }\n        }\n      ])\n      /* Remove null inputs like refId */\n      ~> $sift(function($v, $k){$v != null})\n    )\n  }\n]) ~>\n/* Renamed libraries to linkedLibraries using the transform method */\n| $ | {\"linkedLibraries\": libraries}, [\"libraries\"] | ~>\n/* Renamed workflowName and workflowVersion using the transform method */\n| $ | {\"workflowName\": workflow.name, \"workflowVersion\": workflow.version}, [\"workflow\"] | %}",
             "DetailType": "${__workflow_run_state_change_event_detail_type__}",
             "EventBusName": "${__event_bus_name__}",
             "Source": "${__stack_source__}"
