@@ -7,21 +7,27 @@ import { StepFunctionObject } from '../step-functions/interfaces';
  * EventBridge Target Interfaces
  */
 export type EventBridgeTargetName =
+  // Draft to Ready State Machine Targets
   | 'draftLegacyToCompleteDraftSfnTarget'
   | 'draftToPopulateDraftSfnTarget'
   | 'legacyDraftToValidateDraftAndReadySfnTarget'
   | 'draftToValidateDraftAndReadySfnTarget'
+  // Ready to WES State Machine Targets
   | 'readyLegacyToIcav2WesSubmittedSfnTarget'
   | 'readyToIcav2WesSubmittedSfnTarget'
+  // WES Analysis State Change Event to WRSC State Machine Target
   | 'icav2WesAnalysisStateChangeEventToWrscSfnTarget';
 
 export const eventBridgeTargetsNameList: EventBridgeTargetName[] = [
+  // Draft to Ready State Machine Targets
   'draftLegacyToCompleteDraftSfnTarget',
   'draftToPopulateDraftSfnTarget',
   'legacyDraftToValidateDraftAndReadySfnTarget',
   'draftToValidateDraftAndReadySfnTarget',
+  // Ready to WES State Machine Targets
   'readyLegacyToIcav2WesSubmittedSfnTarget',
   'readyToIcav2WesSubmittedSfnTarget',
+  // WES Analysis State Change Event to WRSC State Machine Target
   'icav2WesAnalysisStateChangeEventToWrscSfnTarget',
 ];
 
