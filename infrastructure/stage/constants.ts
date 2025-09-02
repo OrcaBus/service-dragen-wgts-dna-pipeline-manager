@@ -26,8 +26,8 @@ export const WORKFLOW_VERSION_TO_DEFAULT_ICAV2_PIPELINE_ID_MAP: Record<
   WorkflowVersionType,
   string
 > = {
-  // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20250901010327
-  '4.4.4': 'e436c569-6022-4dfb-9692-3f265522a66f',
+  // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline/4.4.4__20250902012720
+  '4.4.4': '0c7b15f1-f5d4-433a-9333-4618e5ca1731',
 };
 
 export const WORKFLOW_VERSION_TO_DEFAULT_REFERENCE_PATHS_MAP: Record<
@@ -77,9 +77,10 @@ export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<WorkflowVersionType,
     },
     snvVariantCallerOptions: {
       qcDetectContamination: true,
-      vcMnvEmitComponentCalls: true,
-      vcCombinePhasedVariantsDistance: 2,
-      vcCombinePhasedVariantsDistanceSnvsOnly: 2,
+      // While Pave cannot handle MNVs we must disable MNV options from dragen
+      // vcMnvEmitComponentCalls: true,
+      // vcCombinePhasedVariantsDistance: 2,
+      // vcCombinePhasedVariantsDistanceSnvsOnly: 2,
     },
     somaticCnvCallerOptions: {
       enableCnv: true,
