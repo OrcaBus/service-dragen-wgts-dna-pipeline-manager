@@ -311,7 +311,7 @@ You can interactively check if your DRAFT or READY event data payload matches th
 #### Making your own draft events with BASH / JQ (dev)
 
 There may be circumstances where you wish to generate WRSC events manually, the below is a quick solution for
-generating a draft for a somatic wgts dna workflow. Omit setting the TUMOR_LIBRARY_ID variabler for running a germline
+generating a draft for a somatic wgts dna workflow. Omit setting the TUMOR_LIBRARY_ID variable for running a germline
 only workflow.
 
 The draft populator step function will also pull necessary fastq files out of archive.
@@ -499,7 +499,7 @@ aws events put-events --no-cli-pager --cli-input-json "${event_cli_json}"
 #### Making your own draft events with BASH / JQ (prod)
 
 There may be circumstances where you wish to generate WRSC events manually, the below is a quick solution for
-generating a draft for a somatic wgts dna workflow. Omit setting the TUMOR_LIBRARY_ID variabler for running a germline
+generating a draft for a somatic wgts dna workflow. Omit setting the TUMOR_LIBRARY_ID variable for running a germline
 only workflow.
 
 The draft populator step function will also pull necessary fastq files out of archive.
@@ -620,7 +620,7 @@ event_cli_json="$( \
             "timestamp": (now | todateiso8601),
             "workflowName": $workflowName,
             "workflowVersion": $workflowVersion,
-            "workflowRunName": ("umccr--automated--" + $workflow["name"] + "--" + ($workflow["version"] | gsub("\\."; "-")) + "--" + $portalRunId),
+            "workflowRunName": ("umccr--automated--" + $workflowName + "--" + ($workflowVersion | gsub("\\."; "-")) + "--" + $portalRunId),
             "portalRunId": $portalRunId,
             "linkedLibraries": $libraries,
           } |
