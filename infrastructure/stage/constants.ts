@@ -69,38 +69,46 @@ export const MSI_REFERENCE_PATH_MAP: Record<WorkflowVersionType, string> = {
 
 export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<WorkflowVersionType, object> = {
   '4.4.4': {
+    // Alignment step (both germline and somatic)
     alignmentOptions: {
       enableDuplicateMarking: true,
     },
+    // Targeted caller step (germline only)
     targetedCallerOptions: {
       enableTargeted: ['cyp2d6'],
     },
+    // SNV / MNV options (somatic only)
     snvVariantCallerOptions: {
       qcDetectContamination: true,
-      // While Pave cannot handle MNVs we must disable MNV options from dragen
-      // vcMnvEmitComponentCalls: true,
-      // vcCombinePhasedVariantsDistance: 2,
-      // vcCombinePhasedVariantsDistanceSnvsOnly: 2,
+      vcMnvEmitComponentCalls: true,
+      // Phased variants distance
+      vcCombinePhasedVariantsDistanceSnvsOnly: 2,
+      // PAVE cannot handle complex MNVs at the moment
+      vcCombinePhasedVariantsDistance: 0,
     },
+    // CNV Options (somatic only)
     somaticCnvCallerOptions: {
       enableCnv: true,
       enableHrd: true,
       cnvUseSomaticVcBaf: true,
     },
+    // SV Options (somatic only)
     somaticSvCallerOptions: {
       enableSv: true,
     },
+    // MSI Options (somatic only) - Requires MSI reference file
     somaticMsiOptions: {
       msiCommand: 'tumor-normal',
       msiMicrosatellitesFile: MSI_REFERENCE_PATH_MAP['4.4.4'],
       // 40 suggested here - https://help.dragen.illumina.com/product-guide/dragen-v4.4/dragen-recipes/dna-somatic-tumor-normal-solid-wgs#msi
       msiCoverageThreshold: 40, // Default is 60 (allegedly) but it's not actually a default
     },
-    // TMB Requires nirvana annotation data
+    // TMB Requires nirvana annotation data (somatic only)
     somaticNirvanaAnnotationOptions: {
       enableVariantAnnotation: true,
       variantAnnotationAssembly: 'GRCh38',
     },
+    // Also need to enable TMB
     somaticTmbOptions: {
       enableTmb: true,
     },
