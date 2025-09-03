@@ -77,14 +77,14 @@ export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<WorkflowVersionType,
     targetedCallerOptions: {
       enableTargeted: ['cyp2d6'],
     },
-    // SNV / MNV options (somatic only)
+    // SNV / MNV options (both germline and somatic)
     snvVariantCallerOptions: {
+      // Contamination estimation
       qcDetectContamination: true,
-      vcMnvEmitComponentCalls: true,
       // Phased variants distance
+      vcMnvEmitComponentCalls: true,
       vcCombinePhasedVariantsDistanceSnvsOnly: 2,
-      // PAVE cannot handle complex MNVs at the moment
-      vcCombinePhasedVariantsDistance: 0,
+      vcCombinePhasedVariantsDistance: 2,
     },
     // CNV Options (somatic only)
     somaticCnvCallerOptions: {
