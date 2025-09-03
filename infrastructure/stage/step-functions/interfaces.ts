@@ -67,7 +67,6 @@ export const stepFunctionsRequirementsMap: Record<StateMachineNameList, StepFunc
     },
     readyEventToIcav2WesRequestEvent: {
       needsEventPutPermission: true,
-      needsSsmParameterStoreAccess: true,
     },
     icav2WesEventToWrscEvent: {
       needsEventPutPermission: true,
