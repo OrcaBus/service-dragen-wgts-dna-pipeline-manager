@@ -35,7 +35,7 @@
       "Choices": [
         {
           "Next": "Push WRSC Event",
-          "Condition": "{% /* ${__new_workflow_manager_is_deployed__} */ false %}",
+          "Condition": "{% ${__new_workflow_manager_is_deployed__} %}",
           "Comment": "New WFM Has Been Deployed"
         }
       ],
