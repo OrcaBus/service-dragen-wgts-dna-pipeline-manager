@@ -67,6 +67,11 @@ export const MSI_REFERENCE_PATH_MAP: Record<WorkflowVersionType, string> = {
     's3://reference-data-503977275616-ap-southeast-2/refdata/dragen-msi/1-1-0/hg38/WGS_v1.1.0_hg38_microsatellites.list',
 };
 
+export const VARIANT_ANNOTATION_DATA_PATH_MAP: Record<WorkflowVersionType, string> = {
+  '4.4.4':
+    's3://reference-data-503977275616-ap-southeast-2/refdata/dragen-annotations/nirvana/3.25.1/nirvana_assembly_GRCh38.tar.gz',
+};
+
 export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<WorkflowVersionType, object> = {
   '4.4.4': {
     // Alignment step (both germline and somatic)
@@ -107,6 +112,9 @@ export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<WorkflowVersionType,
     somaticNirvanaAnnotationOptions: {
       enableVariantAnnotation: true,
       variantAnnotationAssembly: 'GRCh38',
+      // Not required but saves us having to do through the nirvana download step
+      // Which can break without any error messages
+      variantAnnotationData: VARIANT_ANNOTATION_DATA_PATH_MAP['4.4.4'],
     },
     // Also need to enable TMB
     somaticTmbOptions: {
