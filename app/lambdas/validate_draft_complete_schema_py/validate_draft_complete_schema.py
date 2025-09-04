@@ -11,7 +11,7 @@ import typing
 import jsonschema
 from os import environ
 from typing import Dict
-
+import logging
 from jsonschema import ValidationError
 
 # Type checking imports
@@ -22,6 +22,9 @@ if typing.TYPE_CHECKING:
 # Globals
 SSM_REGISTRY_NAME_ENV_VAR = "SSM_REGISTRY_NAME"
 SSM_SCHEMA_NAME_ENV_VAR = "SSM_SCHEMA_NAME"
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def get_ssm_parameter_value(parameter_name: str) -> str:
@@ -75,9 +78,10 @@ def validate_draft_schema(
     try:
         jsonschema.validate(
             instance=json.loads(json_body),
-            schema=json.loads(json_schema)
+            schema=json.loads(json_schema),
         )
-    except ValidationError:
+    except ValidationError as e:
+        logger.info(f"Failed validation, {e}")
         return False
     return True
 
