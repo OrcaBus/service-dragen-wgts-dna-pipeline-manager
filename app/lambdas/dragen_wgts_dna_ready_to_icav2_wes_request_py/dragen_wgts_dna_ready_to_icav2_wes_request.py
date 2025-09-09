@@ -185,6 +185,24 @@ def handler(event, context) -> Dict[str, Any]:
     ):
         inputs['somaticMsiOptions']['msiMicrosatellitesFile'] = cwlify_file(inputs['somaticMsiOptions']['msiMicrosatellitesFile'])
 
+    # Update variant annotation data to a file object
+    if (
+            'nirvanaAnnotationOptions' in inputs and
+            'variantAnnotationData' in inputs['nirvanaAnnotationOptions']
+    ):
+        inputs['nirvanaAnnotationOptions']['variantAnnotationData'] = cwlify_file(
+            inputs['nirvanaAnnotationOptions']['variantAnnotationData']
+        )
+
+    # Update somatic variant annotation data to a file object
+    if (
+            'somaticNirvanaAnnotationOptions' in inputs and
+            'variantAnnotationData' in inputs['somaticNirvanaAnnotationOptions']
+    ):
+        inputs['somaticNirvanaAnnotationOptions']['variantAnnotationData'] = cwlify_file(
+            inputs['somaticNirvanaAnnotationOptions']['variantAnnotationData']
+        )
+
     # Convert all keys to snake_case recursively
     inputs = recursive_snake_case(inputs)
 
