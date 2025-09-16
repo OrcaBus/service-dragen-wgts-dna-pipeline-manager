@@ -387,7 +387,7 @@
               "End": true,
               "Output": {
                 "subjectId": "{% $states.result.Payload.libraryObj.subject.subjectId %}",
-                "individualId": "{% $states.result.Payload.libraryObj.subject.individualSet[0].individualId %}"
+                "individualId": "{% $count($states.result.Payload.libraryObj.subject.individualSet) > 0 ? $states.result.Payload.libraryObj.subject.individualSet[0].individualId : $states.result.Payload.libraryObj.subject.subjectId %}"
               }
             }
           }
