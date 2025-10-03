@@ -203,6 +203,14 @@ def handler(event, context) -> Dict[str, Any]:
             inputs['somaticNirvanaAnnotationOptions']['variantAnnotationData']
         )
 
+    # If qcCoverage is set, update to a File object
+    if (
+            'alignmentOptions' in inputs and
+            'qcCoverage' in inputs['alignmentOptions']
+    ):
+        for idx, qc_coverage_iter in enumerate(inputs['alignmentOptions']['qcCoverage']):
+            inputs['alignmentOptions']['qcCoverage'][idx]['region'] = cwlify_file(inputs['alignmentOptions']['qcCoverage'][idx]['region'])
+
     # Convert all keys to snake_case recursively
     inputs = recursive_snake_case(inputs)
 

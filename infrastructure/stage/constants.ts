@@ -78,6 +78,20 @@ export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<WorkflowVersionType,
     // Alignment step (both germline and somatic)
     alignmentOptions: {
       enableDuplicateMarking: true,
+      qcCoverage: [
+        // FCC Germline
+        {
+          region:
+            's3://reference-data-503977275616-ap-southeast-2/refdata/gene-panels/v2--0/germline/umccr_predisposition_genes.transcript_regions.bed',
+          reportType: 'cov_report',
+        },
+        // UMCCR Somatic
+        {
+          region:
+            's3://reference-data-503977275616-ap-southeast-2/refdata/gene-panels/v2--0/somatic/umccr_cancer_genes.gene_regions.bed',
+          reportType: 'cov_report',
+        },
+      ],
     },
     // Targeted caller step (germline only)
     targetedCallerOptions: {
