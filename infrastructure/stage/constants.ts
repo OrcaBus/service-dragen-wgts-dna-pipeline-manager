@@ -75,11 +75,27 @@ export const VARIANT_ANNOTATION_DATA_PATH_MAP: Record<WorkflowVersionType, strin
 
 export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<WorkflowVersionType, object> = {
   '4.4.4': {
-    // Alignment step (both germline and somatic)
+    // Alignment options (both germline and somatic)
     alignmentOptions: {
       enableDuplicateMarking: true,
+      qcCoverage: [
+        // FCC Germline
+        {
+          name: 'fcc',
+          region:
+            's3://reference-data-503977275616-ap-southeast-2/refdata/gene-panels/v2--0/germline/umccr_predisposition_genes.transcript_regions.bed',
+          reportType: 'cov_report',
+        },
+        // UMCCR Somatic
+        {
+          name: 'umccr',
+          region:
+            's3://reference-data-503977275616-ap-southeast-2/refdata/gene-panels/v2--0/somatic/umccr_cancer_genes.gene_regions.bed',
+          reportType: 'cov_report',
+        },
+      ],
     },
-    // Targeted caller step (germline only)
+    // Targeted caller options (germline only)
     targetedCallerOptions: {
       enableTargeted: ['cyp2d6'],
     },

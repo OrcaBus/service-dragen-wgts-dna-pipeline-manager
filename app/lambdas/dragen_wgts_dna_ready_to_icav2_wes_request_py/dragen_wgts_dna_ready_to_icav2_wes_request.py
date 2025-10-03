@@ -99,7 +99,7 @@ With the outputs as follows:
 We also get the optional default inputs from SSM, the pipeline id and the project id
 
 """
-
+from copy import copy
 from typing import Dict, Any
 
 
@@ -202,6 +202,15 @@ def handler(event, context) -> Dict[str, Any]:
         inputs['somaticNirvanaAnnotationOptions']['variantAnnotationData'] = cwlify_file(
             inputs['somaticNirvanaAnnotationOptions']['variantAnnotationData']
         )
+
+    # Check if alignmentOptions.qcCoverage is present and convert to CWL File object
+    if (
+            'alignmentOptions' in inputs and
+            'qcCoverage' in inputs['alignmentOptions'] and
+            isinstance(inputs['alignmentOptions']['qcCoverage'], list)
+    ):
+        for idx, qc_obj in enumerate(copy(inputs['alignmentOptions']['qcCoverage'])):
+            inputs['alignmentOptions']['qcCoverage'][idx]['region'] = cwlify_file(qc_obj['region'])
 
     # Convert all keys to snake_case recursively
     inputs = recursive_snake_case(inputs)
