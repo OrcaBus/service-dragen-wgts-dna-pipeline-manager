@@ -27,8 +27,8 @@ export const WORKFLOW_VERSION_TO_DEFAULT_ICAV2_PIPELINE_ID_MAP: Record<
   WorkflowVersionType,
   string
 > = {
-  // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline/4.4.4__20250902012720
-  '4.4.4': '0c7b15f1-f5d4-433a-9333-4618e5ca1731',
+  // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20251004073338
+  '4.4.4': 'c7da3f3a-2015-4420-ae0c-5a9260df4887',
 };
 
 export const WORKFLOW_VERSION_TO_DEFAULT_REFERENCE_PATHS_MAP: Record<
