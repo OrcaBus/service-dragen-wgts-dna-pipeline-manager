@@ -12,6 +12,7 @@ pnpm-lock.yaml
 
 README.md
 docs/operation/SOP/
+docs/operation/examples/
 
 cdk.out/
 cdk.json

@@ -2,32 +2,34 @@ Dragen WGTS DNA Pipeline Manager
 ================================================================================
 
 - [Description](#description)
-    - [Summary](#summary)
-    - [Events Overview](#events-overview)
-    - [Consumed Events](#consumed-events)
-    - [Published Events](#published-events)
-    - [Draft Event Example](#draft-event-example)
-    - [Ready Event example](#ready-event-example)
-        - [Manually Validating Schemas,](#manually-validating-schemas)
-        - [Making your own draft events with BASH / JQ](#making-your-own-draft-events-with-bash--jq)
-        - [Release management](#release-management)
+  - [Summary](#summary)
+  - [Events Overview](#events-overview)
+  - [Consumed Events](#consumed-events)
+  - [Published Events](#published-events)
+  - [DRAFT Event Examples](#draft-event-examples)
+    - [Minimal DRAFT event example](#minimal-draft-event-example)
+    - [Complete DRAFT event example](#complete-draft-event-example)
+    - [Manually Validating Schemas,](#manually-validating-schemas)
+    - [Making your own DRAFT WRU events with BASH / JQ (new system)](#making-your-own-draft-wru-events-with-bash--jq-new-system)
+    - [Making your own DRAFT WRSC events with BASH / JQ (legacy system)](#making-your-own-draft-wrsc-events-with-bash--jq-legacy-system)
+    - [Release management](#release-management)
 - [Infrastructure \& Deployment](#infrastructure--deployment)
-    - [Stateful Stack](#stateful-stack)
-    - [Stateless Stack](#stateless-stack)
-        - [Step Functions](#step-functions)
-    - [CDK Commands](#cdk-commands)
-    - [Stacks](#stacks)
-        - [Stateful Stack](#stateful-stack-1)
-        - [Stateless Stack](#stateless-stack-1)
+  - [Stateful Stack](#stateful-stack)
+  - [Stateless Stack](#stateless-stack)
+    - [Step Functions](#step-functions)
+  - [CDK Commands](#cdk-commands)
+  - [Stacks](#stacks)
+    - [Stateful Stack](#stateful-stack-1)
+    - [Stateless Stack](#stateless-stack-1)
 - [Development](#development)
-    - [Project Structure :construct:](#project-structure-construct)
-    - [Setup :construction:](#setup-construction)
-        - [Requirements](#requirements)
-        - [Install Dependencies](#install-dependencies)
-        - [Update Dependencies](#update-dependencies)
-    - [Conventions](#conventions)
-    - [Linting \& Formatting](#linting--formatting)
-    - [Testing](#testing)
+  - [Project Structure :construct:](#project-structure-construct)
+  - [Setup](#setup)
+    - [Requirements](#requirements)
+    - [Install Dependencies](#install-dependencies)
+    - [Update Dependencies](#update-dependencies)
+  - [Conventions](#conventions)
+  - [Linting \& Formatting](#linting--formatting)
+  - [Testing](#testing)
 - [Glossary \& References](#glossary--references)
 
 Description
@@ -38,43 +40,53 @@ Description
 This is the Dragen WGTS DNA Pipeline Management service,
 responsible for managing the Dragen WGTS DNA pipeline.
 
+This service has 3 parts:
+- **DRAFT Event Populator**: responsible for providing execution parameters
+- **DRAFT Event Validator**: responsible for validating execution requirements
+- **Execution Manager**: responsible for executing and monitoring pipeline runs
+  - **ICAv2 WES to WRU Converter**: (sub-component) responsible for converting external WES events to internal WRU events
+
 The pipeline itself runs on ICAv2 through CWL
 
 ### Events Overview
 
-**Draft Population**
-We listen to DRAFT WRSC events where the workflow name is equal to `dragen-wgts-dna`.
-We then try to populate the inputs for the workflow run, and generate a complete DRAFT event.
+![events-overview](docs/drawio-exports/dragen-wgts-dna.drawio.svg)
 
-**Draft Validation**
+**DRAFT Event Population**
+This is handled by the DRAFT Event Populator.
 We listen to DRAFT WRSC events where the workflow name is equal to `dragen-wgts-dna`.
-We then validate the DRAFT event against the schema, and if valid, we generate a READY event.
+We then try to populate the inputs for the workflow run, and generate a complete DRAFT WRU event.
 
-**Ready Event**
+**DRAFT Event Validation**
+This is handled by the DRAFT Event Validator.
+We listen to DRAFT WRSC events where the workflow name is equal to `dragen-wgts-dna`.
+We then validate the DRAFT event against the schema, and if valid, we generate a READY WRU event.
+
+**READY Event Handler**
+This is handled by the Execution Manager.
 We listen to READY WRSC events where the workflow name is equal to `dragen-wgts-dna`.
 We parse this to the ICAv2 WES Service to generate a ICAv2 WES workflow request.
 
 **ICAv2 WES Analysis State Change**
-We then parse ICAv2 Analysis State Change events to update the state of the workflow in our service.
-
-![events-overview](docs/drawio-exports/dragen-wgts-dna.drawio.svg)
+This is handled by the Execution Manager.
+We then parse `Icav2WesAnalysisStateChange` events from the ICAv2 WES Service to update the state of the workflow in our service and forward any changes as WRU events.
 
 ### Consumed Events
 
 | Name / DetailType             | Source             | Schema Link   | Description                           |
 |-------------------------------|--------------------|---------------|---------------------------------------|
-| `WorkflowRunStateChange`      | `orcabus.any`      | <schema link> | READY statechange                     |
-| `Icav2WesAnalysisStateChange` | `orcabus.icav2wes` | <schema link> | ICAv2 WES Analysis State Change event |
+| `WorkflowRunStateChange`      | `orcabus.workflowmanager` | [WorkflowRunStateChange](https://github.com/OrcaBus/wiki/tree/main/orcabus-platform#workflowrunstatechange) | Source of updates on WorkflowRuns (expected pipeline executions) |
+| `Icav2WesAnalysisStateChange` | `orcabus.icav2wes` | TODO | ICAv2 WES Analysis State Change event |
 
 ### Published Events
 
 | Name / DetailType        | Source                  | Schema Link   | Description           |
 |--------------------------|-------------------------|---------------|-----------------------|
-| `WorkflowRunStateChange` | `orcabus.dragenwgtsdna` | <schema link> | Analysis state change |
+| `WorkflowRunUpdate`      | `orcabus.dragenwgtsdna` | [WorkflowRunUpdate](https://github.com/OrcaBus/wiki/tree/main/orcabus-platform#workflowrunupdate) | Reporting any updates to the pipeline state |
 
-### Draft Event Example
+### DRAFT Event Examples
 
-Draft minimal example
+#### Minimal DRAFT event example
 
 <details>
 
@@ -106,9 +118,12 @@ Draft minimal example
 
 </details>
 
-Please be aware of the following:
+> [!NOTE]
+> Please be aware of the following:
 
-We use a default inputs json to populate the non-file-like parameters, the default for the workflow version 4.4.4 is so:
+The DRAFT Event Populator uses default inputs to populate the non-file-like parameters. See the complete DRAFT [example](#complete-draft-event-example) below.
+
+The defaults for the workflow version 4.4.4 are:
 
 ```json5
 {
@@ -138,9 +153,10 @@ We use a default inputs json to populate the non-file-like parameters, the defau
 }
 ```
 
-**THE DRAFTS POPULATOR SFN DOES NOT PERFORM A RECURSIVE MERGE ON BETWEEN ANY OF YOUR INPUTS AND THE DEFAULT INPUTS**
+> [!IMPORTANT]
+> The DRAFT Event Populator does NOT perform a merge on any of your inputs and the default inputs.
 
-This means if you specify the following in your data inputs payload
+This means if you specify the following in your data inputs payload:
 
 ```json5
 // ...
@@ -155,9 +171,9 @@ This means if you specify the following in your data inputs payload
 }
 ```
 
-"enableDuplicateMarking" will be omitted from the final draft event.
+... then this provided `alignmentOptions` section will override the default and therefore "enableDuplicateMarking" will be omitted from the final DRAFT event.
 
-### Complete Draft Event example
+#### Complete DRAFT event example
 
 <details>
 
@@ -301,345 +317,32 @@ This means if you specify the following in your data inputs payload
 
 #### Manually Validating Schemas,
 
-We have generated JSON Schemas for the complete draft event data which you can find in the [
-`./app/event-schemas`](app/event-schemas) directory.
+We have generated JSON Schemas for the complete DRAFT WRU event **data** which you can find in the [`./app/event-schemas`](app/event-schemas) directory.
 
 You can interactively check if your DRAFT or READY event data payload matches the schema using the following links:
 
-- [Complete Draft Data Event Schema Page](https://www.jsonschemavalidator.net/s/wSuvwypw)
+- [Complete DRAFT WRU Event Data Schema Page](https://www.jsonschemavalidator.net/s/wSuvwypw)
 
-#### Making your own draft events with BASH / JQ (dev)
+#### Making your own DRAFT WRU events with BASH / JQ (new system)
 
-There may be circumstances where you wish to generate WRSC events manually, the below is a quick solution for
-generating a draft for a somatic wgts dna workflow. Omit setting the TUMOR_LIBRARY_ID variable for running a germline
+There may be circumstances where you wish to generate DRAFT events manually, e.g. to explicitly trigger a workflow execution where automation failed or is not available. The below is a quick solution for generating a DRAFT WRU event for a somatic WGTS DNA workflow. Omit setting the `TUMOR_LIBRARY_ID` variable for running a germline only workflow.
+
+> [!NOTE]
+> This is a minimal example. It assumes that the rest of the required information can be retrieved and filled by the DRAFT Event Populator.
+
+The DRAFT Event Populator will also pull necessary fastq files out of archive.
+
+For details, see [PM.DWD.1 - Manual Pipeline Execution](./docs/operation/SOP/PM.DWD.1/PM.DWD.1-ManualPipelineExecution.md)
+
+#### Making your own DRAFT WRSC events with BASH / JQ (legacy system)
+
+There may be circumstances where you wish to generate DRAFT WRSC events manually, the below is a quick solution for
+generating a DRAFT for a somatic WGTS DNA workflow. Omit setting the TUMOR_LIBRARY_ID variable for running a germline
 only workflow.
 
-The draft populator step function will also pull necessary fastq files out of archive.
+The DRAFT populator step function will also pull necessary fastq files out of archive.
 
-<details>
-
-<summary>Click to expand</summary>
-
-```shell
-# Globals
-EVENT_BUS_NAME="OrcaBusMain"
-DETAIL_TYPE="WorkflowRunUpdate"
-SOURCE="orcabus.manual"
-
-WORKFLOW_NAME="dragen-wgts-dna"
-WORKFLOW_VERSION="4.4.4"
-EXECUTION_ENGINE="ICA"
-CODE_VERSION="dd0e8c"
-
-PAYLOAD_VERSION="2025.06.24"
-
-# Glocals
-LIBRARY_ID="L2300950"
-TUMOR_LIBRARY_ID="L2300943"
-
-# Functions
-get_hostname_from_ssm(){
-  aws ssm get-parameter \
-    --name "/hosted_zone/umccr/name" \
-    --output json | \
-  jq --raw-output \
-    '.Parameter.Value'
-}
-
-get_orcabus_token(){
-  aws secretsmanager get-secret-value \
-    --secret-id orcabus/token-service-jwt \
-    --output json \
-    --query SecretString | \
-  jq --raw-output \
-    'fromjson | .id_token'
-}
-
-get_pipeline_id_from_workflow_version(){
-  local workflow_version="$1"
-  aws ssm get-parameter \
-    --name "/orcabus/workflows/dragen-wgts-dna/pipeline-ids-by-workflow-version/${workflow_version}" \
-    --output json | \
-  jq --raw-output \
-    '.Parameter.Value'
-}
-
-get_library_obj_from_library_id(){
-  local library_id="$1"
-  curl --silent --fail --show-error --location \
-    --header "Authorization: Bearer $(get_orcabus_token)" \
-    --url "https://metadata.$(get_hostname_from_ssm)/api/v1/library?libraryId=${library_id}" | \
-  jq --raw-output \
-    '
-      .results[0] |
-      {
-        "libraryId": .libraryId,
-        "orcabusId": .orcabusId
-      }
-    '
-}
-
-generate_portal_run_id(){
-  echo "$(date -u +'%Y%m%d')$(openssl rand -hex 4)"
-}
-
-get_linked_libraries(){
-  local library_id="$1"
-  local tumor_library_id="${2-}"
-
-  linked_library_obj=$(get_library_obj_from_library_id "$library_id")
-
-  if [ -n "$tumor_library_id" ]; then
-    tumor_linked_library_obj=$(get_library_obj_from_library_id "$tumor_library_id")
-  else
-    tumor_linked_library_obj="{}"
-  fi
-
-  jq --null-input --compact-output --raw-output \
-    --argjson libraryObj "$linked_library_obj" \
-    --argjson tumorLibraryObj "$tumor_linked_library_obj" \
-    '
-      [
-          $libraryObj,
-          $tumorLibraryObj
-      ] |
-      # Filter out empty values, tumorLibraryId is optional
-      # Then write back to JSON
-      map(select(length > 0))
-    '
-}
-
-get_workflow(){
-  local workflow_name="$1"
-  local workflow_version="$2"
-  local execution_engine="$3"
-  local execution_engine_pipeline_id="$4"
-  local code_version="$5"
-  curl --silent --fail --show-error --location \
-    --request GET \
-    --get \
-    --header "Authorization: Bearer $(get_orcabus_token)" \
-    --url "https://workflow.$(get_hostname_from_ssm)/api/v1/workflow" \
-    --data "$( \
-      jq \
-       --null-input --compact-output --raw-output \
-       --arg workflowName "$workflow_name" \
-       --arg workflowVersion "$workflow_version" \
-       --arg executionEngine "$execution_engine" \
-       --arg executionEnginePipelineId "$execution_engine_pipeline_id" \
-       --arg codeVersion "$code_version" \
-       '
-         {
-            "name": $workflowName,
-            "version": $workflowVersion,
-            "executionEngine": $executionEngine,
-            "executionEnginePipelineId": $executionEnginePipelineId,
-            "codeVersion": $codeVersion
-         } |
-         to_entries |
-         map(
-           "\(.key)=\(.value)"
-         ) |
-         join("&")
-       ' \
-    )" | \
-  jq --compact-output --raw-output \
-    '
-      .results[0]
-    '
-}
-
-# Generate the event
-event_cli_json="$( \
-  jq --null-input --raw-output \
-    --arg eventBusName "$EVENT_BUS_NAME" \
-    --arg detailType "$DETAIL_TYPE" \
-    --arg source "$SOURCE" \
-    --argjson workflow "$(get_workflow \
-      "${WORKFLOW_NAME}" "${WORKFLOW_VERSION}" \
-      "${EXECUTION_ENGINE}" "$(get_pipeline_id_from_workflow_version "${WORKFLOW_VERSION}")" \
-      "${CODE_VERSION}"
-    )" \
-    --arg payloadVersion "$PAYLOAD_VERSION" \
-    --arg portalRunId "$(generate_portal_run_id)" \
-    --argjson libraries "$(get_linked_libraries "${LIBRARY_ID}" "${TUMOR_LIBRARY_ID}")" \
-    '
-      {
-        # Standard fields for the event
-        "EventBusName": $eventBusName,
-        "DetailType": $detailType,
-        "Source": $source,
-        # Detail must be a JSON object in string format
-        "Detail": (
-          {
-            "status": "DRAFT",
-            "timestamp": (now | todateiso8601),
-            "workflow": $workflow,
-            "workflowRunName": ("umccr--automated--" + $workflow["name"] + "--" + ($workflow["version"] | gsub("\\."; "-")) + "--" + $portalRunId),
-            "portalRunId": $portalRunId,
-            "libraries": $libraries,
-          } |
-          tojson
-        )
-      } |
-      # Now wrap into an "entry" for the CLI
-      {
-        "Entries": [
-          .
-        ]
-      }
-    ' \
-)"
-
-aws events put-events --no-cli-pager --cli-input-json "${event_cli_json}"
-```
-
-</details>
-
-#### Making your own draft events with BASH / JQ (prod)
-
-There may be circumstances where you wish to generate WRSC events manually, the below is a quick solution for
-generating a draft for a somatic wgts dna workflow. Omit setting the TUMOR_LIBRARY_ID variable for running a germline
-only workflow.
-
-The draft populator step function will also pull necessary fastq files out of archive.
-
-<details>
-
-<summary>Click to expand</summary>
-
-```shell
-# Globals
-EVENT_BUS_NAME="OrcaBusMain"
-DETAIL_TYPE="WorkflowRunStateChange"
-SOURCE="orcabus.manual"
-
-WORKFLOW_NAME="dragen-wgts-dna"
-WORKFLOW_VERSION="4.4.4"
-
-PAYLOAD_VERSION="2025.06.24"
-
-# Glocals
-LIBRARY_ID="L2300950"
-TUMOR_LIBRARY_ID="L2300943"
-
-# Functions
-get_hostname_from_ssm(){
-  aws ssm get-parameter \
-    --name "/hosted_zone/umccr/name" \
-    --output json | \
-  jq --raw-output \
-    '.Parameter.Value'
-}
-
-get_orcabus_token(){
-  aws secretsmanager get-secret-value \
-    --secret-id orcabus/token-service-jwt \
-    --output json \
-    --query SecretString | \
-  jq --raw-output \
-    'fromjson | .id_token'
-}
-
-get_pipeline_id_from_workflow_version(){
-  local workflow_version="$1"
-  aws ssm get-parameter \
-    --name "/orcabus/workflows/dragen-wgts-dna/pipeline-ids-by-workflow-version/${workflow_version}" \
-    --output json | \
-  jq --raw-output \
-    '.Parameter.Value'
-}
-
-get_library_obj_from_library_id(){
-  local library_id="$1"
-  curl --silent --fail --show-error --location \
-    --header "Authorization: Bearer $(get_orcabus_token)" \
-    --url "https://metadata.$(get_hostname_from_ssm)/api/v1/library?libraryId=${library_id}" | \
-  jq --raw-output \
-    '
-      .results[0] |
-      {
-        "libraryId": .libraryId,
-        "orcabusId": .orcabusId
-      }
-    '
-}
-
-generate_portal_run_id(){
-  echo "$(date -u +'%Y%m%d')$(openssl rand -hex 4)"
-}
-
-get_linked_libraries(){
-  local library_id="$1"
-  local tumor_library_id="${2-}"
-
-  linked_library_obj=$(get_library_obj_from_library_id "$library_id")
-
-  if [ -n "$tumor_library_id" ]; then
-    tumor_linked_library_obj=$(get_library_obj_from_library_id "$tumor_library_id")
-  else
-    tumor_linked_library_obj="{}"
-  fi
-
-  jq --null-input --compact-output --raw-output \
-    --argjson libraryObj "$linked_library_obj" \
-    --argjson tumorLibraryObj "$tumor_linked_library_obj" \
-    '
-      [
-          $libraryObj,
-          $tumorLibraryObj
-      ] |
-      # Filter out empty values, tumorLibraryId is optional
-      # Then write back to JSON
-      map(select(length > 0))
-    '
-}
-
-
-# Generate the event
-event_cli_json="$( \
-  jq --null-input --raw-output \
-    --arg eventBusName "$EVENT_BUS_NAME" \
-    --arg detailType "$DETAIL_TYPE" \
-    --arg source "$SOURCE" \
-    --arg workflowName "${WORKFLOW_NAME}" \
-    --arg workflowVersion "${WORKFLOW_VERSION}" \
-    --arg payloadVersion "$PAYLOAD_VERSION" \
-    --arg portalRunId "$(generate_portal_run_id)" \
-    --argjson libraries "$(get_linked_libraries "${LIBRARY_ID}" "${TUMOR_LIBRARY_ID}")" \
-    '
-      {
-        # Standard fields for the event
-        "EventBusName": $eventBusName,
-        "DetailType": $detailType,
-        "Source": $source,
-        # Detail must be a JSON object in string format
-        "Detail": (
-          {
-            "status": "DRAFT",
-            "timestamp": (now | todateiso8601),
-            "workflowName": $workflowName,
-            "workflowVersion": $workflowVersion,
-            "workflowRunName": ("umccr--automated--" + $workflowName + "--" + ($workflowVersion | gsub("\\."; "-")) + "--" + $portalRunId),
-            "portalRunId": $portalRunId,
-            "linkedLibraries": $libraries,
-          } |
-          tojson
-        )
-      } |
-      # Now wrap into an "entry" for the CLI
-      {
-        "Entries": [
-          .
-        ]
-      }
-    ' \
-)"
-
-aws events put-events --no-cli-pager --cli-input-json "${event_cli_json}"
-```
-
-</details>
+For a detailed procedure, see [Manual Pipeline Execution (legacy)](./docs/operation/examples/WRSC-DRAFT/ManualPipelineExecution.md)
 
 #### Release management
 
@@ -665,8 +368,8 @@ The stateful stack for this service includes the following resources:
 
 **Schemas**
 
-* We upload the complete draft schema to the AWS Schemas registry,
-  this is used to validate a draft event before it is allowed to mature into a READY event
+* We upload the complete WRU schema to the AWS Schemas registry,
+  this is used to validate a DRAFT event before it is allowed to mature into a READY event
 
 We currently maintain following schemas:
 
@@ -700,21 +403,21 @@ The stateless stack for this service includes the following resources:
 
 #### Step Functions
 
-**Dragen WGTS DNA Draft to Completed Draft State Machine**
+**Dragen WGTS DNA DRAFT to Completed DRAFT State Machine**
 
-From the dragen WGTS DNA DRAFT event, we populate all inputs to make another draft event, complete with all required
+From the dragen WGTS DNA DRAFT event, we populate all inputs to make another DRAFT event, complete with all required
 inputs.
 
 ![draft-to-completed-draft-state-machine](docs/workflow-studio-exports/dragen-wgts-dna-complete-draft-schema.svg)
 
-**Dragen WGTS DNA Validate Draft and Put Ready Event**
+**Dragen WGTS DNA Validate DRAFT and Put READY Event**
 
 Take in a dragen WGTS DNA DRAFT event, make sure it's valid, and then generate a READY event for the dragen WGTS DNA
 pipeline.
 
 ![validate-draft-and-put-ready-event-state-machine](docs/workflow-studio-exports/dragen-wgts-dna-validate-draft-and-put-ready-event.svg)
 
-**Dragen WGTS DNA Ready to ICAv2 WES Submitted State Machine**
+**Dragen WGTS DNA READY to ICAv2 WES Submitted State Machine**
 
 Takes in a READY event for the dragen WGTS DNA pipeline, and generates a ICAv2 WES workflow request.
 
@@ -889,6 +592,11 @@ make test
 
 Glossary & References
 --------------------------------------------------------------------------------
+
+| Term | Description |
+|------|-------------|
+| AWS CLI | The Command Line Interface (CLI) provided by AWS. (https://aws.amazon.com/cli/) |
+| JQ | A JSON command line processor facilitating the work with JSON data. (https://jqlang.org/) |
 
 For general terms and expressions used across OrcaBus services, please see the
 platform [documentation](https://github.com/OrcaBus/wiki/blob/main/orcabus-platform/README.md#glossary--references).
