@@ -27,8 +27,8 @@ export const WORKFLOW_VERSION_TO_DEFAULT_ICAV2_PIPELINE_ID_MAP: Record<
   WorkflowVersionType,
   string
 > = {
-  // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20251004073338
-  '4.4.4': 'c7da3f3a-2015-4420-ae0c-5a9260df4887',
+  // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20251009055750
+  '4.4.4': '8baf6fb0-5aa0-4918-9299-cfb028261057',
 };
 
 export const WORKFLOW_VERSION_TO_DEFAULT_REFERENCE_PATHS_MAP: Record<
@@ -75,11 +75,27 @@ export const VARIANT_ANNOTATION_DATA_PATH_MAP: Record<WorkflowVersionType, strin
 
 export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<WorkflowVersionType, object> = {
   '4.4.4': {
-    // Alignment step (both germline and somatic)
+    // Alignment options (both germline and somatic)
     alignmentOptions: {
       enableDuplicateMarking: true,
+      qcCoverage: [
+        // FCC Germline
+        {
+          name: 'fcc',
+          region:
+            's3://reference-data-503977275616-ap-southeast-2/refdata/gene-panels/v2--0/germline/umccr_predisposition_genes.transcript_regions.bed',
+          reportType: 'cov_report',
+        },
+        // UMCCR Somatic
+        {
+          name: 'umccr',
+          region:
+            's3://reference-data-503977275616-ap-southeast-2/refdata/gene-panels/v2--0/somatic/umccr_cancer_genes.gene_regions.bed',
+          reportType: 'cov_report',
+        },
+      ],
     },
-    // Targeted caller step (germline only)
+    // Targeted caller options (germline only)
     targetedCallerOptions: {
       enableTargeted: ['cyp2d6'],
     },
