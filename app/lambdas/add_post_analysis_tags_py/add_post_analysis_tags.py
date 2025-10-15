@@ -47,11 +47,12 @@ FILENAME_BY_METRIC = {
     "METRICS_JSON": "{SAMPLE_NAME}.metrics.json",
 }
 
+
 def read_file_from_s3(uri: str) -> Optional[str]:
 
     try:
         file_obj = get_file_object_from_s3_uri(uri)
-    except S3FileNotFoundError as e:
+    except S3FileNotFoundError:
         return None
 
     return requests.get(get_presigned_url(file_obj['s3ObjectId'])).text
@@ -101,7 +102,7 @@ def get_hrd_score(
     hrd_score_df = read_csv_from_s3(f"{output_uri}{hrd_score_file_name}")
 
     if hrd_score_df is None or hrd_score_df.empty:
-        return -1
+        return None
 
     return hrd_score_df.query("Sample == @sample_name")["HRD_Score"].item()
 
@@ -127,7 +128,7 @@ def get_tmb_score(
     )
 
     if tmb_metrics_df is None or tmb_metrics_df.empty:
-        return -1
+        return None
 
     return tmb_metrics_df.query("metric == 'TMB'")["value"].item()
 
@@ -155,7 +156,7 @@ def get_sv_pass_count(
     )
 
     if sv_metrics_df is None or sv_metrics_df.empty:
-        return -1
+        return None
 
 
     return sv_metrics_df.query("metric == 'Total number of structural variants (PASS)'")["value"].item()
@@ -198,7 +199,7 @@ def get_cnv_estimated_tumor_purity(
     )
 
     if cnv_metrics_df is None or cnv_metrics_df.empty:
-        return -1
+        return None
 
     return round(
         cnv_metrics_df.query("metric == 'Estimated tumor purity'")["value"].item(),
@@ -243,7 +244,7 @@ def get_cnv_overall_ploidy(
     )
 
     if cnv_metrics_df is None or cnv_metrics_df.empty:
-        return -1
+        return None
 
     return round(
         cnv_metrics_df.query("metric == 'Overall ploidy'")["value"].item(),
@@ -309,7 +310,7 @@ def get_avg_cov_over_genome(
     )
 
     if mapping_metrics_df is None or mapping_metrics_df.empty:
-        return -1
+        return None
 
     return round(
         mapping_metrics_df.query("metric == 'Average autosomal coverage over genome'")["value"].item(),
@@ -449,6 +450,12 @@ def handler(event, context):
     # Now convert the keys to camelCase
     tags = dict(map(
         lambda item: (snake_to_camel(item[0]), item[1]),
+        tags.items()
+    ))
+
+    # Drop any None values
+    tags = dict(filter(
+        lambda item: item[1] is not None,
         tags.items()
     ))
 
