@@ -144,7 +144,7 @@ def handler(event, context):
             inputs['sampleName'],
             inputs['reference']['name'],
             inputs['reference']['structure'],
-            "dragen_germline_variant_calling"
+            "dragen_wgts_dna_germline_variant_calling"
         ]) + "/"
 
         # Set somatic outputs to None by default
@@ -166,7 +166,7 @@ def handler(event, context):
                 inputs['sampleName'],
                 somatic_reference['name'],
                 somatic_reference['structure'],
-                "dragen_somatic_variant_calling"
+                "dragen_wgts_dna_somatic_variant_calling"
             ]) + "/"
 
             # Now redefine the multiqc report details

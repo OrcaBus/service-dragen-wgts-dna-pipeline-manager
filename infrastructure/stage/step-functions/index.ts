@@ -104,7 +104,12 @@ function wireUpStateMachinePermissions(props: WireUpPermissionsProps): void {
   const lambdaFunctions = props.lambdaObjects.filter((lambdaObject) =>
     lambdaFunctionNamesInSfn.includes(lambdaObject.lambdaName)
   );
+  /* Allow the state machine to invoke the lambda function */
+  for (const lambdaObject of lambdaFunctions) {
+    lambdaObject.lambdaFunction.currentVersion.grantInvoke(props.sfnObject);
+  }
 
+  /* Wire up other permissions based on requirements */
   if (sfnRequirements.needsEventPutPermission) {
     props.eventBus.grantPutEventsTo(props.sfnObject);
   }
@@ -131,11 +136,6 @@ function wireUpStateMachinePermissions(props: WireUpPermissionsProps): void {
       ],
       true
     );
-  }
-
-  /* Allow the state machine to invoke the lambda function */
-  for (const lambdaObject of lambdaFunctions) {
-    lambdaObject.lambdaFunction.currentVersion.grantInvoke(props.sfnObject);
   }
 }
 
