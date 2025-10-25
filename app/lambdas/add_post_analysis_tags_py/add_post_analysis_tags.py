@@ -49,7 +49,7 @@ FILENAME_BY_METRIC = {
 
 
 def na_round(value: Union[float, str], *args) -> Optional[float]:
-    if value == 'NA':
+    if value == 'NA' or pd.isna(value):
         return None
     return round(float(value), *args)
 
