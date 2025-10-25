@@ -26,7 +26,7 @@ For each directory collect the following metrics:
 """
 
 # Standard imports
-from typing import Optional
+from typing import Optional, Union
 from io import StringIO
 import pandas as pd
 import requests
@@ -46,6 +46,12 @@ FILENAME_BY_METRIC = {
     "MAPPING_METRICS": "{SAMPLE_NAME}.wgs_coverage_metrics.csv",
     "METRICS_JSON": "{SAMPLE_NAME}.metrics.json",
 }
+
+
+def na_round(value: Union[float, str], *args) -> Optional[float]:
+    if value == 'NA':
+        return None
+    return round(float(value), *args)
 
 
 def read_file_from_s3(uri: str) -> Optional[str]:
@@ -201,7 +207,7 @@ def get_cnv_estimated_tumor_purity(
     if cnv_metrics_df is None or cnv_metrics_df.empty:
         return None
 
-    return round(
+    return na_round(
         cnv_metrics_df.query("metric == 'Estimated tumor purity'")["value"].item(),
         4
     )
@@ -246,7 +252,7 @@ def get_cnv_overall_ploidy(
     if cnv_metrics_df is None or cnv_metrics_df.empty:
         return None
 
-    return round(
+    return na_round(
         cnv_metrics_df.query("metric == 'Overall ploidy'")["value"].item(),
         4
     )
@@ -312,7 +318,7 @@ def get_avg_cov_over_genome(
     if mapping_metrics_df is None or mapping_metrics_df.empty:
         return None
 
-    return round(
+    return na_round(
         mapping_metrics_df.query("metric == 'Average autosomal coverage over genome'")["value"].item(),
         4
     )
@@ -335,7 +341,7 @@ def get_contamination_rate(
     if metrics_json is None:
         return None
 
-    return round(
+    return na_round(
         metrics_json.get("modules", {}).get("mapAlign", {}).get("globalMetrics", {}).get("estimatedSampleContamination", {}).get("value"),
         4
     )
@@ -357,7 +363,7 @@ def get_duplication_rate(
     if metrics_json is None:
         return None
 
-    return round(
+    return na_round(
         metrics_json.get("modules", {}).get("mapAlign", {}).get("globalMetrics", {}).get("duplicateMarkedReads", {}).get("percentage") / 100,
         4
     )
@@ -398,7 +404,7 @@ def get_ti_tv_ratio(
     if metrics_json is None:
         return None
 
-    return round(
+    return na_round(
         metrics_json.get("modules", {}).get("variantCaller", {}).get("postFilter", {}).get(sample_name, {}).get("tiTvRatio", {}).get("value"),
         4
     )
