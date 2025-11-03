@@ -18,22 +18,38 @@ See the Payload Mismatch section below for more information on how to resolve th
 
 ### Fastq Sync Stuck
 
-The Fastq Sync step uses a heart-beat timeout so if the step function is genuinely stuck, it will eventually time out and fail the execution.
+The Fastq Sync step may hang for a number of hours. Reasons may include:
+
+* Fastq QC stat jobs are taking a long time to complete (usually no longer than one hour)
+* Fastq data is still being sequenced and is not yet available for processing (depends on sequencing run, usually up to 48 hours)
+* Fastq data is being thawed from archive storage (S3 Glacier) (usually around 8 to 10 hours)
+
+The fastq sync service will find fastq ids associated with running jobs, be it active sequencing runs, BCLConvert analyses, or unarchiving jobs.
+Services using the Fastq Sync service will receive a heartbeat on their respective task token if any of their fastq ids have an active jobs.
+If the step function is genuinely stuck, it will not receive any heartbeats and will therefore timeout after one hour.
+
+The failed execution will push a message to the #alerts-prod slack channel.
+
 You may wish to then 'redrive' the execution from the console.
-However, the Fastq Sync step will receive heartbeats if there are any active jobs running on that particular library id.
-It may be the case that the step is waiting for either a fastq job to complete, such as qc stat calculation (usually taking around 20 minutes),
-OR the fastq data is in archive and is in the process of being thawed (which may take several hours).
+
 
 ### Payload Mismatch
 
-If you can find the most recent execution for this library id, then you may be able to look at the Log Group for the 'validate-draft-payload' lambda.
+> Note the below may soon be replaced with automated commentary on the OrcaUI for draft payloads that fail validation.
+
+If you can find the most recent step function execution for this library id, then you may be able to look at the Log Group for the 'validate-draft-payload' lambda,
+by clicking on the log group section for that particular lambda.
 
 This lambda will let you know how the payload violates the expected schema.
-You may wish to then manually update the payload and generate a new WorkflowRunUpdate draft event as discussed in [SOP 1][sop_1_rel_path]
+You may wish to then manually update the payload and generate a new WorkflowRunUpdate draft event as discussed in [SOP 1][sop_1_rel_path].
 
 ## Analysis Stuck in READY state
 
 If the analysis is stuck in READY state, then it is likely that the translation from the READY event to the ICAv2 WES event has failed.
+This is a rare occurrence, but may be due to transient issues with the ICAv2 WES manager.
+One can confirm that this has occurred by querying the offending workflow run name against the [ICAv2 WES Manager API][icav2_wes_api_swagger_page].
+If no analysis is found for that workflow run name, then the issue is likely due to a communication failure between the Dragen WGTS DNA service
+and the ICAv2 WES Manager.
 
 ## Analysis Fails to Start
 
@@ -96,3 +112,4 @@ dragen 4.4.6 which has a more memory efficient structural variant calling algori
 [sop_1_rel_path]: ../PM.DWD.1/PM.DWD.1-ManualPipelineExecution.md
 [icav2_wiki_page]: https://github.com/umccr/icav2-cli-plugins/wiki
 [icav2_wes_project_setup_sop]: https://github.com/umccr/research-projects/tree/main/project-template/infrastructure
+[icav2_wes_api_swagger_page]: https://icav2-wes.prod.umccr.org/schema/swagger-ui#/

@@ -8,7 +8,8 @@ This assumes that the [CWL pipeline][cwl_pipeline] has already been updated to s
 
 ## Constants File Update
 
-To update any of our pipeline parameters, head to the infrastructure stage constants path and you should find something like the following.
+To update any of our pipeline parameters, head to the [infrastructure constants path][infrastructure_constants_path] and
+you should expect to find something like the following.
 
 <details>
 
@@ -113,3 +114,4 @@ Once you are happy with the changes, you can trigger a full run through the [Pip
 [verification_testing_sop]: ../PM.DWD.4/PM.DWD.4-RunningWorkflowValidation.md
 [ready_to_icav2_wes_request_lambda]: ../../../../app/lambdas/dragen_wgts_dna_ready_to_icav2_wes_request_py/dragen_wgts_dna_ready_to_icav2_wes_request.py
 [icav2_cli_plugins_wiki_pages]: https://github.com/umccr/icav2-cli-plugins/wiki
+[infrastructure_constants_path]: ../../../../infrastructure/stage/constants.ts
