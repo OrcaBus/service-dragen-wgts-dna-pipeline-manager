@@ -220,7 +220,7 @@ We can perform the following command to register the new workflow version:
 make-new-workflow.sh \
   --workflow-name 'dragen-wgts-dna' \
   --workflow-version "4.4.4" \
-  --executionEngine "ICA"
+  --executionEngine "ICA" \
   --executionEnginePipelineId "<THE PIPELINE ID YOU KEPT NOTE OF EARLIER>" \
   --codeVersion "$(cd <cwl-ica-repo> && git rev-parse --short=7 HEAD)" \
   --validationState "VALIDATED"
@@ -232,7 +232,8 @@ Make note of the new orcabus ID.
 ### Analysis Glue Updates
 
 Head to the [analysis-glue repository][analysis_glue_repo_link] and update the constants in the `infrastructure/stage/constants.ts` file to include
-the new OrcaBus ID.
+the new workflow. You will not need to add in the workflow orcabus id, but all the other attributes used to create the workflow object
+will be required.
 
 You should be able to find the snippet to replace as something that looks like this:
 
@@ -249,11 +250,9 @@ export const WORKFLOW_VERSIONS_BY_NAME: Record<StageName, WorkflowObjectType> = 
 ```
 
 
-### Workflow Manager Updates
-
 [ica_about]: https://www.illumina.com/products/by-type/informatics-products/connected-analytics.html
 [cwl_user_guide]: https://www.commonwl.org/user_guide/
-[cwl_ica_repo]: https://github.com/umccr/cwl-ica\
+[cwl_ica_repo]: https://github.com/umccr/cwl-ica
 [cwl_ica_installation_link]: https://github.com/umccr/cwl-ica/wiki/Getting_Started#installation
 [icav2_releases_page]: https://help.ica.illumina.com/command-line-interface/cli-installation
 [icav2_plugins_installation_page]: https://github.com/umccr/icav2-cli-plugins/wiki#installation

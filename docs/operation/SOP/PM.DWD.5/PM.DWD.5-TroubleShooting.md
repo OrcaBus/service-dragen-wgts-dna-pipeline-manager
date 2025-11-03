@@ -83,8 +83,16 @@ please consult the [ICAv2 Plugins Manual][icav2_wiki_page] for more information 
 
 ### Dragen Step Fails with a 137 Exit Code
 
-This is likely due to insufficient memory. Structual Variant calling within Dragen is memory sensitive.
+This is likely due to insufficient memory. Structural Variant calling within Dragen is memory sensitive.
 Unfortunately, there isn't much that can be done to mitigate this issue since we are restricted by the instance sizes.
 
 It may be worth discussing with the project lead for this library to see if structural variant calling is required,
 since we will also get the structural variants downstream through the ESVEE step of the oncoanalyser wgts dna pipeline.
+
+It may also be worth checking the workflow type, (i.e clinical or research) and, if appropriate, re-running the pipeline through
+dragen 4.4.6 which has a more memory efficient structural variant calling algorithm.
+
+[aws_step_functions_console_prod]: https://472057503814.ap-southeast-2.console.aws.amazon.com/states/home?region=ap-southeast-2#/statemachines
+[sop_1_rel_path]: ../PM.DWD.1/PM.DWD.1-ManualPipelineExecution.md
+[icav2_wiki_page]: https://github.com/umccr/icav2-cli-plugins/wiki
+[icav2_wes_project_setup_sop]: https://github.com/umccr/research-projects/tree/main/project-template/infrastructure

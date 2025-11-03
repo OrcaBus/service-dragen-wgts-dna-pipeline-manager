@@ -3,8 +3,8 @@
 From time-to-time there may be a requirement to add or subtract pipeline parameters.
 
 Unfortunately, the DRAFT payload inputs we supply do not directly map to the pipeline parameters used when running ICAv2.
-This is a little annoying but also improves the user experience as is allows us to provide more user-friendly names for input parameters.
-This assumes that the [CWL pipeline][cwl-pipeline] has already been updated to support the new parameters. See [New Dragen WGTS DNA Deployment SOP][new_dragen_wgts_dna_deployment_sop] for more information.
+This is a little annoying but also improves the user experience as it allows us to provide more user-friendly names for input parameters.
+This assumes that the [CWL pipeline][cwl_pipeline] has already been updated to support the new parameters. See [New Dragen WGTS DNA Deployment SOP][new_dragen_wgts_dna_deployment_sop] for more information.
 
 ## Constants File Update
 
@@ -99,9 +99,17 @@ DRAFT payload inputs are correctly mapped to the ICAv2 pipeline parameters.
 
 ## Testing
 
-Deploy your changes to development /#FIXME
+Deploy your changes to development by updating the pipeline through the ICAv2 Pipeline Update instructions in the [ICAv2 CLI Plugins Wiki Pages][icav2_cli_plugins_wiki_pages].
 
 As a first pass, you may wish to follow the [Manual Pipeline Execution SOP][manual_pipeline_execution_sop] to ensure
 that the changes you have made are functioning as expected.
 
 Once you are happy with the changes, you can trigger a full run through the [Pipeline Verification SOP][verification_testing_sop] to ensure that everything is working as expected.
+
+[cwl_pipeline]: https://github.com/umccr/cwl-ica/releases?q=%2Fdragen-wgts-dna-pipeline&expanded=false
+[new_dragen_wgts_dna_deployment_sop]: ../PM.DWD.2/PM.DWD.2-NewDragenWgtsDnaPipelineDeployment.md
+[draft_event_schema]: ../../../../app/event-schemas/complete-data-draft-schema.json
+[manual_pipeline_execution_sop]: ../PM.DWD.1/PM.DWD.1-ManualPipelineExecution.md
+[verification_testing_sop]: ../PM.DWD.4/PM.DWD.4-RunningWorkflowValidation.md
+[ready_to_icav2_wes_request_lambda]: ../../../../app/lambdas/dragen_wgts_dna_ready_to_icav2_wes_request_py/dragen_wgts_dna_ready_to_icav2_wes_request.py
+[icav2_cli_plugins_wiki_pages]: https://github.com/umccr/icav2-cli-plugins/wiki

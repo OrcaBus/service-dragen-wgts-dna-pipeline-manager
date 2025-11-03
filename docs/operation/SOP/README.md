@@ -32,7 +32,7 @@ These tasks range from:
 
 ## Verifying a new version of the Dragen WGTS DNA Pipeline
 
-/# FIXME
+* [PM.DWD.4 - Running Workflow Validations](PM.DWD.4/PM.DWD.4-RunningWorkflowValidations.md)
 
 ## Troubleshooting common issues with the Dragen WGTS DNA Pipeline
 

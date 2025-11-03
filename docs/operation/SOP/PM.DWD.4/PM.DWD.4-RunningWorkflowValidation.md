@@ -10,7 +10,7 @@ run the workflow on the HCC1395 data.
 
 ## Validating the Results
 
-Currently this is particularly challenging since we're using cell-lines rather than DNA
+This is particularly challenging since we're using cell-lines rather than DNA
 so we do expect some divergence from the truth set. This SOP is certainly a work-in-progress as
 we determine ways to accurately set up sensitivity/specificity metrics.
 
@@ -18,7 +18,7 @@ We expect some differences between our variant calls and the truth set.
 
 For now, we take a 95% SNV precision and recall as a passing metric for the workflow.
 
-You can look at [example.sh](example.sh) for a full script.
+You can look at [example.sh](./example.sh) for a full script.
 
 ### Setup: Define and pull Docker Images
 
@@ -218,3 +218,5 @@ docker run \
 0   indels         1625         2559  1363  1196  262    0     0  0.838769      0.820294      0.856039  0.838769    0.53263         0.513271         0.551915  0.0        0.0      2875001522    0.416
 5  records         1625         2559  1363  1196  262    0     0  0.838769      0.820294      0.856039  0.838769    0.53263         0.513271         0.551915  0.0        0.0      2875001522    0.416
 ```
+
+[manual_pipeline_execution_sop]: ../PM.DWD.1/PM.DWD.1-ManualPipelineExecution.md
