@@ -1,7 +1,24 @@
 # Running Workflow Validation
 
+- Version: 1.0
+- Contact: Alexis Lucattini, [alexisl@unimelb.edu.au](mailto:alexisl@unimelb.edu.au)
+
+
 For a quick workflow validation,
 we use the HCC1395 cell line (L2300950 / L2300943) with the high-confidence truth set.
+
+In this example we use the [seqcii test dataset][seqcii_test_dataset]
+
+- [Run Workflow](#run-workflow)
+- [Validating the Results](#validating-the-results)
+  - [Setup: Define and pull Docker Images](#setup-define-and-pull-docker-images)
+  - [Step 1: Download the Truth Sets](#step-1-download-the-truth-sets)
+  - [Step 2: Download and prepare the VCFs](#step-2-download-and-prepare-the-vcfs)
+  - [Step 3: Run som.py to compare VCFs](#step-3-run-sompy-to-compare-vcfs)
+  - [Validation Outputs](#validation-outputs)
+    - [SNVS](#snvs)
+    - [INDELS](#indels)
+
 
 ## Run Workflow
 
@@ -220,3 +237,4 @@ docker run \
 ```
 
 [manual_pipeline_execution_sop]: ../PM.DWD.1/PM.DWD.1-ManualPipelineExecution.md
+[seqcii_test_dataset]: https://github.com/umccr/research-projects/blob/main/hofmann-lab/testdata/datasets-and-cases.md#seqc-ii

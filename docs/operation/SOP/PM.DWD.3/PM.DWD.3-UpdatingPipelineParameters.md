@@ -1,10 +1,20 @@
 # Updating Pipeline Parameters
 
+- Version: 1.0
+- Contact: Alexis Lucattini, [alexisl@unimelb.edu.au](mailto:alexisl@unimelb.edu.au)
+
+
 From time-to-time there may be a requirement to add or subtract pipeline parameters.
 
 Unfortunately, the DRAFT payload inputs we supply do not directly map to the pipeline parameters used when running ICAv2.
 This is a little annoying but also improves the user experience as it allows us to provide more user-friendly names for input parameters.
 This assumes that the [CWL pipeline][cwl_pipeline] has already been updated to support the new parameters. See [New Dragen WGTS DNA Deployment SOP][new_dragen_wgts_dna_deployment_sop] for more information.
+
+- [Constants File Update](#constants-file-update)
+- [Draft Event Schema](#draft-event-schema)
+- [Lambda Parameter Mapping](#lambda-parameter-mapping)
+- [Testing](#testing)
+
 
 ## Constants File Update
 

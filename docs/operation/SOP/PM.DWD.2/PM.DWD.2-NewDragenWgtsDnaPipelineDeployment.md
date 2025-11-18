@@ -1,5 +1,9 @@
 # New Dragen WGTS DNA Pipeline Deployment
 
+- Version: 1.0
+- Contact: Alexis Lucattini, [alexisl@unimelb.edu.au](mailto:alexisl@unimelb.edu.au)
+
+
 There may be times where we need to create a new CWL workflow for our Dragen WGTS DNA pipeline.
 
 In the SOP below we discuss the following scenarios:
@@ -27,7 +31,6 @@ Throughout the SOP we make the following expectations:
   - [Infrastructure Constants Updates](#infrastructure-constants-updates)
   - [Workflow Manager Updates](#workflow-manager-updates)
   - [Analysis Glue Updates](#analysis-glue-updates)
-  - [Workflow Manager Updates](#workflow-manager-updates-1)
 
 
 ## Pipeline Summary

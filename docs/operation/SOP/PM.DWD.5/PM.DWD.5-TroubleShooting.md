@@ -1,8 +1,24 @@
 # Trouble Shooting
 
+- Version: 1.0
+- Contact: Alexis Lucattini, [alexisl@unimelb.edu.au](mailto:alexisl@unimelb.edu.au)
+
+
 Most processes within the Dragen WGTS DNA Orchestration use AWS Step Functions to manage the workflow.
 We post all Step Function errors to the #alerts-prod slack channel, a Center staff member can
 then click on the offending Step Function link in the slack message to be taken to the AWS Step Functions console to investigate further.
+
+- [Analysis Stuck in DRAFT state.](#analysis-stuck-in-draft-state)
+  - [Fastq Sync Stuck](#fastq-sync-stuck)
+  - [Payload Mismatch](#payload-mismatch)
+- [Analysis Stuck in READY state](#analysis-stuck-in-ready-state)
+- [Analysis Fails to Start](#analysis-fails-to-start)
+  - [Project Not Set Up Correctly](#project-not-set-up-correctly)
+  - [Invalid Pipeline ID](#invalid-pipeline-id)
+  - [Data Not Available](#data-not-available)
+- [Common Dragen Failures](#common-dragen-failures)
+  - [Dragen Step Fails with a 137 Exit Code](#dragen-step-fails-with-a-137-exit-code)
+
 
 ## Analysis Stuck in DRAFT state.
 
