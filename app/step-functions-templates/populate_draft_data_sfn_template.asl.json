@@ -529,7 +529,7 @@
         }
       ],
       "Assign": {
-        "libraries": "{% $states.result.(library) %}"
+        "libraries": "{% [ $states.result.(library) ] %}"
       }
     },
     "Get Inputs": {
