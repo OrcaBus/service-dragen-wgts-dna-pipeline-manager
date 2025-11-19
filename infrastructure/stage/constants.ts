@@ -27,8 +27,10 @@ export const WORKFLOW_VERSION_TO_DEFAULT_ICAV2_PIPELINE_ID_MAP: Record<
   WorkflowVersionType,
   string
 > = {
-  // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20251009055750
-  '4.4.4': '8baf6fb0-5aa0-4918-9299-cfb028261057',
+  // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20251102002321
+  '4.4.4': 'd43ef483-fdef-4dc3-8dac-85165c7f4d2e',
+  // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.6__20251030232217
+  '4.4.6': '34c40b33-a71d-443a-a415-3d7ef157b545',
 };
 
 export const WORKFLOW_VERSION_TO_DEFAULT_REFERENCE_PATHS_MAP: Record<
@@ -41,6 +43,12 @@ export const WORKFLOW_VERSION_TO_DEFAULT_REFERENCE_PATHS_MAP: Record<
     tarball:
       's3://reference-data-503977275616-ap-southeast-2/refdata/dragen-hash-tables/v11-r5/hg38-alt_masked-cnv-graph-hla-methyl_cg-rna/hg38-alt_masked.cnv.graph.hla.methyl_cg.rna-11-r5.0-1.tar.gz',
   },
+  '4.4.6': {
+    name: 'hg38',
+    structure: 'graph',
+    tarball:
+      's3://reference-data-503977275616-ap-southeast-2/refdata/dragen-hash-tables/v11-r5/hg38-alt_masked-cnv-graph-hla-methyl_cg-rna/hg38-alt_masked.cnv.graph.hla.methyl_cg.rna-11-r5.0-1.tar.gz',
+  },
 };
 
 export const WORKFLOW_VERSION_TO_DEFAULT_SOMATIC_REFERENCE_PATHS_MAP: Record<
@@ -48,6 +56,12 @@ export const WORKFLOW_VERSION_TO_DEFAULT_SOMATIC_REFERENCE_PATHS_MAP: Record<
   Reference
 > = {
   '4.4.4': {
+    name: 'hg38',
+    structure: 'linear',
+    tarball:
+      's3://reference-data-503977275616-ap-southeast-2/refdata/dragen-hash-tables/v11-r5/hg38-alt_masked-cnv-hla-methyl_cg-methylated_combined/hg38-alt_masked.cnv.hla.methyl_cg.methylated_combined.rna-11-r5.0-1.tar.gz',
+  },
+  '4.4.6': {
     name: 'hg38',
     structure: 'linear',
     tarball:
@@ -66,15 +80,19 @@ export const ORA_VERSION_TO_DEFAULT_ORA_REFERENCE_PATHS_MAP: Record<
 export const MSI_REFERENCE_PATH_MAP: Record<WorkflowVersionType, string> = {
   '4.4.4':
     's3://reference-data-503977275616-ap-southeast-2/refdata/dragen-msi/1-1-0/hg38/WGS_v1.1.0_hg38_microsatellites.list',
+  '4.4.6':
+    's3://reference-data-503977275616-ap-southeast-2/refdata/dragen-msi/1-1-0/hg38/WGS_v1.1.0_hg38_microsatellites.list',
 };
 
 export const VARIANT_ANNOTATION_DATA_PATH_MAP: Record<WorkflowVersionType, string> = {
   '4.4.4':
     's3://reference-data-503977275616-ap-southeast-2/refdata/dragen-annotations/nirvana/3.25.1/nirvana_assembly_GRCh38.tar.gz',
+  '4.4.6':
+    's3://reference-data-503977275616-ap-southeast-2/refdata/dragen-annotations/nirvana/3.25.1/nirvana_assembly_GRCh38.tar.gz',
 };
 
-export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<WorkflowVersionType, object> = {
-  '4.4.4': {
+const DEFAULT_WORKFLOW_INPUTS = (workflowVersion: WorkflowVersionType) => {
+  return {
     // Alignment options (both germline and somatic)
     alignmentOptions: {
       enableDuplicateMarking: true,
@@ -121,7 +139,7 @@ export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<WorkflowVersionType,
     // MSI Options (somatic only) - Requires MSI reference file
     somaticMsiOptions: {
       msiCommand: 'tumor-normal',
-      msiMicrosatellitesFile: MSI_REFERENCE_PATH_MAP['4.4.4'],
+      msiMicrosatellitesFile: MSI_REFERENCE_PATH_MAP[workflowVersion],
       // 40 suggested here - https://help.dragen.illumina.com/product-guide/dragen-v4.4/dragen-recipes/dna-somatic-tumor-normal-solid-wgs#msi
       msiCoverageThreshold: 40, // Default is 60 (allegedly) but it's not actually a default
     },
@@ -131,13 +149,18 @@ export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<WorkflowVersionType,
       variantAnnotationAssembly: 'GRCh38',
       // Not required but saves us having to do through the nirvana download step
       // Which can break without any error messages
-      variantAnnotationData: VARIANT_ANNOTATION_DATA_PATH_MAP['4.4.4'],
+      variantAnnotationData: VARIANT_ANNOTATION_DATA_PATH_MAP[workflowVersion],
     },
     // Also need to enable TMB
     somaticTmbOptions: {
       enableTmb: true,
     },
-  },
+  };
+};
+
+export const DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP: Record<WorkflowVersionType, object> = {
+  '4.4.4': DEFAULT_WORKFLOW_INPUTS('4.4.4'),
+  '4.4.6': DEFAULT_WORKFLOW_INPUTS('4.4.6'),
 };
 
 /* SSM Parameter Paths */
