@@ -87,5 +87,5 @@ export const stepFunctionToLambdasMap: Record<StateMachineNameList, LambdaNameLi
   ],
   validateDraftDataAndPutReadyEvent: ['validateDraftCompleteSchema'],
   readyEventToIcav2WesRequestEvent: ['dragenWgtsDnaReadyToIcav2WesRequest'],
-  icav2WesEventToWrscEvent: ['convertIcav2WesStateChangeEventToWrscEvent'],
+  icav2WesEventToWrscEvent: ['convertIcav2WesStateChangeEventToWrscEvent', 'addPostAnalysisTags'],
 };

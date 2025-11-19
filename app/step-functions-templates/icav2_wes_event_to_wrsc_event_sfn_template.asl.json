@@ -5,9 +5,6 @@
     "Convert ICAv2 WES event to WRSC Event": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
-      "Output": {
-        "workflowRunStateChangeEvent": "{% $states.result.Payload.workflowRunStateChangeEvent %}"
-      },
       "Arguments": {
         "FunctionName": "${__convert_icav2_wes_state_change_event_to_wrsc_event_lambda_function_arn__}",
         "Payload": {
@@ -28,7 +25,116 @@
           "JitterStrategy": "FULL"
         }
       ],
-      "Next": "New WFM has been deployed"
+      "Next": "Workflow has succeeded status",
+      "Assign": {
+        "workflowRunStateChangeEvent": "{% $states.result.Payload.workflowRunStateChangeEvent %}"
+      }
+    },
+    "Workflow has succeeded status": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Add post analysis tags",
+          "Condition": "{% $workflowRunStateChangeEvent.status = 'SUCCEEDED' %}",
+          "Comment": "Workflow has SUCCEEDED status"
+        }
+      ],
+      "Default": "New WFM has been deployed"
+    },
+    "Add post analysis tags": {
+      "Type": "Parallel",
+      "Next": "New WFM has been deployed",
+      "Branches": [
+        {
+          "StartAt": "Add post analysis tags (germline)",
+          "States": {
+            "Add post analysis tags (germline)": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Output": {
+                "tags": "{% $states.result.Payload.tags %}"
+              },
+              "Arguments": {
+                "FunctionName": "${__add_post_analysis_tags_lambda_function_arn__}",
+                "Payload": {
+                  "variantCallingOutputUri": "{% $workflowRunStateChangeEvent.payload.data.engineParameters.outputUri & $workflowRunStateChangeEvent.payload.data.outputs.dragenGermlineVariantCallingOutputRelPath %}",
+                  "variantCallingSampleName": "{% $workflowRunStateChangeEvent.payload.data.inputs.sampleName %}"
+                }
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Has tumor library id",
+          "States": {
+            "Has tumor library id": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Next": "Add post-analysis tags (tumor)",
+                  "Condition": "{% $workflowRunStateChangeEvent.payload.data.tags.tumorLibraryId ? true : false %}",
+                  "Comment": "Has tumor library id"
+                }
+              ],
+              "Default": "Pass"
+            },
+            "Pass": {
+              "Type": "Pass",
+              "End": true,
+              "Output": {}
+            },
+            "Add post-analysis tags (tumor)": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Arguments": {
+                "FunctionName": "${__add_post_analysis_tags_lambda_function_arn__}",
+                "Payload": {
+                  "variantCallingOutputUri": "{% $workflowRunStateChangeEvent.payload.data.engineParameters.outputUri & $workflowRunStateChangeEvent.payload.data.outputs.dragenSomaticVariantCallingOutputRelPath %}",
+                  "variantCallingSampleName": "{% $workflowRunStateChangeEvent.payload.data.inputs.tumorSampleName %}",
+                  "isTumor": true
+                }
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "End": true,
+              "Output": {
+                "tags": "{% $states.result.Payload.tags %}"
+              }
+            }
+          }
+        }
+      ],
+      "Assign": {
+        "workflowRunStateChangeEvent": "{% $workflowRunStateChangeEvent ~> \n| $.payload.data.tags | ( [ $states.result.(tags) ] ~> $merge ) | %}"
+      },
+      "Output": {}
     },
     "New WFM has been deployed": {
       "Type": "Choice",
@@ -47,7 +153,7 @@
       "Arguments": {
         "Entries": [
           {
-            "Detail": "{% $states.input.workflowRunStateChangeEvent %}",
+            "Detail": "{% $workflowRunStateChangeEvent %}",
             "DetailType": "${__workflow_run_update_event_detail_type__}",
             "EventBusName": "${__event_bus_name__}",
             "Source": "${__stack_source__}"
@@ -62,7 +168,7 @@
       "Arguments": {
         "Entries": [
           {
-            "Detail": "{% $states.input.workflowRunStateChangeEvent ~>\n/* Renamed libraries to linkedLibraries using the transform method */\n| $ | {\"linkedLibraries\": libraries}, [\"libraries\"] | ~>\n/* Renamed workflowName and workflowVersion using the transform method */\n| $ | {\"workflowName\": workflow.name, \"workflowVersion\": workflow.version}, [\"workflow\"] | %}",
+            "Detail": "{% $workflowRunStateChangeEvent ~>\n/* Renamed libraries to linkedLibraries using the transform method */\n| $ | {\"linkedLibraries\": libraries}, [\"libraries\"] | ~>\n/* Renamed workflowName and workflowVersion using the transform method */\n| $ | {\"workflowName\": workflow.name, \"workflowVersion\": workflow.version}, [\"workflow\"] | %}",
             "DetailType": "${__workflow_run_state_change_event_detail_type__}",
             "EventBusName": "${__event_bus_name__}",
             "Source": "${__stack_source__}"

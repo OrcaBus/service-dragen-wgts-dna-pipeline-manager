@@ -33,7 +33,8 @@ export interface StatelessApplicationStackConfig {
   isNewWorkflowManagerDeployed: boolean;
 }
 
-export type WorkflowVersionType = '4.4.4';
+export type WorkflowVersionType = '4.4.4' | '4.4.6';
+
 export type OraReferenceVersionType = '2.7.0';
 
 export interface Reference {

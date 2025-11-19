@@ -20,7 +20,8 @@ export type LambdaNameList =
   // Pre-submission Lambda functions
   | 'dragenWgtsDnaReadyToIcav2WesRequest'
   // Post-submission Lambda functions/
-  | 'convertIcav2WesStateChangeEventToWrscEvent';
+  | 'convertIcav2WesStateChangeEventToWrscEvent'
+  | 'addPostAnalysisTags';
 
 export const lambdaNameList: LambdaNameList[] = [
   // Pre-Draft Lambda functions
@@ -39,6 +40,7 @@ export const lambdaNameList: LambdaNameList[] = [
   'dragenWgtsDnaReadyToIcav2WesRequest',
   // Post-submission Lambda functions/
   'convertIcav2WesStateChangeEventToWrscEvent',
+  'addPostAnalysisTags',
 ];
 
 // Requirements interface for Lambda functions
@@ -86,6 +88,7 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
   dragenWgtsDnaReadyToIcav2WesRequest: {},
   // Needs Orcabus API tools to fetch the existing workflow run state
   convertIcav2WesStateChangeEventToWrscEvent: { needsOrcabusApiTools: true },
+  addPostAnalysisTags: { needsOrcabusApiTools: true },
 };
 
 export interface LambdaInput {

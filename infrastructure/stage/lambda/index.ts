@@ -21,31 +21,6 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
   const lambdaNameToSnakeCase = camelCaseToSnakeCase(props.lambdaName);
   const lambdaRequirements = lambdaRequirementsMap[props.lambdaName];
 
-  // Set command hooks
-  // let commandHooks: ICommandHooks = {
-  //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  //   beforeBundling(inputDir: string, outputDir: string): string[] {
-  //     return [];
-  //   },
-  //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  //   afterBundling: function (inputDir: string, outputDir: string): string[] {
-  //     return [];
-  //   },
-  // };
-  // if (props.lambdaName === 'validatewrscReady') {
-  //   commandHooks = {
-  //     beforeBundling(inputDir: string, outputDir: string): string[] {
-  //       return [
-  //         `cp ${path.join(inputDir, '../../event-schemas/dragen-wgts-dna-wrsc-ready-schema.json')} ${outputDir}`,
-  //       ];
-  //     },
-  //     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  //     afterBundling: function (inputDir: string, outputDir: string): string[] {
-  //       return [];
-  //     },
-  //   };
-  // }
-
   // Create the lambda function
   const lambdaFunction = new PythonUvFunction(scope, props.lambdaName, {
     entry: path.join(LAMBDA_DIR, lambdaNameToSnakeCase + '_py'),
