@@ -11,6 +11,7 @@ FORCE=false  # Use --force to set to true
 OUTPUT_URI_PREFIX=""
 LOGS_URI_PREFIX=""
 PROJECT_ID=""
+DISABLE_SV_CALLING="false"
 
 # Workflow constants
 WORKFLOW_NAME="dragen-wgts-dna"
@@ -35,6 +36,7 @@ generate-WRU-draft.sh (library_id)...
                       [-o | --output-uri-prefix <s3_uri>]
                       [-l | --logs-uri-prefix <s3_uri>]
                       [-p | --project-id <project_id>]
+                      [--disable-sv-calling]
 
 Description:
 Run this script to generate a draft WorkflowRunUpdate event for the specified library IDs.
@@ -48,6 +50,7 @@ Keyword arguments:
   -l | --logs-uri-prefix:    (Optional) S3 URI for logs (must end with a slash).
   -o | --output-uri-prefix:  (Optional) S3 URI for outputs (must end with a slash).
   -p | --project-id:         (Optional) ICAv2 Project ID to associate with the workflow run
+  --disable-sv-calling:      (Optional) Disable structural variant calling for the somatic step of the pipeline.
 
 Environment:
   AWS_PROFILE:  (Optional) The AWS CLI profile to use for authentication.
@@ -59,7 +62,6 @@ bash generate-WRU-draft.sh tumor_library_id normal_library_id \\
   --output-uri-prefix s3://project-bucket/analysis/dragen-wgts-dna/ \\
   --logs-uri-prefix s3://project-bucket/logs/dragen-wgts-dna \\
   --project-id project-uuid-1234-abcd
-
 "
 }
 
@@ -186,6 +188,11 @@ while [[ $# -gt 0 ]]; do
       FORCE=true
       shift
       ;;
+    # Disable SV calling
+    --disable-sv-calling)
+	  DISABLE_SV_CALLING="true"
+	  shift
+	  ;;
     # Output URI prefix
     -o|--output-uri-prefix)
 	  OUTPUT_URI_PREFIX="$2"
@@ -260,6 +267,7 @@ lambda_payload="$( \
     --arg portalRunId "${portal_run_id}" \
     --argjson libraries "$(get_linked_libraries)" \
     --argjson engineParameters "${engine_parameters}" \
+    --argjson disableSvCalling "${DISABLE_SV_CALLING}" \
     '
 	  {
 		"status": "DRAFT",
@@ -269,13 +277,31 @@ lambda_payload="$( \
 		"portalRunId": $portalRunId,
 		"libraries": $libraries,
 	  } |
-	  if ( ($engineParameters | length) > 0 ) then
+	  if (
+	    $disableSvCalling or
+	    ( ($engineParameters | length) > 0 )
+	  ) then
+	    # We have a payload to add
+	    # So we initialise with a version and an empty data object
 	    .["payload"] = {
 	      "version": $payloadVersion,
-	      "data": {
-	        "engineParameters": $engineParameters
+	      "data": {}
+	    } |
+	    # Separately edit each of the payload data fields
+	    # Check if the SV calling is to be disabled
+	    # And edit inputs.somaticSvCallerOptions if so
+	    if $disableSvCalling then
+	      .["payload"]["data"]["inputs"] = {
+	        "somaticSvCallerOptions": {
+	          "enableSv": false
+	        }
 	      }
-	    }
+	    end |
+	    # Check if there are engine parameters to add
+	    # And set engineParameters if so
+	    if ( ($engineParameters | length) > 0 ) then
+	      .["payload"]["data"]["engineParameters"] = $engineParameters
+	    end
 	  end
     ' \
 )"
