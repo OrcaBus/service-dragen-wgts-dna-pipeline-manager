@@ -36,6 +36,8 @@ generate-WRU-draft.sh (library_id)...
                       [-o | --output-uri-prefix <s3_uri>]
                       [-l | --logs-uri-prefix <s3_uri>]
                       [-p | --project-id <project_id>]
+                      [--workflow-version <workflow_version>]
+                      [--code-version <code_version>]
                       [--disable-sv-calling]
 
 Description:
@@ -50,6 +52,10 @@ Keyword arguments:
   -l | --logs-uri-prefix:    (Optional) S3 URI for logs (must end with a slash).
   -o | --output-uri-prefix:  (Optional) S3 URI for outputs (must end with a slash).
   -p | --project-id:         (Optional) ICAv2 Project ID to associate with the workflow run
+  --workflow-version:        (Optional) The workflow version to use, defaults to ${WORKFLOW_VERSION},
+                             but can also be set to 4.4.6, this is particularly useful for SV calling.
+  --code-version:            (Optional) Set the code version to pull a particular workflow object.
+                             Required if using a workflow version other than the default.
   --disable-sv-calling:      (Optional) Disable structural variant calling for the somatic step of the pipeline.
 
 Environment:
@@ -218,6 +224,24 @@ while [[ $# -gt 0 ]]; do
 	  ;;
 	-p=*|--project-id=*)
 	  PROJECT_ID="${1#*=}"
+	  shift
+	  ;;
+	# Workflow version
+	--workflow-version)
+	  WORKFLOW_VERSION="$2"
+	  shift 2
+	  ;;
+	--workflow-version=*)
+	  WORKFLOW_VERSION="${1#*=}"
+	  shift
+	  ;;
+	# Code version
+	--code-version)
+	  CODE_VERSION="$2"
+	  shift 2
+	  ;;
+	--code-version=*)
+	  CODE_VERSION="${1#*=}"
 	  shift
 	  ;;
 	# Positional arguments (library IDs)
