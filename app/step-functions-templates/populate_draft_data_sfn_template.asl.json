@@ -125,10 +125,10 @@
                 "Name": "${__default_project_id_ssm_parameter_name__}"
               },
               "Resource": "arn:aws:states:::aws-sdk:ssm:getParameter",
-              "End": true,
               "Output": {
                 "projectId": "{% $states.result.Parameter.Value %}"
-              }
+              },
+              "End": true
             }
           }
         },
@@ -605,7 +605,35 @@
                   }
                 ]
               },
-              "Next": "Get fastq list rows from rgid list"
+              "Next": "Get prefix from project id"
+            },
+            "Get prefix from project id": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Arguments": {
+                "FunctionName": "${__get_project_base_uri_from_project_id_lambda_function_arn__}",
+                "Payload": {
+                  "projectId": "{% $draftEngineParameters.projectId %}"
+                }
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "Next": "Get fastq list rows from rgid list",
+              "Output": {
+                "s3Uri": "{% $states.result.Payload.s3Uri %}"
+              }
             },
             "Get fastq list rows from rgid list": {
               "Type": "Task",
@@ -613,7 +641,8 @@
               "Arguments": {
                 "FunctionName": "${__get_fastq_list_rows_from_rgid_list_lambda_function_arn__}",
                 "Payload": {
-                  "fastqRgidList": "{% $tags.fastqRgidList %}"
+                  "fastqRgidList": "{% $tags.fastqRgidList %}",
+                  "s3UriPrefix": "{% $states.input.s3Uri %}"
                 }
               },
               "Retry": [
@@ -718,6 +747,34 @@
                   }
                 ]
               },
+              "Next": "Get prefix from project id (tumor)"
+            },
+            "Get prefix from project id (tumor)": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Output": {
+                "s3Uri": "{% $states.result.Payload.s3Uri %}"
+              },
+              "Arguments": {
+                "FunctionName": "${__get_project_base_uri_from_project_id_lambda_function_arn__}",
+                "Payload": {
+                  "projectId": "{% $draftEngineParameters.projectId %}"
+                }
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
               "Next": "Get tumor fastq list rows from rgid list"
             },
             "Get tumor fastq list rows from rgid list": {
@@ -729,7 +786,8 @@
               "Arguments": {
                 "FunctionName": "${__get_fastq_list_rows_from_rgid_list_lambda_function_arn__}",
                 "Payload": {
-                  "fastqRgidList": "{% $tags.tumorFastqRgidList %}"
+                  "fastqRgidList": "{% $tags.tumorFastqRgidList %}",
+                  "s3UriPrefix": "{% $states.input.s3Uri %}"
                 }
               },
               "Retry": [

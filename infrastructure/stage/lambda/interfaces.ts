@@ -10,6 +10,7 @@ export type LambdaNameList =
   | 'validateDraftCompleteSchema'
   | 'getLibraries'
   | 'getMetadataTags'
+  | 'getProjectBaseUriFromProjectId'
   | 'getFastqListRowsFromRgidList'
   | 'getFastqRgidsFromLibraryId'
   | 'getFastqIdListFromRgidList'
@@ -30,6 +31,7 @@ export const lambdaNameList: LambdaNameList[] = [
   'validateDraftCompleteSchema',
   'getLibraries',
   'getMetadataTags',
+  'getProjectBaseUriFromProjectId',
   'getFastqListRowsFromRgidList',
   'getFastqRgidsFromLibraryId',
   'getFastqIdListFromRgidList',
@@ -46,6 +48,7 @@ export const lambdaNameList: LambdaNameList[] = [
 // Requirements interface for Lambda functions
 export interface LambdaRequirements {
   needsOrcabusApiTools?: boolean;
+  needsIcav2Tools?: boolean;
   needsSsmParametersAccess?: boolean;
   needsSchemaRegistryAccess?: boolean;
 }
@@ -69,6 +72,9 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
   },
   getFastqIdListFromRgidList: {
     needsOrcabusApiTools: true,
+  },
+  getProjectBaseUriFromProjectId: {
+    needsIcav2Tools: true,
   },
   getQcSummaryStatsFromRgidList: {
     needsOrcabusApiTools: true,
