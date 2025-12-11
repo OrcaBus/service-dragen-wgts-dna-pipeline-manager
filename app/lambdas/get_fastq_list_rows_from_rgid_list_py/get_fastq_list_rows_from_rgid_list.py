@@ -45,10 +45,14 @@ def handler(event, context):
         "fastqListRows": list(map(
             lambda fastq_id_iter_: to_fastq_list_row(
                 fastq_id_iter_,
-                **{
-                    "bucket": s3_uri_obj.netloc,
-                    "key_prefix": (str(Path(s3_uri_obj.path)) + "/").lstrip('/')
-                } if s3_uri_obj is not None else {}
+                **(
+                    {
+                        "bucket": s3_uri_obj.netloc,
+                        "key_prefix": (str(Path(s3_uri_obj.path)) + "/").lstrip('/')
+                    }
+                    if s3_uri_obj is not None
+                    else {}
+                )
             ),
             all_fastq_ids
         ))
