@@ -21,7 +21,11 @@ def handler(event, context) -> Dict[str, str]:
     set_icav2_env_vars()
 
     # Inputs
-    project_id = event["projectId"]
+    project_id = event.get("projectId", None)
+
+    # Check project id is not None:
+    if project_id is None:
+        raise ValueError("projectId is a required input")
 
     return {
         "s3Uri": get_s3_key_prefix_by_project_id(project_id)

@@ -29,8 +29,13 @@ def handler(event, context):
     s3_uri_prefix = event.get("s3UriPrefix", None)
 
     # Convert the uri prefix to a parsed object
-    s3_uri_obj = urlparse(s3_uri_prefix)
+    s3_uri_obj = (
+        urlparse(s3_uri_prefix)
+        if s3_uri_prefix is not None
+        else None
+    )
 
+    # Collect all fastq ids from the rgid list
     all_fastq_ids = sorted(list(map(
         lambda fastq_rgid_iter_: get_fastq_by_rgid(fastq_rgid_iter_)['id'],
         fastq_rgid_list
@@ -40,8 +45,10 @@ def handler(event, context):
         "fastqListRows": list(map(
             lambda fastq_id_iter_: to_fastq_list_row(
                 fastq_id_iter_,
-                bucket=s3_uri_obj.netloc,
-                key_prefix=(str(Path(s3_uri_obj.path)) + "/").lstrip('/')
+                **{
+                    "bucket": s3_uri_obj.netloc,
+                    "key_prefix": (str(Path(s3_uri_obj.path)) + "/").lstrip('/')
+                } if s3_uri_obj is not None else {}
             ),
             all_fastq_ids
         ))
