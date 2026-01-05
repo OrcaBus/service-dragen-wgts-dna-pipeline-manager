@@ -613,7 +613,7 @@
               "Arguments": {
                 "FunctionName": "${__get_project_base_uri_from_project_id_lambda_function_arn__}",
                 "Payload": {
-                  "projectId": "{% $draftEngineParameters.projectId %}"
+                  "projectId": "{% $engineParameters.projectId %}"
                 }
               },
               "Retry": [
@@ -758,7 +758,7 @@
               "Arguments": {
                 "FunctionName": "${__get_project_base_uri_from_project_id_lambda_function_arn__}",
                 "Payload": {
-                  "projectId": "{% $draftEngineParameters.projectId %}"
+                  "projectId": "{% $engineParameters.projectId %}"
                 }
               },
               "Retry": [
