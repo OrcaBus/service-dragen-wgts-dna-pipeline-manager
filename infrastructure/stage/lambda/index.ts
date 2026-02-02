@@ -6,6 +6,8 @@ import {
   DEFAULT_WORKFLOW_VERSION,
   SCHEMA_REGISTRY_NAME,
   SSM_SCHEMA_ROOT,
+  REFERENCE_DATA_BUCKET_NAME,
+  TEST_DATA_BUCKET_NAME,
 } from '../constants';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Duration } from 'aws-cdk-lib';
@@ -107,6 +109,15 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
   }
 
   /*
+    External bucket info, required by the post schema validation lambda to confirm inputs
+    are legitimate
+  */
+  if (lambdaRequirements.needsExternalBucketInfo) {
+    lambdaFunction.addEnvironment('TEST_DATA_BUCKET_NAME', TEST_DATA_BUCKET_NAME);
+    lambdaFunction.addEnvironment('REF_DATA_BUCKET_NAME', REFERENCE_DATA_BUCKET_NAME);
+  }
+
+  /*
     Special if the lambdaName is 'generateWorkflowRunNameAndPortalRunId'
     We need to add a specific environment variable for this lambda
      */
@@ -120,12 +131,17 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
     to the REGISTRY_NAME and SCHEMA_NAME
    */
   if (props.lambdaName === 'validateDraftCompleteSchema') {
+    lambdaFunction.addEnvironment('WORKFLOW_NAME', WORKFLOW_NAME);
     const draftSchemaName: SchemaNames = 'completeDataDraft';
     lambdaFunction.addEnvironment('SSM_REGISTRY_NAME', path.join(SSM_SCHEMA_ROOT, 'registry'));
     lambdaFunction.addEnvironment(
       'SSM_SCHEMA_NAME',
       path.join(SSM_SCHEMA_ROOT, camelCaseToKebabCase(draftSchemaName), 'latest')
     );
+  }
+
+  if (props.lambdaName === 'postSchemaValidation') {
+    lambdaFunction.addEnvironment('WORKFLOW_NAME', WORKFLOW_NAME);
   }
 
   /* Return the function */

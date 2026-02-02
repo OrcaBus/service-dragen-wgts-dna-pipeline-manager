@@ -22,7 +22,6 @@ import {
   ORA_VERSION_TO_DEFAULT_ORA_REFERENCE_PATHS_MAP,
   SSM_PARAMETER_PATH_PREFIX_INPUTS_BY_WORKFLOW_VERSION,
   DEFAULT_WORKFLOW_INPUTS_BY_VERSION_MAP,
-  NEW_WORKFLOW_MANAGER_IS_DEPLOYED,
 } from './constants';
 import { StatefulApplicationStackConfig, StatelessApplicationStackConfig } from './interfaces';
 import { StageName } from '@orcabus/platform-cdk-constructs/shared-config/accounts';
@@ -107,9 +106,6 @@ export const getStatelessStackProps = (stage: StageName): StatelessApplicationSt
 
     // Event Bus Object
     eventBusName: EVENT_BUS_NAME,
-
-    // Is new workflow manager deployed
-    isNewWorkflowManagerDeployed: NEW_WORKFLOW_MANAGER_IS_DEPLOYED[stage],
 
     // Stage Name
     stageName: stage,

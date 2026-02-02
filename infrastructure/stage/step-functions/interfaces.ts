@@ -45,7 +45,6 @@ export interface BuildStepFunctionProps extends StepFunctionInput {
   lambdaObjects: LambdaObject[];
   eventBus: IEventBus;
   ssmParameterPaths: SsmParameterPaths;
-  isNewWorkflowManagerDeployed: boolean;
 }
 
 export interface StepFunctionObject extends StepFunctionInput {
@@ -86,7 +85,11 @@ export const stepFunctionToLambdasMap: Record<StateMachineNameList, LambdaNameLi
     'checkNtsmExternal',
     'getProjectBaseUriFromProjectId',
   ],
-  validateDraftDataAndPutReadyEvent: ['validateDraftCompleteSchema'],
+  validateDraftDataAndPutReadyEvent: ['validateDraftCompleteSchema', 'postSchemaValidation'],
   readyEventToIcav2WesRequestEvent: ['dragenWgtsDnaReadyToIcav2WesRequest'],
-  icav2WesEventToWrscEvent: ['convertIcav2WesStateChangeEventToWrscEvent', 'addPostAnalysisTags'],
+  icav2WesEventToWrscEvent: [
+    'convertIcav2WesStateChangeEventToWrscEvent',
+    'addPostAnalysisTags',
+    'addWesFailureComment',
+  ],
 };

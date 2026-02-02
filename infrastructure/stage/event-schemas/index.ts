@@ -24,7 +24,7 @@ export function buildSchema(scope: Construct, props: BuildSchemaProps): schemas.
     type: 'JSONSchemaDraft4',
     content: fs.readFileSync(schemaPath, 'utf-8'),
     registryName: SCHEMA_REGISTRY_NAME,
-    schemaName: `${STACK_PREFIX}-${props.schemaName}`,
+    schemaName: `${STACK_PREFIX}--${props.schemaName}`,
   });
 }
 

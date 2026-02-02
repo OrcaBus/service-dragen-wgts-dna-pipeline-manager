@@ -2,17 +2,24 @@
 
 """
 Download the draft schema, validate it against the current schema, and print the results.
+
+Confirm the following:
+- Each fastq uri is a valid s3 uri AND is accessible in the project id context for a given ICAv2 project id
+
 """
 
 # Imports
-import json
 import boto3
 import typing
 import jsonschema
-from os import environ
 from typing import Dict
 import logging
 from jsonschema import ValidationError
+from os import environ
+import json
+
+# Layer imports
+from orcabus_api_tools.workflow import add_comment_to_workflow_run
 
 # Type checking imports
 if typing.TYPE_CHECKING:
@@ -22,6 +29,8 @@ if typing.TYPE_CHECKING:
 # Globals
 SSM_REGISTRY_NAME_ENV_VAR = "SSM_REGISTRY_NAME"
 SSM_SCHEMA_NAME_ENV_VAR = "SSM_SCHEMA_NAME"
+WORKFLOW_NAME_ENV_VAR = "WORKFLOW_NAME"
+COMMENT_AUTHOR = "{WORKFLOW_NAME}-workflow-validation-service"
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -70,10 +79,17 @@ def get_schema_from_registry(
 
 def validate_draft_schema(
         json_schema: str,
-        json_body: str
+        json_body: str,
+        workflow_run_id: str = None,
+        comment_error: bool = False
 ) -> bool:
     """
     Download the draft schema, validate it against the current schema, and print the results.
+
+    :param json_schema: The current schema as a JSON string.
+    :param json_body: The draft schema as a JSON string.
+    :param workflow_run_id: The workflow run ID to add comments to (if any).
+    :param comment_error: Whether to add a comment to the workflow run on validation error.
     """
     try:
         jsonschema.validate(
@@ -82,6 +98,14 @@ def validate_draft_schema(
         )
     except ValidationError as e:
         logger.info(f"Failed validation, {e}")
+        if comment_error:
+            add_comment_to_workflow_run(
+                workflow_run_orcabus_id=workflow_run_id,
+                comment=f"Draft schema validation failed: {e.message} at \"{e.json_path}\"",
+                author=COMMENT_AUTHOR.format(
+                    WORKFLOW_NAME=environ.get(WORKFLOW_NAME_ENV_VAR)
+                )
+            )
         return False
     return True
 
@@ -91,6 +115,11 @@ def handler(event, context) -> Dict[str, bool]:
     Given a draft schema, validate it against the current schema and print the results.
     :return:
     """
+    # Get the event data
+    payload_data = event.get('data')
+    workflow_run_id = event.get("workflowRunId", "")
+    comment_error = event.get("addCommentOnError", False)
+
     # Get the SSM parameters
     schema_registry = get_ssm_parameter_value(environ[SSM_REGISTRY_NAME_ENV_VAR])
     schema_name = json.loads(get_ssm_parameter_value(environ[SSM_SCHEMA_NAME_ENV_VAR]))['schemaName']
@@ -101,23 +130,30 @@ def handler(event, context) -> Dict[str, bool]:
         schema_name=schema_name
     )
 
-    # Get the draft schema from the schema registry
+    # Validate the draft schema against the current schema
+    is_valid_schema = validate_draft_schema(
+        current_schema,
+        # Assuming the event contains the draft schema as a JSON string
+        json.dumps(payload_data),
+        workflow_run_id=workflow_run_id,
+        comment_error=comment_error
+    )
+
+    # Return if the schema is not valid
     return {
-        "isValid": validate_draft_schema(
-            current_schema,
-            # Assuming the event contains the draft schema as a JSON string
-            json.dumps(event)
-        )
+        "isValid": is_valid_schema
     }
 
 
 # if __name__ == "__main__":
-#     from os import environ
-#     import json
 #     environ['AWS_PROFILE'] = 'umccr-development'
 #     environ["SSM_REGISTRY_NAME"] = '/orcabus/workflows/dragen-wgts-dna/schemas/registry'
-#     environ["SSM_SCHEMA_NAME"] = '/orcabus/workflows/dragen-wgts-dna/schemas/dragen-wgts-dna-complete-data-draft/latest'
+#     environ["SSM_SCHEMA_NAME"] = '/orcabus/workflows/dragen-wgts-dna/schemas/complete-data-draft/latest'
 #     print(json.dumps(
-#         handler({}, None),
+#         handler({
+#             "inputs": "foo",
+#             "tags": "far",
+#             "engineParameters": "car"
+#         }, None),
 #         indent=4
 #     ))

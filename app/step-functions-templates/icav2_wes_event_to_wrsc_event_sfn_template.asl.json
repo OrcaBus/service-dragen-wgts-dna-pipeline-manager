@@ -25,25 +25,32 @@
           "JitterStrategy": "FULL"
         }
       ],
-      "Next": "Workflow has succeeded status",
+      "Next": "Workflow status decision tree",
       "Assign": {
-        "workflowRunStateChangeEvent": "{% $states.result.Payload.workflowRunStateChangeEvent %}"
+        "workflowRunStateChangeEvent": "{% $states.result.Payload.workflowRunStateChangeEvent %}",
+        "errorMessage": "{% $states.result.Payload.errorMessage %}",
+        "errorType": "{% $states.result.Payload.errorType %}"
       }
     },
-    "Workflow has succeeded status": {
+    "Workflow status decision tree": {
       "Type": "Choice",
       "Choices": [
         {
           "Next": "Add post analysis tags",
           "Condition": "{% $workflowRunStateChangeEvent.status = 'SUCCEEDED' %}",
           "Comment": "Workflow has SUCCEEDED status"
+        },
+        {
+          "Next": "Add comment for WES failure",
+          "Condition": "{% $workflowRunStateChangeEvent.status = 'FAILED' %}",
+          "Comment": "Workflow has FAILED status"
         }
       ],
-      "Default": "New WFM has been deployed"
+      "Default": "Push WRSC Event"
     },
     "Add post analysis tags": {
       "Type": "Parallel",
-      "Next": "New WFM has been deployed",
+      "Next": "Push WRSC Event",
       "Branches": [
         {
           "StartAt": "Add post analysis tags (germline)",
@@ -136,17 +143,6 @@
       },
       "Output": {}
     },
-    "New WFM has been deployed": {
-      "Type": "Choice",
-      "Choices": [
-        {
-          "Next": "Push WRSC Event",
-          "Condition": "{% ${__new_workflow_manager_is_deployed__} %}",
-          "Comment": "New WFM Has Been Deployed"
-        }
-      ],
-      "Default": "Push WRSC Event (legacy)"
-    },
     "Push WRSC Event": {
       "Type": "Task",
       "Resource": "arn:aws:states:::events:putEvents",
@@ -162,20 +158,33 @@
       },
       "End": true
     },
-    "Push WRSC Event (legacy)": {
+    "Add comment for WES failure": {
       "Type": "Task",
-      "Resource": "arn:aws:states:::events:putEvents",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Output": "{% $states.result.Payload %}",
       "Arguments": {
-        "Entries": [
-          {
-            "Detail": "{% $workflowRunStateChangeEvent ~>\n/* Renamed libraries to linkedLibraries using the transform method */\n| $ | {\"linkedLibraries\": libraries}, [\"libraries\"] | ~>\n/* Renamed workflowName and workflowVersion using the transform method */\n| $ | {\"workflowName\": workflow.name, \"workflowVersion\": workflow.version}, [\"workflow\"] | %}",
-            "DetailType": "${__workflow_run_state_change_event_detail_type__}",
-            "EventBusName": "${__event_bus_name__}",
-            "Source": "${__stack_source__}"
-          }
-        ]
+        "FunctionName": "${__add_wes_failure_comment_lambda_function_arn__}",
+        "Payload": {
+          "errorType": "{% $errorType %}",
+          "errorMessage": "{% $errorMessage %}",
+          "portalRunId": "{% $workflowRunStateChangeEvent.portalRunId %}"
+        }
       },
-      "End": true
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Push WRSC Event"
     }
   },
   "QueryLanguage": "JSONata"

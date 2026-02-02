@@ -7,6 +7,7 @@
       "Next": "Validate Draft Complete Event",
       "Assign": {
         "detail": "{% $states.input %}",
+        "workflowRunId": "{% $states.input.orcabusId %}",
         "payload": "{% $states.input.payload ? $states.input.payload : {} %}",
         "payloadData": "{% $states.input.payload.data ? $states.input.payload.data : {} %}"
       }
@@ -19,7 +20,11 @@
       },
       "Arguments": {
         "FunctionName": "${__validate_draft_complete_schema_lambda_function_arn__}",
-        "Payload": "{% $payloadData %}"
+        "Payload": {
+          "data": "{% $payloadData %}",
+          "workflowRunId": "{% $workflowRunId %}",
+          "addCommentOnError": true
+        }
       },
       "Retry": [
         {
@@ -41,23 +46,50 @@
       "Type": "Choice",
       "Choices": [
         {
-          "Next": "New workflow manager is deployed",
+          "Next": "Run post-schema validation",
           "Condition": "{% $states.input.isValid %}",
           "Comment": "Draft is Valid"
         }
       ],
       "Default": "Pass"
     },
-    "New workflow manager is deployed": {
+    "Run post-schema validation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Output": "{% $states.result.Payload %}",
+      "Arguments": {
+        "FunctionName": "${__post_schema_validation_lambda_function_arn__}",
+        "Payload": {
+          "data": "{% $payloadData %}",
+          "workflowRunId": "{% $workflowRunId %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Workflow Inputs are Valid"
+    },
+    "Workflow Inputs are Valid": {
       "Type": "Choice",
       "Choices": [
         {
           "Next": "Push READY Event",
-          "Condition": "{% ${__new_workflow_manager_is_deployed__} %}",
-          "Comment": "New workflow manager is deployed"
+          "Condition": "{% $states.input.isValid %}",
+          "Comment": "Inputs are valid"
         }
       ],
-      "Default": "Push READY Event (legacy)"
+      "Default": "Pass"
     },
     "Push READY Event": {
       "Type": "Task",
@@ -67,21 +99,6 @@
           {
             "Detail": "{% $merge([\n  $detail,\n  {\n    \"timestamp\": $now(),\n    \"status\": \"${__ready_event_status__}\",\n    \"payload\": (\n      $merge([\n        $detail ~> $lookup(\"payload\"),\n        {\n          \"orcabusId\": null,\n          \"refId\": null\n        }\n      ]) ~>\n      $sift(function($v, $k){$v != null})\n    )\n  }\n]) %}",
             "DetailType": "${__workflow_run_update_event_detail_type__}",
-            "EventBusName": "${__event_bus_name__}",
-            "Source": "${__stack_source__}.validator"
-          }
-        ]
-      },
-      "End": true
-    },
-    "Push READY Event (legacy)": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::events:putEvents",
-      "Arguments": {
-        "Entries": [
-          {
-            "Detail": "{% $merge([\n  $detail,\n  {\n    \"timestamp\": $now(),\n    \"status\": \"${__ready_event_status__}\"\n  }\n]) ~>\n/* Renamed libraries to linkedLibraries using the transform method */\n| $ | {\"linkedLibraries\": libraries}, [\"libraries\"] | ~>\n/* Renamed workflowName and workflowVersion using the transform method */\n| $ | {\"workflowName\": workflow.name, \"workflowVersion\": workflow.version}, [\"workflow\"] | %}",
-            "DetailType": "${__workflow_run_state_change_event_detail_type__}",
             "EventBusName": "${__event_bus_name__}",
             "Source": "${__stack_source__}.validator"
           }

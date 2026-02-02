@@ -123,9 +123,6 @@ def handler(event, context):
     # ICAV2 WES State Change Event payload
     icav2_wes_event = event['icav2WesStateChangeEvent']
 
-    # Get the output URI from the engine parameters
-    output_uri = icav2_wes_event['engineParameters']['outputUri']
-
     # Get the portal run ID from the event tags
     portal_run_id = icav2_wes_event['tags']['portalRunId']
 
@@ -183,6 +180,14 @@ def handler(event, context):
     else:
         outputs = None
 
+    # Check if the status was FAILED, if so we populate the error message and type
+    if icav2_wes_event['status'] == 'FAILED':
+        error_message = icav2_wes_event.get('errorMessage', 'Unknown error occurred during workflow execution.')
+        error_type = icav2_wes_event.get('errorType', 'UnknownErrorType')
+    else:
+        error_message = None
+        error_type = None
+
     # Update the latest payload with the outputs if available
     if outputs:
         latest_payload['data']['outputs'] = outputs
@@ -214,7 +219,9 @@ def handler(event, context):
                 "version": latest_payload['version'],
                 "data": latest_payload['data']
             }
-        }
+        },
+        "errorMessage": error_message,
+        "errorType": error_type,
     }
 
 

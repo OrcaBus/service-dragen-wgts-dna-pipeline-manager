@@ -5,20 +5,16 @@ import { EventPattern, IEventBus, Rule } from 'aws-cdk-lib/aws-events';
  */
 export type EventBridgeRuleName =
   // Pre-draft
-  | 'wrscDraftLegacy'
   | 'wrscDraft'
   // Pre-ready
-  | 'wrscReadyLegacy'
   | 'wrscReady'
   // Post-submitted
   | 'icav2WesAnalysisStateChange';
 
 export const eventBridgeRuleNameList: EventBridgeRuleName[] = [
   // Pre-draft
-  'wrscDraftLegacy',
   'wrscDraft',
   // Pre-ready
-  'wrscReadyLegacy',
   'wrscReady',
   // Post-submitted
   'icav2WesAnalysisStateChange',
