@@ -28,7 +28,7 @@
       "Next": "Workflow status decision tree",
       "Assign": {
         "workflowRunStateChangeEvent": "{% $states.result.Payload.workflowRunStateChangeEvent %}",
-        "errorMessage": "{% $states.result.Payload.errorMessage %}",
+        "errorMessageUri": "{% $states.result.Payload.errorMessageUri %}",
         "errorType": "{% $states.result.Payload.errorType %}"
       }
     },
@@ -166,7 +166,7 @@
         "FunctionName": "${__add_wes_failure_comment_lambda_function_arn__}",
         "Payload": {
           "errorType": "{% $errorType %}",
-          "errorMessage": "{% $errorMessage %}",
+          "errorMessageUri": "{% $errorMessageUri %}",
           "portalRunId": "{% $workflowRunStateChangeEvent.portalRunId %}"
         }
       },

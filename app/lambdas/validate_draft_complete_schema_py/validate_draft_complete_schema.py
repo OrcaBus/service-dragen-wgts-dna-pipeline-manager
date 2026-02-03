@@ -143,17 +143,3 @@ def handler(event, context) -> Dict[str, bool]:
     return {
         "isValid": is_valid_schema
     }
-
-
-# if __name__ == "__main__":
-#     environ['AWS_PROFILE'] = 'umccr-development'
-#     environ["SSM_REGISTRY_NAME"] = '/orcabus/workflows/dragen-wgts-dna/schemas/registry'
-#     environ["SSM_SCHEMA_NAME"] = '/orcabus/workflows/dragen-wgts-dna/schemas/complete-data-draft/latest'
-#     print(json.dumps(
-#         handler({
-#             "inputs": "foo",
-#             "tags": "far",
-#             "engineParameters": "car"
-#         }, None),
-#         indent=4
-#     ))

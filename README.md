@@ -78,7 +78,7 @@ A draft event may even be submitted without a payload.
 
 #### Draft Event Submission
 
-To submit a Dragen WGTS DNA draft event, please follow the [PM.DWD.1 SOP](/docs/operation/SOP/README.md#PM.DWD.1) in our
+To submit a Dragen WGTS DNA draft event, please follow the [PM.DWD.1 SOP](/docs/operation/SOP/README.md#pm.dwd.1) in our
 SOPs documentation.
 
 #### Draft Data Schema Validation

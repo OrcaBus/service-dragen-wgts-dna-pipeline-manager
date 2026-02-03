@@ -106,7 +106,7 @@ def validate_inputs(
     for ref_key in ["reference", "somaticReference"]:
         ref_obj = inputs.get(ref_key, {})
         data_uris.append(ref_obj.get("tarball"))
-    data_uris.append(ref_obj.get("oraReference"))
+    data_uris.append(inputs.get("oraReference"))
 
     # Remove empty values from list
     # Or externally mounted data uris (e.g. s3://reference-data-bucket/...)
@@ -123,12 +123,6 @@ def validate_inputs(
 
     # Validate each fastq uri
     for data_uri in data_uris:
-        if (
-
-        ):
-            # Reference data or test data, skip validation,
-            # these are externally mounted
-            continue
         # Try get the icav2 object by uri
         try:
             project_data_obj = coerce_data_id_or_uri_to_project_data_obj(
@@ -204,17 +198,3 @@ def handler(event, context) -> Dict[str, bool]:
     return {
         "isValid": True
     }
-
-
-# if __name__ == "__main__":
-#     environ['AWS_PROFILE'] = 'umccr-development'
-#     environ["SSM_REGISTRY_NAME"] = '/orcabus/workflows/dragen-wgts-dna/schemas/registry'
-#     environ["SSM_SCHEMA_NAME"] = '/orcabus/workflows/dragen-wgts-dna/schemas/complete-data-draft/latest'
-#     print(json.dumps(
-#         handler({
-#             "inputs": "foo",
-#             "tags": "far",
-#             "engineParameters": "car"
-#         }, None),
-#         indent=4
-#     ))

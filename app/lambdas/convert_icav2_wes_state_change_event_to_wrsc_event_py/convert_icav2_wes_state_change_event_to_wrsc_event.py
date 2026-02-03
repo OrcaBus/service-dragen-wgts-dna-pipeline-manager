@@ -182,10 +182,10 @@ def handler(event, context):
 
     # Check if the status was FAILED, if so we populate the error message and type
     if icav2_wes_event['status'] == 'FAILED':
-        error_message = icav2_wes_event.get('errorMessage', 'Unknown error occurred during workflow execution.')
         error_type = icav2_wes_event.get('errorType', 'UnknownErrorType')
+        error_message_uri = icav2_wes_event.get('errorMessageUri', None)
     else:
-        error_message = None
+        error_message_uri = None
         error_type = None
 
     # Update the latest payload with the outputs if available
@@ -220,7 +220,7 @@ def handler(event, context):
                 "data": latest_payload['data']
             }
         },
-        "errorMessage": error_message,
+        "errorMessageUri": error_message_uri,
         "errorType": error_type,
     }
 

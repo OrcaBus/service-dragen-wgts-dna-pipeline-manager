@@ -47,9 +47,7 @@ def handler(event, context):
 
     # Test-data will have its own prefix
     fastq_list_rows = list(map(
-        lambda fastq_id_iter_: to_fastq_list_row(
-            fastq_id_iter_
-        ),
+        to_fastq_list_row,
         all_fastq_ids
     ))
 
