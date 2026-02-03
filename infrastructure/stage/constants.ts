@@ -1,8 +1,11 @@
 /* Directory constants */
 import path from 'path';
 import { OraReferenceVersionType, Reference, WorkflowVersionType } from './interfaces';
-import { StageName } from '@orcabus/platform-cdk-constructs/shared-config/accounts';
 import { DATA_SCHEMA_REGISTRY_NAME } from '@orcabus/platform-cdk-constructs/shared-config/event-bridge';
+import {
+  REFERENCE_DATA_BUCKET,
+  TEST_DATA_BUCKET,
+} from '@orcabus/platform-cdk-constructs/shared-config/s3';
 
 export const APP_ROOT = path.join(__dirname, '../../app');
 export const LAMBDA_DIR = path.join(APP_ROOT, 'lambdas');
@@ -223,6 +226,10 @@ export const WORKFLOW_MANAGER_EVENT_SOURCE = 'orcabus.workflowmanager';
 export const ICAV2_WES_EVENT_SOURCE = 'orcabus.icav2wesmanager';
 export const FASTQ_SYNC_DETAIL_TYPE = 'FastqSync';
 
+/* Bucket constants */
+export const TEST_DATA_BUCKET_NAME = TEST_DATA_BUCKET;
+export const REFERENCE_DATA_BUCKET_NAME = REFERENCE_DATA_BUCKET;
+
 /* Event rule constants */
 export const DRAFT_STATUS = 'DRAFT';
 export const READY_STATUS = 'READY';
@@ -230,10 +237,3 @@ export const READY_STATUS = 'READY';
 /* Schema constants */
 export const SCHEMA_REGISTRY_NAME = DATA_SCHEMA_REGISTRY_NAME;
 export const SSM_SCHEMA_ROOT = path.join(SSM_PARAMETER_PATH_PREFIX, 'schemas');
-
-/* Future proofing */
-export const NEW_WORKFLOW_MANAGER_IS_DEPLOYED: Record<StageName, boolean> = {
-  BETA: true,
-  GAMMA: true,
-  PROD: true,
-};

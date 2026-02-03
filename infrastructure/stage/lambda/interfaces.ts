@@ -7,7 +7,6 @@ export type LambdaNameList =
   // Pre-Draft Lambda functions
   | 'generateWorkflowRunNameAndPortalRunId'
   // Pre-Draft-complete Lambda functions
-  | 'validateDraftCompleteSchema'
   | 'getLibraries'
   | 'getMetadataTags'
   | 'getProjectBaseUriFromProjectId'
@@ -17,18 +16,21 @@ export type LambdaNameList =
   | 'getQcSummaryStatsFromRgidList'
   | 'checkNtsmInternal'
   | 'checkNtsmExternal'
+  // Validation Functions
+  | 'validateDraftCompleteSchema'
+  | 'postSchemaValidation'
   // Pre-READY Lambda functions
   // Pre-submission Lambda functions
   | 'dragenWgtsDnaReadyToIcav2WesRequest'
   // Post-submission Lambda functions/
   | 'convertIcav2WesStateChangeEventToWrscEvent'
-  | 'addPostAnalysisTags';
+  | 'addPostAnalysisTags'
+  | 'addWesFailureComment';
 
 export const lambdaNameList: LambdaNameList[] = [
   // Pre-Draft Lambda functions
   'generateWorkflowRunNameAndPortalRunId',
   // Pre-ready Lambda functions
-  'validateDraftCompleteSchema',
   'getLibraries',
   'getMetadataTags',
   'getProjectBaseUriFromProjectId',
@@ -38,11 +40,15 @@ export const lambdaNameList: LambdaNameList[] = [
   'getQcSummaryStatsFromRgidList',
   'checkNtsmInternal',
   'checkNtsmExternal',
+  // Validation Functions
+  'validateDraftCompleteSchema',
+  'postSchemaValidation',
   // Pre-submission Lambda functions
   'dragenWgtsDnaReadyToIcav2WesRequest',
   // Post-submission Lambda functions/
   'convertIcav2WesStateChangeEventToWrscEvent',
   'addPostAnalysisTags',
+  'addWesFailureComment',
 ];
 
 // Requirements interface for Lambda functions
@@ -51,6 +57,7 @@ export interface LambdaRequirements {
   needsIcav2Tools?: boolean;
   needsSsmParametersAccess?: boolean;
   needsSchemaRegistryAccess?: boolean;
+  needsExternalBucketInfo?: boolean;
 }
 
 // Lambda requirements mapping
@@ -66,6 +73,7 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
   },
   getFastqListRowsFromRgidList: {
     needsOrcabusApiTools: true,
+    needsExternalBucketInfo: true,
   },
   getFastqRgidsFromLibraryId: {
     needsOrcabusApiTools: true,
@@ -85,16 +93,23 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
   checkNtsmExternal: {
     needsOrcabusApiTools: true,
   },
-  // Pre-ready-complete lambda functions
+  // Validation Functions
   validateDraftCompleteSchema: {
     needsSchemaRegistryAccess: true,
     needsSsmParametersAccess: true,
+    needsOrcabusApiTools: true,
+  },
+  postSchemaValidation: {
+    needsOrcabusApiTools: true,
+    needsIcav2Tools: true,
+    needsExternalBucketInfo: true,
   },
   // Pre-submission Lambda functions
   dragenWgtsDnaReadyToIcav2WesRequest: {},
   // Needs Orcabus API tools to fetch the existing workflow run state
   convertIcav2WesStateChangeEventToWrscEvent: { needsOrcabusApiTools: true },
   addPostAnalysisTags: { needsOrcabusApiTools: true },
+  addWesFailureComment: { needsOrcabusApiTools: true },
 };
 
 export interface LambdaInput {

@@ -9,6 +9,13 @@ from orcabus_api_tools.metadata import get_library_from_library_orcabus_id
 from orcabus_api_tools.metadata.models import LibraryBase
 
 
+def get_rgid_list_from_library_object(library_object: LibraryBase) -> List[str]:
+    return list(map(
+        lambda readset_iter_: readset_iter_['rgid'],
+        library_object.get('readsets', [])
+    ))
+
+
 def handler(event, context):
     """
     Get the libraries from the input, check their metadata,
@@ -23,11 +30,11 @@ def handler(event, context):
     if len(libraries) > 2:
         raise ValueError("We expect at most two libraries in the input")
 
-
     if len(libraries) == 1:
         # If only one library is provided, then we have a germline library
         return {
-            "libraryId": libraries[0]['libraryId']
+            "libraryId": libraries[0]['libraryId'],
+            "rgidList": get_rgid_list_from_library_object(libraries[0])
         }
 
     # Get library metadata for both libraries
@@ -56,5 +63,7 @@ def handler(event, context):
     # If both libraries are provided, return their IDs
     return {
         "libraryId": library_obj['libraryId'],
-        "tumorLibraryId": tumor_library_obj['libraryId']
+        "tumorLibraryId": tumor_library_obj['libraryId'],
+        "fastqRgidList": get_rgid_list_from_library_object(library_obj),
+        "tumorFastqRgidList": get_rgid_list_from_library_object(tumor_library_obj)
     }

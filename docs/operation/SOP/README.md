@@ -18,22 +18,27 @@ These tasks range from:
 * Troubleshooting common issues with the Dragen WGTS DNA Pipeline
 * Kicking off a reanalysis of a set of samples manually
 
+<a name="pm.dwd.1"></a>
 ## Manually running an analysis
 
 * [PM.DWD.1 - Kicking off a reanalysis of a set of samples manually](PM.DWD.1/PM.DWD.1-ManualPipelineExecution.md)
 
+<a name="pm.dwd.2"></a>
 ## Installation and Pipeline Deployment
 
 * [PM.DWD.2 - Installing and Deploying a new version of the Dragen WGTS DNA Pipeline](PM.DWD.2/PM.DWD.2-NewDragenWgtsDnaPipelineDeployment.md)
 
+<a name="pm.dwd.3"></a>
 ## Parameter Updates
 
 * [PM.DWD.3 - Updating Parameters for the Dragen WGTS DNA Pipeline](PM.DWD.3/PM.DWD.3-UpdatingPipelineParameters.md)
 
+<a name="pm.dwd.4"></a>
 ## Verifying a new version of the Dragen WGTS DNA Pipeline
 
 * [PM.DWD.4 - Running Workflow Validations](PM.DWD.4/PM.DWD.4-RunningWorkflowValidations.md)
 
+<a name="pm.dwd.5"></a>
 ## Troubleshooting common issues with the Dragen WGTS DNA Pipeline
 
 * [PM.DWD.5 - Troubleshooting common issues with the Dragen WGTS DNA Pipeline](PM.DWD.5/PM.DWD.5-TroubleShooting.md)

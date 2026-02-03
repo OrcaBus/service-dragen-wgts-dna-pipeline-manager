@@ -1,22 +1,22 @@
-Dragen WGTS DNA Pipeline Manager
+# Dragen WGTS DNA Pipeline Manager
 ================================================================================
 
 - [Description](#description)
   - [Summary](#summary)
-  - [Events Overview](#events-overview)
+  - [Ready Event Creation](#ready-event-creation)
   - [Consumed Events](#consumed-events)
   - [Published Events](#published-events)
-  - [DRAFT Event Examples](#draft-event-examples)
-    - [Minimal DRAFT event example](#minimal-draft-event-example)
-    - [Complete DRAFT event example](#complete-draft-event-example)
-    - [Manually Validating Schemas,](#manually-validating-schemas)
-    - [Making your own DRAFT WRU events with BASH / JQ (new system)](#making-your-own-draft-wru-events-with-bash--jq-new-system)
-    - [Making your own DRAFT WRSC events with BASH / JQ (legacy system)](#making-your-own-draft-wrsc-events-with-bash--jq-legacy-system)
-    - [Release management](#release-management)
+  - [Draft Event](#draft-event)
+    - [Draft Event Submission](#draft-event-submission)
+    - [Draft Data Schema Validation](#draft-data-schema-validation)
+  - [Release management](#release-management)
+  - [Related Services](#related-services)
+    - [Upstream Pipelines](#upstream-pipelines)
+    - [Downstream Pipelines](#downstream-pipelines)
+    - [Primary Services](#primary-services)
 - [Infrastructure \& Deployment](#infrastructure--deployment)
   - [Stateful Stack](#stateful-stack)
   - [Stateless Stack](#stateless-stack)
-    - [Step Functions](#step-functions)
   - [CDK Commands](#cdk-commands)
   - [Stacks](#stacks)
     - [Stateful Stack](#stateful-stack-1)
@@ -28,323 +28,69 @@ Dragen WGTS DNA Pipeline Manager
     - [Install Dependencies](#install-dependencies)
     - [Update Dependencies](#update-dependencies)
   - [Conventions](#conventions)
-  - [Linting \& Formatting](#linting--formatting)
+    - [Linting \& Formatting](#linting--formatting)
   - [Testing](#testing)
 - [Glossary \& References](#glossary--references)
 
-Description
+## Description
 --------------------------------------------------------------------------------
 
 ### Summary
 
-This is the Dragen WGTS DNA Pipeline Management service,
-responsible for managing the Dragen WGTS DNA pipeline.
+This is the Dragen WGTS DNA Pipeline Management service, responsible for managing the Dragen WGTS DNA pipeline.
 
-This service has 3 parts:
-- **DRAFT Event Populator**: responsible for providing execution parameters
-- **DRAFT Event Validator**: responsible for validating execution requirements
-- **Execution Manager**: responsible for executing and monitoring pipeline runs
-  - **ICAv2 WES to WRU Converter**: (sub-component) responsible for converting external WES events to internal WRU events
+The [Dragen WGTS DNA Pipeline](https://help.dragen.illumina.com/product-guide/dragen-v4.4/dragen-dna-pipeline) is used
+for alignment, variant calling of whole genome sequencing data for both germline and somatic data.
 
-The pipeline itself runs on ICAv2 through CWL
+The pipeline itself runs on ICAv2 through CWL,
+see [our CWL releases page](https://github.com/umccr/cwl-ica/releases?q=dragen-wgts-dna&expanded=true)
+that allows us to run both the somatic and germline steps simultaneously in a single workflow run.
 
-### Events Overview
+The orchestration logic is per the
+standard [ICAv2-centric Pipeline Architecture](https://github.com/OrcaBus/wiki/blob/main/orcabus/platform/pipelines.md#pipeline-orchestration-general-logic)
 
-![events-overview](docs/drawio-exports/dragen-wgts-dna.drawio.svg)
+### Ready Event Creation
 
-**DRAFT Event Population**
-This is handled by the DRAFT Event Populator.
-We listen to DRAFT WRSC events where the workflow name is equal to `dragen-wgts-dna`.
-We then try to populate the inputs for the workflow run, and generate a complete DRAFT WRU event.
-
-**DRAFT Event Validation**
-This is handled by the DRAFT Event Validator.
-We listen to DRAFT WRSC events where the workflow name is equal to `dragen-wgts-dna`.
-We then validate the DRAFT event against the schema, and if valid, we generate a READY WRU event.
-
-**READY Event Handler**
-This is handled by the Execution Manager.
-We listen to READY WRSC events where the workflow name is equal to `dragen-wgts-dna`.
-We parse this to the ICAv2 WES Service to generate a ICAv2 WES workflow request.
-
-**ICAv2 WES Analysis State Change**
-This is handled by the Execution Manager.
-We then parse `Icav2WesAnalysisStateChange` events from the ICAv2 WES Service to update the state of the workflow in our service and forward any changes as WRU events.
+![events-overview](docs/drawio-exports/draft-to-ready.drawio.svg)
 
 ### Consumed Events
 
-| Name / DetailType             | Source             | Schema Link   | Description                           |
-|-------------------------------|--------------------|---------------|---------------------------------------|
-| `WorkflowRunStateChange`      | `orcabus.workflowmanager` | [WorkflowRunStateChange](https://github.com/OrcaBus/wiki/tree/main/orcabus-platform#workflowrunstatechange) | Source of updates on WorkflowRuns (expected pipeline executions) |
-| `Icav2WesAnalysisStateChange` | `orcabus.icav2wes` | TODO | ICAv2 WES Analysis State Change event |
+| Name / DetailType             | Source                    | Schema Link                                                                                                                                | Description                                                      |
+|-------------------------------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------|
+| `WorkflowRunStateChange`      | `orcabus.workflowmanager` | [WorkflowRunStateChange](https://github.com/OrcaBus/wiki/tree/main/orcabus-platform#workflowrunstatechange)                                | Source of updates on WorkflowRuns (expected pipeline executions) |
+| `Icav2WesAnalysisStateChange` | `orcabus.icav2wes`        | [Icav2WesAnalysisStateChange](https://github.com/OrcaBus/service-icav2-wes-manager/blob/main/app/event-schemas/analysis-state-change.json) | ICAv2 WES Analysis State Change event                            |
 
 ### Published Events
 
-| Name / DetailType        | Source                  | Schema Link   | Description           |
-|--------------------------|-------------------------|---------------|-----------------------|
-| `WorkflowRunUpdate`      | `orcabus.dragenwgtsdna` | [WorkflowRunUpdate](https://github.com/OrcaBus/wiki/tree/main/orcabus-platform#workflowrunupdate) | Reporting any updates to the pipeline state |
+| Name / DetailType   | Source                  | Schema Link                                                                                                 | Description                                 |
+|---------------------|-------------------------|-------------------------------------------------------------------------------------------------------------|---------------------------------------------|
+| `WorkflowRunUpdate` | `orcabus.dragenwgtsdna` | [WorkflowRunUpdate](https://github.com/OrcaBus/wiki/blob/main/orcabus/platform/events.md#workflowrunupdate) | Reporting any updates to the pipeline state |
 
-### DRAFT Event Examples
+### Draft Event
 
-#### Minimal DRAFT event example
+A workflow run must be placed into a DRAFT state before it can be started.
 
-<details>
+This is to ensure that only valid workflow runs are started, and that all required data is present.
 
-<summary>Click to expand</summary>
+This service is responsible for both populating and validating draft workflow runs.
 
-```json5
-{
-  "EventBusName": "OrcaBusMain",
-  "Source": "orcabus.manual",
-  "DetailType": "WorkflowRunUpdate",
-  "Detail": {
-    "status": "DRAFT",
-    "timestamp": "2025-06-06T04:39:31Z",
-    "workflowRunName": "umccr--automated--dragen-wgts-dna--4-4-4--20250606abcd6789",
-    "workflow": {
-      "name": "dragen-wgts-dna",
-      "version": "4.4.4",
-    },
-    "portalRunId": "20250606abcd6789",  // pragma: allowlist secret
-    "linkedLibraries": [
-      {
-        "libraryId": "L2301197",
-        "orcabusId": "lib.01JBMVHM2D5GCC7FTC20K4FDFK"
-      }
-    ]
-  }
-}
-```
+A draft event may even be submitted without a payload.
 
-</details>
+#### Draft Event Submission
 
-> [!NOTE]
-> Please be aware of the following:
+To submit a Dragen WGTS DNA draft event, please follow the [PM.DWD.1 SOP](/docs/operation/SOP/README.md#pm.dwd.1) in our
+SOPs documentation.
 
-The DRAFT Event Populator uses default inputs to populate the non-file-like parameters. See the complete DRAFT [example](#complete-draft-event-example) below.
+#### Draft Data Schema Validation
 
-The defaults for the workflow version 4.4.4 are:
+We have generated JSON schemas for the complete DRAFT WRU event **data** which you can find in the
+[`app/event-schemas` directory](/app/event-schemas).
 
-```json5
-{
-  // All '*Options' are optional but there are no defaults
-  // So please ensure you set the options you need
-  "alignmentOptions": {
-    "enableDuplicateMarking": true
-  },
-  // targetedCallerOptions - Not required, options for the targeted caller
-  "targetedCallerOptions": {
-    "enableTargeted": [
-      "cyp2d6"
-    ]
-  },
-  // Snv Variant Caller Options
-  // Not required, enableVariantCaller is always set to true
-  "snvVariantCallerOptions": {
-    "enableVcfCompression": true,
-    // True by default
-    "enableVcfIndexing": true,
-    // True by default
-    "qcDetectContamination": true,
-    "vcMnvEmitComponentCalls": true,
-    "vcCombinePhasedVariantsDistance": 2,
-    "vcCombinePhasedVariantsDistanceSnvsOnly": 2
-  }
-}
-```
+You can interactively check if your DRAFT event data payload matches the schema using the following links:
 
-> [!IMPORTANT]
-> The DRAFT Event Populator does NOT perform a merge on any of your inputs and the default inputs.
+- [Complete DRAFT WRU Event Data Schema Page](https://www.jsonschemavalidator.net/s/JX96lXfY)
 
-This means if you specify the following in your data inputs payload:
-
-```json5
-// ...
-{
-  "data": {
-    "inputs": {
-      "alignmentOptions": {
-        "enableDeterministicSort": true
-      }
-    }
-  }
-}
-```
-
-... then this provided `alignmentOptions` section will override the default and therefore "enableDuplicateMarking" will be omitted from the final DRAFT event.
-
-#### Complete DRAFT event example
-
-<details>
-
-<summary>Click to expand</summary>
-
-```json5
-{
-  "EventBusName": "OrcaBusMain",
-  "Source": "orcabus.manual",
-  "DetailType": "WorkflowRunUpdate",
-  "Detail": {
-    // status - Required - and must be set to DRAFT
-    "status": "DRAFT",
-    // timestamp - Required - set in UTC / ZULU time
-    "timestamp": "2025-06-06T04:39:31Z",
-    // workflow
-    "workflow": {
-      "orcabusId": "wfl.01K3F98TQJM8W3MQPKAKBPK26T",
-      "name": "dragen-wgts-dna",
-      "version": "4.4.4",
-      "executionEnginePipelineId": "f6a4c255-5d49-4379-91ec-dd89b76a213f"
-    },
-    // workflowVersion - Required - Must be set to 4.4.4
-    "workflowVersion": "4.4.4",
-    // workflowRunName - Required - Nomenclature is umccr--automated--dragen-wgts-dna--<workflowVersion>--<portalRunId>
-    "workflowRunName": "umccr--automated--dragen-wgts-dna--4-4-4--20250606abcd6789",
-    // portalRunId - Required - Must be set to a unique identifier for the run in the format YYYYMMDD<8-hex-digit-unique-id>
-    "portalRunId": "20250606abcd6789",  // pragma: allowlist secret
-    // pragma: allowlist secret
-    // linkedLibraries - Required - List of linked libraries, in the format
-    // 'libraryId': '<libraryId>', 'orcabusId': '<orcabusId>'
-    "linkedLibraries": [
-      {
-        "libraryId": "L2301197",
-        "orcabusId": "lib.01JBMVHM2D5GCC7FTC20K4FDFK"
-      }
-    ],
-    // payload - The payload for the workflow run, containing all the necessary data
-    "payload": {
-      // version - The version of the payload schema used by this service
-      // Not currently used by the service, but may be used in future
-      "version": "2025.06.06",
-      // data - The data for the workflow run, containing inputs, engine parameters, and tags
-      "data": {
-        // all inputs for the dragen-wgts-dna pipeline
-        "inputs": {
-          // All '*Options' are optional but there are no defaults
-          // So please ensure you set the options you need
-          "alignmentOptions": {
-            "enableDuplicateMarking": true
-          },
-          // Not required, set to hg38 graph genome by default
-          "reference": {
-            "name": "hg38",
-            "structure": "graph",
-            "tarball": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/reference-data/dragen-hash-tables/v11-r5/hg38-alt_masked-cnv-graph-hla-methyl_cg-rna/hg38-alt_masked.cnv.graph.hla.methyl_cg.rna-11-r5.0-1.tar.gz"
-          },
-          // somaticReference - Not required, set to hg38 linear by default
-          "somaticReference": {
-            "name": "hg38",
-            "structure": "linear",
-            "tarball": "s3://..."
-          },
-          // oraReference - Not required,
-          // and only added in if any sequence data is in ORA format
-          "oraReference": "s3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/reference-data/dragen-ora/v2/ora_reference_v2.tar.gz",
-          // sampleName - Not required, the sample name for the workflow run
-          // by default this is the libraryId
-          "sampleName": "L2301197",
-          // targetedCallerOptions - Not required, options for the targeted caller
-          "targetedCallerOptions": {
-            "enableTargeted": [
-              "cyp2d6"
-            ]
-          },
-          // sequenceData - The sequence data for the workflow run
-          // Not required, will be populated based on the fastqListRowRgids under tags.fastqRgidList
-          "sequenceData": {
-            "fastqListRows": [
-              {
-                "rgid": "L2301197",
-                "rglb": "L2301197",
-                "rgsm": "L2301197",
-                "lane": 1,
-                "read1FileUri": "s3://pipeline-dev-cache-503977275616-ap-southeast-2/byob-icav2/development/test_data/ora-testing/input_data/MDX230428_L2301197_S7_L004_R1_001.fastq.ora",
-                "read2FileUri": "s3://pipeline-dev-cache-503977275616-ap-southeast-2/byob-icav2/development/test_data/ora-testing/input_data/MDX230428_L2301197_S7_L004_R2_001.fastq.ora"
-              }
-            ]
-          },
-          // Snv Variant Caller Options
-          // Not required, enableVariantCaller is always set to true
-          "snvVariantCallerOptions": {
-            "enableVcfCompression": true,
-            // True by default
-            "enableVcfIndexing": true,
-            // True by default
-            "qcDetectContamination": true,
-            "vcMnvEmitComponentCalls": true,
-            "vcCombinePhasedVariantsDistance": 2,
-            "vcCombinePhasedVariantsDistanceSnvsOnly": 2
-          }
-        },
-        // engineParameters - Parameters for the pipeline engine
-        "engineParameters": {
-          // Not required, defaults to the default pipeline for the workflowVersion specified
-          "pipelineId": "f6a4c255-5d49-4379-91ec-dd89b76a213f",
-          // Not required, defaults to the default project id
-          "projectId": "ea19a3f5-ec7c-4940-a474-c31cd91dbad4",
-          // Not required, defaults to the default workflow output prefix
-          "outputUri": "s3://pipeline-dev-cache-503977275616-ap-southeast-2/byob-icav2/development/analysis/dragen-wgts-dna/20250606abcd6789/",
-          // Not required, defaults to the default workflow logs prefix
-          "logsUri": "s3://pipeline-dev-cache-503977275616-ap-southeast-2/byob-icav2/development/logs/dragen-wgts-dna/20250606abcd6789/"
-        },
-        "tags": {
-          // libraryId, required, the germline library ID for the workflow run
-          "libraryId": "L2301197",
-          // tumorLibraryId, only required for somatic workflows, the somatic library ID for the workflow run
-          "tumorLibraryId": "L2301198",
-          // fastqRgidList, not required, a list of fastq RGIDs for the workflow run
-          // If not provided, will be populated from the fastq manager for the current fastq set for the library id provided
-          "fastqRgidList": [
-            "AAAAAAA+GGGGGGGG.4.240902_A01030_0366_ABCD1234567"
-          ],
-          // tumorFastqRgidList, only required for somatic workflows, a list of fastq RGIDs for the somatic workflow run
-          "tumorFastqRgidList": [
-            "CCCCCCC+TTTTTTTT.4.240902_A01030_0366_EFGH1234567"
-          ],
-          // subjectId, not required, the subject ID for the workflow run
-          // If not provided, will be populated by the metadata manager from the libraryId provided
-          "subjectId": "ExternalSubjectId",
-          // individualId - not required, the individual ID for the workflow run
-          "individualId": "InternalSubjectId",
-        }
-      }
-    }
-  }
-}
-```
-
-</details>
-
-#### Manually Validating Schemas,
-
-We have generated JSON Schemas for the complete DRAFT WRU event **data** which you can find in the [`./app/event-schemas`](app/event-schemas) directory.
-
-You can interactively check if your DRAFT or READY event data payload matches the schema using the following links:
-
-- [Complete DRAFT WRU Event Data Schema Page](https://www.jsonschemavalidator.net/s/wSuvwypw)
-
-#### Making your own DRAFT WRU events with BASH / JQ (new system)
-
-There may be circumstances where you wish to generate DRAFT events manually, e.g. to explicitly trigger a workflow execution where automation failed or is not available. The below is a quick solution for generating a DRAFT WRU event for a somatic WGTS DNA workflow. Omit setting the `TUMOR_LIBRARY_ID` variable for running a germline only workflow.
-
-> [!NOTE]
-> This is a minimal example. It assumes that the rest of the required information can be retrieved and filled by the DRAFT Event Populator.
-
-The DRAFT Event Populator will also pull necessary fastq files out of archive.
-
-For details, see [PM.DWD.1 - Manual Pipeline Execution](./docs/operation/SOP/PM.DWD.1/PM.DWD.1-ManualPipelineExecution.md)
-
-#### Making your own DRAFT WRSC events with BASH / JQ (legacy system)
-
-There may be circumstances where you wish to generate DRAFT WRSC events manually, the below is a quick solution for
-generating a DRAFT for a somatic WGTS DNA workflow. Omit setting the TUMOR_LIBRARY_ID variable for running a germline
-only workflow.
-
-The DRAFT populator step function will also pull necessary fastq files out of archive.
-
-For a detailed procedure, see [Manual Pipeline Execution (legacy)](./docs/operation/examples/WRSC-DRAFT/ManualPipelineExecution.md)
-
-#### Release management
+### Release management
 
 The service employs a fully automated CI/CD pipeline that automatically builds and releases all changes to the `main`
 code branch.
@@ -352,9 +98,28 @@ code branch.
 A developer must enable the CodePipeline transition manually through the UI to promote changes to the `production`
 environment.
 
+### Related Services
+
+#### Upstream Pipelines
+
+- [Analysis Glue](https://github.com/OrcaBus/service-analysis-glue)
+
+#### Downstream Pipelines
+
+- [Oncoanalyser WGTS DNA](https://github.com/OrcaBus/service-oncoanalyser-wgts-dna-pipeline-manager)
+- [Oncoanalyser WGTS DNA/RNA](https://github.com/OrcaBus/service-oncoanalyser-wgts-both-pipeline-manager)
+
+#### Primary Services
+
+- [ICAv2 WES Manager](https://github.com/OrcaBus/service-icav2-wes-manager)
+- [Workflow Manager](https://github.com/OrcaBus/service-workflow-manager)
+- [Fastq Glue](https://github.com/OrcaBus/service-fastq-glue)
+
 
 Infrastructure & Deployment
 --------------------------------------------------------------------------------
+
+> Deployment settings / configuration (e.g. CodePipeline(s) / automated builds).
 
 Short description with diagrams where appropriate.
 Deployment settings / configuration (e.g. CodePipeline(s) / automated builds).
@@ -400,34 +165,6 @@ We also map the schemas in this stack to SSM parameters.
 ### Stateless Stack
 
 The stateless stack for this service includes the following resources:
-
-#### Step Functions
-
-**Dragen WGTS DNA DRAFT to Completed DRAFT State Machine**
-
-From the dragen WGTS DNA DRAFT event, we populate all inputs to make another DRAFT event, complete with all required
-inputs.
-
-![draft-to-completed-draft-state-machine](docs/workflow-studio-exports/dragen-wgts-dna-complete-draft-schema.svg)
-
-**Dragen WGTS DNA Validate DRAFT and Put READY Event**
-
-Take in a dragen WGTS DNA DRAFT event, make sure it's valid, and then generate a READY event for the dragen WGTS DNA
-pipeline.
-
-![validate-draft-and-put-ready-event-state-machine](docs/workflow-studio-exports/dragen-wgts-dna-validate-draft-and-put-ready-event.svg)
-
-**Dragen WGTS DNA READY to ICAv2 WES Submitted State Machine**
-
-Takes in a READY event for the dragen WGTS DNA pipeline, and generates a ICAv2 WES workflow request.
-
-![ready-to-icav2-wes-submitted-state-machine](docs/workflow-studio-exports/dragen-wgts-dna-ready-to-icav2-wes-submitted.svg)
-
-**ICAv2 WES Event to WRSC Event**
-
-From the ICAv2 WES Analysis State Change event, we parse the analysis state and workflow name to generate a WRSC event.
-
-![icav2-wes-event-to-wrsc-event-state-machine](docs/workflow-studio-exports/dragen-wgts-dna-handle-icav2-analysis-state-change.svg)
 
 ### CDK Commands
 
@@ -561,7 +298,7 @@ pnpm update
 
 ### Conventions
 
-### Linting & Formatting
+#### Linting & Formatting
 
 Automated checks are enforces via pre-commit hooks, ensuring only checked code is committed. For details consult the
 `.pre-commit-config.yaml` file.
@@ -592,11 +329,6 @@ make test
 
 Glossary & References
 --------------------------------------------------------------------------------
-
-| Term | Description |
-|------|-------------|
-| AWS CLI | The Command Line Interface (CLI) provided by AWS. (https://aws.amazon.com/cli/) |
-| JQ | A JSON command line processor facilitating the work with JSON data. (https://jqlang.org/) |
 
 For general terms and expressions used across OrcaBus services, please see the
 platform [documentation](https://github.com/OrcaBus/wiki/blob/main/orcabus-platform/README.md#glossary--references).
