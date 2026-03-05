@@ -42,7 +42,7 @@ compare_script_version_to_repo(){
   '
   repo_script_version="$( \
 	curl --silent --fail --location --show-error \
-	  --url "https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/${THIS_SCRIPT_PATH}" | \
+	  --url "https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/${THIS_SCRIPT_PATH}" 2>/dev/null | \
 	(
 		grep -m1 "THIS_SCRIPT_VERSION" | \
 		cut -d'"' -f2
@@ -336,6 +336,13 @@ if [[ -z "${PORTAL_TOKEN:-}" ]]; then
   exit 1
 fi
 
+# Check comment is provided
+if [[ -z "${COMMENT}" ]]; then
+  echo_stderr "Error: Comment is required. Please provide a comment using the -c or --comment flag. Exiting."
+  print_usage
+  exit 1
+fi
+
 # Check AWS CLI configuration
 if ! aws sts get-caller-identity --output json > /dev/null 2>&1; then
   echo_stderr "Error: AWS CLI is not configured properly. Please configure your AWS CLI with appropriate credentials and region. Exiting."
@@ -368,7 +375,7 @@ libraries="$(get_linked_libraries)"
 if [[ -z "${libraries}" || "$(jq 'length' <<< "${libraries}")" == 0 ]]; then
   echo_stderr "Error: No valid libraries found for the provided library IDs. Exiting."
   exit 1
-elif [[ "$(jq 'map(select(. == null)) | length' <<< "${libraries}")" -gt 0 ]]; then
+elif [[ "$(jq 'map(select(.libraryId == null or .orcabusId == null)) | length' <<< "${libraries}")" -gt 0 ]]; then
   echo_stderr "Error: One or more library objects are null. Please check the provided library IDs. Exiting."
   exit 1
 else
@@ -523,11 +530,16 @@ curl --fail --silent --location \
   	  '
   	    {
   	      "text": "Pipeline executed manually via SOP \($sopId) -- \($comment)",
-  	      "created_by": $emailAddress
-  	    }
+  	      "createdBy": $emailAddress
+  	    } |
+	   to_entries |
+	   map(
+		 "\(.key)=\(.value)"
+	   ) |
+	   join("&")
   	  '
   )" \
-  --url "https://workflow.$(get_hostname_from_ssm)/api/v1/workflowrun/${workflow_run_orcabus_id}/comment/"
+  --url "https://workflow.$(get_hostname_from_ssm)/api/v1/workflowrun/${workflow_run_orcabus_id}/comment/" > /dev/null
 
 echo_stderr "Workflow Run Creation Event complete!"
 echo_stderr "Please head to 'https://orcaui.$(get_hostname_from_ssm)/runs/workflow/${workflow_run_orcabus_id}' to track the status of the workflow run"
