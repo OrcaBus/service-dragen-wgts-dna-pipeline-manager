@@ -61,6 +61,10 @@ print_usage(){
   '
   local hostname
   hostname="$(get_hostname_from_ssm)"
+  if [[ -z "${hostname}" ]]; then
+	hostname="<aws_account_prefix>.umccr.org"
+  fi
+
   echo "
 generate-WRU-draft.sh [-h | --help]
 generate-WRU-draft.sh (library_id)...
@@ -265,6 +269,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     -c=*|--comment=*)
 	  COMMENT="${1#*=}"
+	  shift
 	  ;;
   	# Force boolean
     -f|--force)
@@ -522,6 +527,7 @@ curl --fail --silent --location \
   --request "POST" \
   --header "Accept: application/json" \
   --header "Authorization: Bearer ${PORTAL_TOKEN}" \
+  --header "Content-Type: application/json" \
   --data "$(
   	jq --null-input --raw-output \
   	  --arg emailAddress "$(get_email_from_portal_token)" \

@@ -36,7 +36,7 @@ For convenience, we provide a shell script that generates and optionally submits
     - ensure the values are fit for your use case, e.g. for clinical samples match the accredited pipeline details
   - Set the engine parameters (if necessary) and library id(s) in the positional arguments.
 - execute the script (e.g. `bash generate-WRU-draft.sh --comment 'Manual rerun' <your_tn_library_id> <your_normal_library_id>`)
-  - Note: AWS credentials need to set on the environment
+  - Note: AWS credentials need to set on the environment as does your PORTAL_TOKEN (see the script for details)
 - the script should produce the JSON output of the DRAFT event that can be inspected to double check that reflects the intended request
   - take note of the generated `workflowRunName` or `portalRunId` and the URL to the OrcaBus Portal view of the workflow.
 
