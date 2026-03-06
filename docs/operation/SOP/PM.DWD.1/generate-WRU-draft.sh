@@ -36,9 +36,6 @@ declare -A MIN_REQUIREMENTS=(
   ["curl"]="7.76.0"  # For --fail-with-body option
 )
 
-# Library ID array
-LIBRARY_ID_ARRAY=()
-
 # AWS Account ID by prefix
 declare -A PREFIX_BY_AWS_ACCOUNT_ID=(
   ["843407916570"]="dev"
@@ -50,6 +47,9 @@ declare -A COGNITO_USER_POOL_ID_BY_PREFIX=(
   ["ap-southeast-2_wWDrdTyzP"]="stg"
   ["ap-southeast-2_HFrQ3aWm8"]="prod"
 )
+
+# Library ID array
+LIBRARY_ID_ARRAY=()
 
 # Functions
 echo_stderr(){
@@ -103,9 +103,9 @@ Keyword arguments:
   -p | --project-id:         (Optional) ICAv2 Project ID to associate with the workflow run
   --save-draft-payload:      (Optional) Save the generated draft event to a local file after pushing to event bridge for record purposes.
   --workflow-version:        (Optional) The workflow version to use, defaults to ${WORKFLOW_VERSION},
-                             but can also be set to 4.4.6, this is particularly useful for SV calling.
+                                        but can also be set to 4.4.6, this is particularly useful for SV calling.
   --code-version:            (Optional) Set the code version to pull a particular workflow object.
-                             Required if using a workflow version other than the default.
+                                        Required if using a workflow version other than the default.
   --disable-sv-calling:      (Optional) Disable structural variant calling for the somatic step of the pipeline.
 
 Environment:
@@ -231,6 +231,29 @@ get_hostname_from_ssm(){
     '.Parameter.Value'
 }
 
+get_aws_account_prefix(){
+  local aws_account_id
+  aws_account_id="$( \
+    aws sts get-caller-identity --output json --query "Account" | \
+    jq --raw-output \
+  )"
+  echo "${PREFIX_BY_AWS_ACCOUNT_ID[${aws_account_id}]:-"unknown_aws_account_prefix"}"
+}
+
+get_cognito_user_pool_id(){
+  local cognito_user_pool_id
+  cognito_user_pool_id="$( \
+    cut -d'.' -f2 <<< "${PORTAL_TOKEN}" |
+    (base64 --decode 2>/dev/null || true) | \
+    jq --raw-output \
+      '
+        .iss |
+        split("/")[-1]
+      ' \
+  )"
+  echo "${COGNITO_USER_POOL_ID_BY_PREFIX[${cognito_user_pool_id}]:-"unknown_cognito_user_pool_id"}"
+}
+
 get_library_obj_from_library_id(){
   : '
   Get the library object (libraryId and orcabusId) from the library id
@@ -330,29 +353,6 @@ get_workflow_run(){
     '
 }
 
-get_aws_account_prefix(){
-  local aws_account_id
-  aws_account_id="$( \
-    aws sts get-caller-identity --output json --query "Account" | \
-    jq --raw-output \
-  )"
-  echo "${PREFIX_BY_AWS_ACCOUNT_ID[${aws_account_id}]:-"unknown_aws_account_prefix"}"
-}
-
-get_cognito_user_pool_id(){
-  local cognito_user_pool_id
-  cognito_user_pool_id="$( \
-    cut -d'.' -f2 <<< "${PORTAL_TOKEN}" |
-    (base64 --decode 2>/dev/null || true) | \
-    jq --raw-output \
-      '
-        .iss |
-        split("/")[-1]
-      ' \
-  )"
-  echo "${COGNITO_USER_POOL_ID_BY_PREFIX[${cognito_user_pool_id}]:-"unknown_cognito_user_pool_id"}"
-}
-
 generate_workflow_comment(){
   : '
   Generate a comment on the workflow run
@@ -368,10 +368,11 @@ generate_workflow_comment(){
       jq --null-input --raw-output \
         --arg emailAddress "${email_address}" \
         --arg sopId "${SOP_ID}" \
+        --arg sopVersion "${THIS_SCRIPT_VERSION}" \
         --arg comment "${COMMENT}" \
         '
           {
-            "text": "Pipeline executed manually via SOP \($sopId) -- \($comment)",
+            "text": "Pipeline executed manually via SOP \($sopId)/\($sopVersion) -- \($comment)",
             "createdBy": $emailAddress
           }
         '
@@ -401,6 +402,7 @@ while [[ $# -gt 0 ]]; do
       FORCE=true
       shift
       ;;
+    # Save draft payload to file
     --save-draft-payload)
       SAVE_DRAFT_PAYLOAD="$2"
       shift 2
@@ -627,9 +629,9 @@ lambda_payload="$( \
 )"
 
 # Confirm before pushing the event
+echo_stderr "Send the following payload to the lambda object:"
+jq --raw-output <<< "${lambda_payload}" 1>&2
 if [[ "${FORCE}" == "false" ]]; then
-  echo_stderr "Send the following payload to the lambda object:"
-  jq --raw-output <<< "${lambda_payload}" 1>&2
   read -r -p 'Confirm to push this event to EventBridge? (y/n): ' confirm_push
   if [[ ! "${confirm_push}" =~ ^[Yy]$ ]]; then
     echo_stderr "Aborting event push."
