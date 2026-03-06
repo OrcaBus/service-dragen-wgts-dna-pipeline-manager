@@ -29,6 +29,13 @@ SOP_ID="PM.DWD.1"
 GITHUB_REPO="OrcaBus/service-dragen-wgts-dna-pipeline-manager"
 THIS_SCRIPT_PATH="docs/operation/SOP/${SOP_ID}/generate-WRU-draft.sh"
 
+# SCRIPT BINARY VERSION MIN REQUIREMENTS
+declare -A MIN_REQUIREMENTS=(
+  ["jq"]="1.7.0"     # For if without else options
+  ["aws"]="2.0.0"    # Because what are you doing still on V1?
+  ["curl"]="7.76.0"  # For --fail-with-body option
+)
+
 # Library ID array
 LIBRARY_ID_ARRAY=()
 
@@ -75,6 +82,15 @@ generate-WRU-draft.sh (library_id)...
 Description:
 Run this script to generate a draft WorkflowRunUpdate event for the specified library IDs.
 
+Research Projects Note:
+If you intend to run this workflow outside of the main ICA projects (development, staging, production),
+ensure you have --output-uri-prefix, --logs-uri-prefix, and --project-id set appropriately.
+
+You will also need to ensure that the ICA pipeline ID attributed to the workflow-name/version/codeVersion is
+available in the ICA project id specified.
+
+The output uri prefix, logs uri prefixes must be set to a location inside the s3 prefix that the ICA project is mounted on.
+
 Positional arguments:
   library_id:   One or more library IDs to link to the WorkflowRunUpdate event.
 
@@ -99,13 +115,23 @@ Environment:
 
 Binaries:
   - aws CLI should be installed and configured with appropriate credentials and region.
-  - jq should be installed for JSON parsing.
+    - install from https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+  - jq should be installed for JSON parsing
+    - from https://github.com/jqlang/jq
+  - semver for comparing versions
+    - from https://github.com/fsaintjacques/semver-tool
   - curl should be installed for making API requests.
+    - from https://curl.se/download.html
   - base64 should be available for decoding the portal token.
+    - this should be installed by default on most systems, but if not it can be installed from https://www.gnu.org/software/coreutils/
   - openssl should be available for generating random portal run ids.
+    - this should be installed by default on most systems, but if not it can be installed from https://www.openssl.org/source/
+  - awk should be available for parsing command output.
+    - this should be installed by default on most systems. If not, it can be installed from https://www.gnu.org/software/gawk/
 
 Example usage:
-bash generate-WRU-draft.sh tumor_library_id normal_library_id
+bash generate-WRU-draft.sh tumor_library_id normal_library_id \\
+  --comment 'Initial test of WRU event generation script'
 bash generate-WRU-draft.sh tumor_library_id normal_library_id \\
   --comment 'Redriving analysis after failure' \\
   --output-uri-prefix s3://project-bucket/analysis/dragen-wgts-dna/ \\
@@ -120,7 +146,8 @@ compare_script_version_to_repo(){
   Compare the version of this script to the version in the repo, and print a warning if they are different
   '
   repo_script_version="$( \
-    curl --silent --fail --location --show-error \
+    curl --silent --fail-with-body --location --show-error \
+      --header "Accept: text/html" \
       --url "https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/${THIS_SCRIPT_PATH}" 2>/dev/null | \
     (
       grep -m1 "THIS_SCRIPT_VERSION" | \
@@ -130,7 +157,45 @@ compare_script_version_to_repo(){
 
   if [[ "${THIS_SCRIPT_VERSION}" != "${repo_script_version}" ]]; then
     echo_stderr "Warning: This script version (${THIS_SCRIPT_VERSION}) is different from the version in the repo (${repo_script_version})."
-    echo_stderr "Warning: Consider refetching this script from https://github.com/${GITHUB_REPO}/blob/main/${THIS_SCRIPT_PATH}"
+    echo_stderr "         Consider refetching this script from https://github.com/${GITHUB_REPO}/blob/main/${THIS_SCRIPT_PATH}"
+  fi
+}
+
+check_binaries(){
+  : '
+  Check that required binaries are installed
+  '
+  for binary in aws semver jq curl base64 openssl awk; do
+    if ! command -v "${binary}" > /dev/null 2>&1; then
+      echo_stderr "Error: ${binary} is not installed. Please install ${binary} and try again. Exiting."
+      exit 1
+    fi
+  done
+
+  # Check that jq is version 1.7 or higher, as we use the fromjson function which was added in 1.7
+  jq_version="$(jq --version | cut -d'-' -f2)"
+  if [[ "${jq_version}" =~ ^1.\d$ && ! "${jq_version}" == "1.7" ]]; then
+    echo_stderr "Error: jq version 1.7 or higher is required. Please update jq and try again. Exiting."
+    exit 1
+  fi
+  # After version 1.7, jq changed their versioning to semver, so we can use semver to compare versions
+  if [[ ! "$(semver compare "${jq_version}" "${MIN_REQUIREMENTS["jq"]}")" -ge 0 ]]; then
+    echo_stderr "Error: jq version ${MIN_REQUIREMENTS["jq"]} or higher is required. Please update jq and try again. Exiting."
+    exit 1
+  fi
+
+  # Check aws cli version is 2.0.0 or higher, as we use the --cli-binary-format option which was added in 2.0.0
+  aws_version="$(aws --version 2>&1 | awk '{print $1}' | cut -d'/' -f2)"
+  if [[ ! "$(semver compare "${aws_version}" "${MIN_REQUIREMENTS["aws"]}")" -ge 0 ]]; then
+    echo_stderr "Error: AWS CLI version ${MIN_REQUIREMENTS["aws"]} or higher is required. Please update AWS CLI and try again. Exiting."
+    exit 1
+  fi
+
+  # Check curl version is 7.76.0 or higher, as we use the --fail-with-body option which was added in 7.76.0
+  curl_version="$(curl --version | head -n1 | awk '{print $2}')"
+  if [[ ! "$(semver compare "${curl_version}" "${MIN_REQUIREMENTS["curl"]}")" -ge 0 ]]; then
+    echo_stderr "Error: curl version ${MIN_REQUIREMENTS["curl"]} or higher is required. Please update curl and try again. Exiting."
+    exit 1
   fi
 }
 
@@ -142,7 +207,7 @@ get_email_from_portal_token(){
   to indicate who created the workflow run
   '
   cut -d'.' -f2 <<< "${PORTAL_TOKEN}" | \
-    (base64 --decode 2>/dev/null || true) | \
+  (base64 --decode 2>/dev/null || true) | \
   jq --raw-output '.email'
 }
 
@@ -171,7 +236,8 @@ get_library_obj_from_library_id(){
   Get the library object (libraryId and orcabusId) from the library id
   '
   local library_id="$1"
-  curl --silent --fail --show-error --location \
+  curl --silent --fail-with-body --show-error --location \
+    --header "Accept: application/json" \
     --header "Authorization: Bearer ${PORTAL_TOKEN}" \
     --url "https://metadata.$(get_hostname_from_ssm)/api/v1/library?libraryId=${library_id}" | \
   jq --raw-output \
@@ -212,9 +278,10 @@ get_workflow(){
   local workflow_version="$2"
   local execution_engine="$3"
   local code_version="$4"
-  curl --silent --fail --show-error --location \
+  curl --silent --fail-with-body --show-error --location \
     --request GET \
     --get \
+    --header "Accept: application/json" \
     --header "Authorization: Bearer ${PORTAL_TOKEN}" \
     --url "https://workflow.$(get_hostname_from_ssm)/api/v1/workflow" \
     --data "$( \
@@ -247,9 +314,10 @@ get_workflow(){
 get_workflow_run(){
   local portal_run_id="$1"
 
-  curl --silent --fail --show-error --location \
+  curl --silent --fail-with-body --show-error --location \
     --request GET \
     --get \
+    --header "Accept: application/json" \
     --header "Authorization: Bearer ${PORTAL_TOKEN}" \
     --url "https://workflow.$(get_hostname_from_ssm)/api/v1/workflowrun?portalRunId=${portal_run_id}" | \
   jq --compact-output --raw-output \
@@ -392,14 +460,21 @@ if [[ -n "${SAVE_DRAFT_PAYLOAD}" ]]; then
   # Check parent directory exists
   if [[ ! -d "$(dirname "${SAVE_DRAFT_PAYLOAD}")" ]]; then
     echo_stderr "Error: The parent directory for the file path provided for --save-draft-payload '${SAVE_DRAFT_PAYLOAD}' does not exist."
-    echo_stderr "does not exist. Please provide a valid file path with an existing parent directory. Exiting."
+    echo_stderr "       does not exist. Please provide a valid file path with an existing parent directory. Exiting."
     exit 1
   fi
   if [[ -e "${SAVE_DRAFT_PAYLOAD}" ]]; then
     echo_stderr "Error: The file path provided for --save-draft-payload already exists. "
-    echo_stderr "Please provide a file path that does not already exist to avoid overwriting. Exiting."
+    echo_stderr "       Please provide a file path that does not already exist to avoid overwriting. Exiting."
     exit 1
   fi
+fi
+
+# Check binaries are installed
+if ! check_binaries; then
+  echo_stderr "Error: One or more required binaries are not installed. Please install the required binaries and try again. Exiting."
+  print_usage
+  exit 1
 fi
 
 # Check AWS CLI configuration
@@ -419,9 +494,16 @@ compare_script_version_to_repo
 # to help catch users who have multiple AWS profiles configured and are using the wrong one
 if [[ "$(get_aws_account_prefix)" != "$(get_cognito_user_pool_id)" ]]; then
   echo_stderr "Warning: The AWS account prefix associated with your AWS credentials ($(get_aws_account_prefix)) "
-  echo_stderr "does not match the expected prefix for the portal token you provided ($(get_cognito_user_pool_id))."
-  echo_stderr "This may cause API calls to fail due to authentication issues."
-  echo_stderr "Please check that you are using the correct AWS profile and that your portal token is valid."
+  echo_stderr "         does not match the expected prefix for the portal token you provided ($(get_cognito_user_pool_id))."
+  echo_stderr "         This may cause API calls to fail due to authentication issues."
+  echo_stderr "         Please check that you are using the correct AWS profile and that your portal token is valid."
+fi
+
+# Get email address upfront
+if ! email_address="$(get_email_from_portal_token)"; then
+  echo_stderr "Error: Failed to extract email address from portal token."
+  echo_stderr "       The comment will not be created. Please check that your PORTAL_TOKEN is valid."
+  exit 1
 fi
 
 # Generate the portal run id
@@ -597,14 +679,14 @@ while :; do
 done
 
 echo_stderr "Generating workflow comment"
-curl --fail --silent --location --show-error \
+curl --silent --fail-with-body --location --show-error \
   --request "POST" \
   --header "Accept: application/json" \
   --header "Authorization: Bearer ${PORTAL_TOKEN}" \
   --header "Content-Type: application/json" \
   --data "$(
     jq --null-input --raw-output \
-      --arg emailAddress "$(get_email_from_portal_token)" \
+      --arg emailAddress "${email_address}" \
       --arg sopId "${SOP_ID}" \
       --arg comment "${COMMENT}" \
       '
