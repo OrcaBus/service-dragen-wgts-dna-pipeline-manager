@@ -353,6 +353,32 @@ get_cognito_user_pool_id(){
   echo "${COGNITO_USER_POOL_ID_BY_PREFIX[${cognito_user_pool_id}]:-"unknown_cognito_user_pool_id"}"
 }
 
+generate_workflow_comment(){
+  : '
+  Generate a comment on the workflow run
+  '
+  local workflow_run_orcabus_id="$1"
+  local email_address="$2"
+  curl --silent --fail-with-body --location --show-error \
+    --request "POST" \
+    --header "Accept: application/json" \
+    --header "Authorization: Bearer ${PORTAL_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --data "$(
+      jq --null-input --raw-output \
+        --arg emailAddress "${email_address}" \
+        --arg sopId "${SOP_ID}" \
+        --arg comment "${COMMENT}" \
+        '
+          {
+            "text": "Pipeline executed manually via SOP \($sopId) -- \($comment)",
+            "createdBy": $emailAddress
+          }
+        '
+    )" \
+    --url "https://workflow.$(get_hostname_from_ssm)/api/v1/workflowrun/${workflow_run_orcabus_id}/comment/"
+}
+
 # Get args
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -679,24 +705,13 @@ while :; do
 done
 
 echo_stderr "Generating workflow comment"
-curl --silent --fail-with-body --location --show-error \
-  --request "POST" \
-  --header "Accept: application/json" \
-  --header "Authorization: Bearer ${PORTAL_TOKEN}" \
-  --header "Content-Type: application/json" \
-  --data "$(
-    jq --null-input --raw-output \
-      --arg emailAddress "${email_address}" \
-      --arg sopId "${SOP_ID}" \
-      --arg comment "${COMMENT}" \
-      '
-        {
-          "text": "Pipeline executed manually via SOP \($sopId) -- \($comment)",
-          "createdBy": $emailAddress
-        }
-      '
-  )" \
-  --url "https://workflow.$(get_hostname_from_ssm)/api/v1/workflowrun/${workflow_run_orcabus_id}/comment/" > /dev/null
+if ! comment_response="$(generate_workflow_comment "${workflow_run_orcabus_id}" "${email_address}")"; then
+  echo_stderr "Warning: Failed to generate comment on workflow run."
+  echo_stderr "         Please check that your PORTAL_TOKEN is valid and has permission to comment on the workflow run. "
+  echo_stderr "         And contact the script author if the issue persists. The workflow run has been created successfully, but the comment indicating who created the workflow run will be missing."
+  echo_stderr "         but the comment indicating who created the workflow run and why will be missing."
+  echo_stderr "		    Error details: $(jq -rc <<< "${comment_response}")"
+fi
 
 echo_stderr "Workflow Run Creation Event complete!"
-echo_stderr "Please head to 'https://orcaui.$(get_hostname_from_ssm)/runs/workflow/${workflow_run_orcabus_id}' to track the status of the workflow run"
+echo_stderr "Please head to 'https://orcaui.$(get_hostname_from_ssm)/workflows/workflowRuns/${workflow_run_orcabus_id}' to track the status of the workflow run"
