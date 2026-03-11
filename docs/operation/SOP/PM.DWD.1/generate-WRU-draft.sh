@@ -24,7 +24,7 @@ CODE_VERSION="724101a"
 PAYLOAD_VERSION="2025.06.24"
 
 # SOP constants
-THIS_SCRIPT_VERSION="2026.03.05"
+SOP_VERSION="2026.03.05"
 SOP_ID="PM.DWD.1"
 GITHUB_REPO="OrcaBus/service-dragen-wgts-dna-pipeline-manager"
 THIS_SCRIPT_PATH="docs/operation/SOP/${SOP_ID}/generate-WRU-draft.sh"
@@ -150,13 +150,13 @@ compare_script_version_to_repo(){
       --header "Accept: text/html" \
       --url "https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/${THIS_SCRIPT_PATH}" 2>/dev/null | \
     (
-      grep -m1 "THIS_SCRIPT_VERSION" | \
+      grep -m1 "SOP_VERSION" | \
       cut -d'"' -f2
     ) || echo "unknown"
   )"
 
-  if [[ "${THIS_SCRIPT_VERSION}" != "${repo_script_version}" ]]; then
-    echo_stderr "Warning: This script version (${THIS_SCRIPT_VERSION}) is different from the version in the repo (${repo_script_version})."
+  if [[ "${SOP_VERSION}" != "${repo_script_version}" ]]; then
+    echo_stderr "Warning: This script version (${SOP_VERSION}) is different from the version in the repo (${repo_script_version})."
     echo_stderr "         Consider refetching this script from https://github.com/${GITHUB_REPO}/blob/main/${THIS_SCRIPT_PATH}"
   fi
 }
@@ -218,8 +218,8 @@ get_hostname_from_ssm(){
   # Cache the hostname in a global variable to
   # avoid multiple calls to SSM Parameter Store
   if [[ -n "${HOSTNAME}" ]]; then
-  echo "${HOSTNAME}"
-  return
+    echo "${HOSTNAME}"
+    return
   fi
 
   # Get the hostname from SSM Parameter Store and
@@ -368,7 +368,7 @@ generate_workflow_comment(){
       jq --null-input --raw-output \
         --arg emailAddress "${email_address}" \
         --arg sopId "${SOP_ID}" \
-        --arg sopVersion "${THIS_SCRIPT_VERSION}" \
+        --arg sopVersion "${SOP_VERSION}" \
         --arg comment "${COMMENT}" \
         '
           {
