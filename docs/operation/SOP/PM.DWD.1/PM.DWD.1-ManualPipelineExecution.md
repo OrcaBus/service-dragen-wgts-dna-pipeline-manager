@@ -34,8 +34,6 @@ To initiate a pipeline execution we need to generate an initial DRAFT event. For
 For convenience, we provide a shell script that generates and optionally submits an appropriate event.
 
 - Familiarise yourself with the script and its parameters: [generate-WRU-draft.sh --help](./generate-WRU-draft.sh)
-  - especially check the settings in the `Globals` section
-    - ensure the values are fit for your use case, e.g. for clinical samples match the accredited pipeline details
   - Set the engine parameters (if necessary) and library id(s) in the positional arguments.
 - Execute the script (e.g. `bash generate-WRU-draft.sh --comment 'Manual rerun' <your_tn_library_id> <your_normal_library_id>`)
   - Note: AWS credentials need to be set on the environment as does your PORTAL_TOKEN (see the script for details)
