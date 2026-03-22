@@ -24,6 +24,8 @@ WORKFLOW_NAME_ENV_VAR = "WORKFLOW_NAME"
 COMMENT_AUTHOR = "{WORKFLOW_NAME}-workflow-validation-service"
 TEST_BUCKET_ENV_VAR = "TEST_DATA_BUCKET_NAME"
 REF_DATA_BUCKET_ENV_VAR = "REF_DATA_BUCKET_NAME"
+ANALYSIS_MIDFIX = "analysis"
+LOGS_MIDFIX = "logs"
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -68,10 +70,10 @@ def validate_engine_parameters(
     portal_run_id = get_workflow_run(workflow_run_id)['portalRunId']
 
     # Confirm that the output uri, logs uri end with the portal run id
-    if not output_uri.endswith(f"/{portal_run_id}/"):
-        return False, f"outputUri '{output_uri}' does not end with the portal run id '{portal_run_id}'"
-    if not logs_uri.endswith(f"/{portal_run_id}/"):
-        return False, f"logsUri '{logs_uri}' does not end with the portal run id '{portal_run_id}'"
+    if not output_uri.endswith(f"/{ANALYSIS_MIDFIX}/{environ[WORKFLOW_NAME_ENV_VAR]}/{portal_run_id}/"):
+        return False, f"outputUri '{output_uri}' does not end with '/{ANALYSIS_MIDFIX}/{environ[WORKFLOW_NAME_ENV_VAR]}/{portal_run_id}'"
+    if not logs_uri.endswith(f"/{LOGS_MIDFIX}/{environ[WORKFLOW_NAME_ENV_VAR]}/{portal_run_id}/"):
+        return False, f"logsUri '{logs_uri}' does not end with the portal run id '/{LOGS_MIDFIX}/{environ[WORKFLOW_NAME_ENV_VAR]}/{portal_run_id}'"
 
     return True, ""
 
