@@ -6,6 +6,7 @@ set -euo pipefail
 # Globals
 LAMBDA_FUNCTION_NAME="WruDraftValidator"
 HOSTNAME=""
+LAMBDA_TMP_DIR=""
 
 # CLI Defaults
 FORCE=false  # Use --force to set to true
@@ -669,7 +670,7 @@ trap 'rm -rf "${LAMBDA_TMP_DIR}"' EXIT
 LAMBDA_TMP_DIR="$(mktemp -d "LAMBDA_TMP_DIR_XXXXXX")"
 LAMBDA_DATA_PIPE="${LAMBDA_TMP_DIR}/lambda_data_pipe"
 mkfifo "${LAMBDA_DATA_PIPE}"
-errors_json="${LAMBDA_TMP_DIR}/$(mktemp "errors.XXXXXX.json")"
+errors_json="$(mktemp -p "${LAMBDA_TMP_DIR}" "errors.XXXXXX.json")"
 echo_stderr "Pushing the draft event for portalRunId ${portal_run_id} via WRU Validation Lambda Function"
 aws lambda invoke \
   --function-name "$(get_lambda_function_name)" \
@@ -704,7 +705,7 @@ fi
 trap - EXIT
 
 # Now wait for the workflow run to be registered by the workflow manager,
-# which should be done within a minute or two after pushing the event to EventBridge,
+# which should be done within a minute after pushing the event to EventBridge,
 # and get the workflow run object, which contains the Orcabus ID that we will use to link the
 # workflow run to the comment we will create in the next step
 echo_stderr "Waiting for the workflow run to be registered by the workflow manager"
@@ -738,7 +739,7 @@ echo_stderr "Generating workflow comment"
 if ! comment_response="$(generate_workflow_comment "${workflow_run_orcabus_id}" "${email_address}")"; then
   echo_stderr "Warning: Failed to generate comment on workflow run."
   echo_stderr "         Please check that your PORTAL_TOKEN is valid and has permission to comment on the workflow run. "
-  echo_stderr "         And contact the script author if the issue persists. The workflow run has been created successfully, but the comment indicating who created the workflow run will be missing."
+  echo_stderr "         And contact the script author if the issue persists. The workflow run has been created successfully."
   echo_stderr "         but the comment indicating who created the workflow run and why will be missing."
   echo_stderr "Error details: $(jq -rc <<< "${comment_response}")"
 fi
