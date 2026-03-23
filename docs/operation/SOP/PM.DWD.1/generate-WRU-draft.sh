@@ -6,6 +6,7 @@ set -euo pipefail
 # Globals
 LAMBDA_FUNCTION_NAME="WruDraftValidator"
 HOSTNAME=""
+LAMBDA_TMP_DIR=""
 
 # CLI Defaults
 FORCE=false  # Use --force to set to true
@@ -24,7 +25,7 @@ CODE_VERSION="724101a"
 PAYLOAD_VERSION="2025.06.24"
 
 # SOP constants
-THIS_SCRIPT_VERSION="2026.03.05"
+SOP_VERSION="2026.03.05"
 SOP_ID="PM.DWD.1"
 GITHUB_REPO="OrcaBus/service-dragen-wgts-dna-pipeline-manager"
 THIS_SCRIPT_PATH="docs/operation/SOP/${SOP_ID}/generate-WRU-draft.sh"
@@ -122,8 +123,6 @@ Binaries:
     - from https://github.com/fsaintjacques/semver-tool
   - curl should be installed for making API requests.
     - from https://curl.se/download.html
-  - base64 should be available for decoding the portal token.
-    - this should be installed by default on most systems, but if not it can be installed from https://www.gnu.org/software/coreutils/
   - openssl should be available for generating random portal run ids.
     - this should be installed by default on most systems, but if not it can be installed from https://www.openssl.org/source/
   - awk should be available for parsing command output.
@@ -150,13 +149,13 @@ compare_script_version_to_repo(){
       --header "Accept: text/html" \
       --url "https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/${THIS_SCRIPT_PATH}" 2>/dev/null | \
     (
-      grep -m1 "THIS_SCRIPT_VERSION" | \
+      grep -m1 "SOP_VERSION" | \
       cut -d'"' -f2
     ) || echo "unknown"
   )"
 
-  if [[ "${THIS_SCRIPT_VERSION}" != "${repo_script_version}" ]]; then
-    echo_stderr "Warning: This script version (${THIS_SCRIPT_VERSION}) is different from the version in the repo (${repo_script_version})."
+  if [[ "${SOP_VERSION}" != "${repo_script_version}" ]]; then
+    echo_stderr "Warning: This script version (${SOP_VERSION}) is different from the version in the repo (${repo_script_version})."
     echo_stderr "         Consider refetching this script from https://github.com/${GITHUB_REPO}/blob/main/${THIS_SCRIPT_PATH}"
   fi
 }
@@ -165,7 +164,7 @@ check_binaries(){
   : '
   Check that required binaries are installed
   '
-  for binary in aws semver jq curl base64 openssl awk; do
+  for binary in aws semver jq curl openssl awk; do
     if ! command -v "${binary}" > /dev/null 2>&1; then
       echo_stderr "Error: ${binary} is not installed. Please install ${binary} and try again. Exiting."
       exit 1
@@ -206,9 +205,20 @@ get_email_from_portal_token(){
   once the event is pushed to EventBridge and the workflow run is created,
   to indicate who created the workflow run
   '
-  cut -d'.' -f2 <<< "${PORTAL_TOKEN}" | \
-  (base64 --decode 2>/dev/null || true) | \
-  jq --raw-output '.email'
+  jq --raw-output \
+    --null-input \
+    --arg portalToken "${PORTAL_TOKEN}" \
+    '
+      (
+        # Get the middle chunk of the portal jwt token
+        $portalToken | split(".")[1] |
+        # Decode base64
+        @base64d |
+        # Load json
+        fromjson
+      ) |
+      .email
+    '
 }
 
 get_hostname_from_ssm(){
@@ -218,8 +228,8 @@ get_hostname_from_ssm(){
   # Cache the hostname in a global variable to
   # avoid multiple calls to SSM Parameter Store
   if [[ -n "${HOSTNAME}" ]]; then
-  echo "${HOSTNAME}"
-  return
+    echo "${HOSTNAME}"
+    return
   fi
 
   # Get the hostname from SSM Parameter Store and
@@ -243,10 +253,18 @@ get_aws_account_prefix(){
 get_cognito_user_pool_id(){
   local cognito_user_pool_id
   cognito_user_pool_id="$( \
-    cut -d'.' -f2 <<< "${PORTAL_TOKEN}" |
-    (base64 --decode 2>/dev/null || true) | \
     jq --raw-output \
+      --null-input \
+      --arg portalToken "${PORTAL_TOKEN}" \
       '
+        (
+          # Get the middle chunk of the portal jwt token
+          $portalToken | split(".")[1] |
+          # Decode base64
+          @base64d |
+          # Load json
+          fromjson
+        ) |
         .iss |
         split("/")[-1]
       ' \
@@ -368,7 +386,7 @@ generate_workflow_comment(){
       jq --null-input --raw-output \
         --arg emailAddress "${email_address}" \
         --arg sopId "${SOP_ID}" \
-        --arg sopVersion "${THIS_SCRIPT_VERSION}" \
+        --arg sopVersion "${SOP_VERSION}" \
         --arg comment "${COMMENT}" \
         '
           {
@@ -646,11 +664,13 @@ if [[ -n "${SAVE_DRAFT_PAYLOAD}" ]]; then
 fi
 
 # Set the trap
-trap 'rm -f lambda_data_pipe' EXIT
+trap 'rm -rf "${LAMBDA_TMP_DIR}"' EXIT
 
 # Push the event to EventBridge
-mkfifo lambda_data_pipe
-errors_json="$(mktemp "errors.XXXXXX.json")"
+LAMBDA_TMP_DIR="$(mktemp -d "LAMBDA_TMP_DIR_XXXXXX")"
+LAMBDA_DATA_PIPE="${LAMBDA_TMP_DIR}/lambda_data_pipe"
+mkfifo "${LAMBDA_DATA_PIPE}"
+errors_json="$(mktemp -p "${LAMBDA_TMP_DIR}" "errors.XXXXXX.json")"
 echo_stderr "Pushing the draft event for portalRunId ${portal_run_id} via WRU Validation Lambda Function"
 aws lambda invoke \
   --function-name "$(get_lambda_function_name)" \
@@ -658,7 +678,7 @@ aws lambda invoke \
   --cli-binary-format raw-in-base64-out \
   --no-cli-pager \
   --invocation-type 'RequestResponse' \
-  lambda_data_pipe 1>/dev/null & \
+  "${LAMBDA_DATA_PIPE}" 1>/dev/null & \
 jq --raw-output \
   '
   if .statusCode != 200 then
@@ -667,30 +687,38 @@ jq --raw-output \
     empty
   end
   ' \
-  < lambda_data_pipe \
+  < "${LAMBDA_DATA_PIPE}" \
   > "${errors_json}" & \
 wait
-rm lambda_data_pipe
-
-# Remove trap
-trap - EXIT
 
 # Check if there were any errors returned from the Lambda invocation
 if [[ -s "${errors_json}" ]]; then
   echo_stderr "Error pushing event to Lambda Function:"
   jq --raw-output '.' < "${errors_json}" 1>&2
-  rm "${errors_json}"
+  rm -rf "${LAMBDA_TMP_DIR}"
   exit 1
 else
-  rm "${errors_json}"
+  rm -rf "${LAMBDA_TMP_DIR}"
 fi
 
+# Remove trap
+trap - EXIT
+
 # Now wait for the workflow run to be registered by the workflow manager,
-# which should be done within a minute or two after pushing the event to EventBridge,
+# which should be done within a minute after pushing the event to EventBridge,
 # and get the workflow run object, which contains the Orcabus ID that we will use to link the
 # workflow run to the comment we will create in the next step
 echo_stderr "Waiting for the workflow run to be registered by the workflow manager"
+max_attempts=6  # 1 minute with 10-second intervals
+attempts=0
 while :; do
+  # Check if we've exceeded max attempts
+  if [[ "${attempts}" -ge "${max_attempts}" ]]; then
+    echo_stderr "Exceeded maximum attempts (${max_attempts}) to check for workflow run registration"
+    exit 1
+  fi
+
+  # Get the workflow run object
   workflow_run_object="$( \
     get_workflow_run "${portal_run_id}"
   )"
@@ -703,6 +731,7 @@ while :; do
   else
     echo_stderr "Workflow run not yet registered, waiting 10 seconds..."
     sleep 10
+    attempts="$((attempts + 1))"
   fi
 done
 
@@ -710,9 +739,9 @@ echo_stderr "Generating workflow comment"
 if ! comment_response="$(generate_workflow_comment "${workflow_run_orcabus_id}" "${email_address}")"; then
   echo_stderr "Warning: Failed to generate comment on workflow run."
   echo_stderr "         Please check that your PORTAL_TOKEN is valid and has permission to comment on the workflow run. "
-  echo_stderr "         And contact the script author if the issue persists. The workflow run has been created successfully, but the comment indicating who created the workflow run will be missing."
+  echo_stderr "         And contact the script author if the issue persists. The workflow run has been created successfully."
   echo_stderr "         but the comment indicating who created the workflow run and why will be missing."
-  echo_stderr "		    Error details: $(jq -rc <<< "${comment_response}")"
+  echo_stderr "Error details: $(jq -rc <<< "${comment_response}")"
 fi
 
 echo_stderr "Workflow Run Creation Event complete!"
