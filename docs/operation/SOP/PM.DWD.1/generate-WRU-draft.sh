@@ -30,25 +30,6 @@ SOP_ID="PM.DWD.1"
 GITHUB_REPO="OrcaBus/service-dragen-wgts-dna-pipeline-manager"
 THIS_SCRIPT_PATH="docs/operation/SOP/${SOP_ID}/generate-WRU-draft.sh"
 
-# SCRIPT BINARY VERSION MIN REQUIREMENTS
-declare -A MIN_REQUIREMENTS=(
-  ["jq"]="1.7.0"     # For if without else options
-  ["aws"]="2.0.0"    # Because what are you doing still on V1?
-  ["curl"]="7.76.0"  # For --fail-with-body option
-)
-
-# AWS Account ID by prefix
-declare -A PREFIX_BY_AWS_ACCOUNT_ID=(
-  ["843407916570"]="dev"
-  ["455634345446"]="stg"
-  ["472057503814"]="prod"
-)
-declare -A COGNITO_USER_POOL_ID_BY_PREFIX=(
-  ["ap-southeast-2_iWOHnsurL"]="dev"
-  ["ap-southeast-2_wWDrdTyzP"]="stg"
-  ["ap-southeast-2_HFrQ3aWm8"]="prod"
-)
-
 # Library ID array
 LIBRARY_ID_ARRAY=()
 
@@ -96,18 +77,18 @@ Positional arguments:
   library_id:   One or more library IDs to link to the WorkflowRunUpdate event.
 
 Keyword arguments:
-  -h | --help:               Print this help message and exit.
-  -c | --comment:            (Required) A comment to add to the payload, which will be visible in the workflow run details in OrcaUI.
-  -f | --force:              (Optional) Don't confirm before pushing the event to EventBridge.
-  -l | --logs-uri-prefix:    (Optional) S3 URI for logs (must end with a slash).
-  -o | --output-uri-prefix:  (Optional) S3 URI for outputs (must end with a slash).
-  -p | --project-id:         (Optional) ICAv2 Project ID to associate with the workflow run
-  --save-draft-payload:      (Optional) Save the generated draft event to a local file after pushing to event bridge for record purposes.
-  --workflow-version:        (Optional) The workflow version to use, defaults to ${WORKFLOW_VERSION},
-                                        but can also be set to 4.4.6, this is particularly useful for SV calling.
-  --code-version:            (Optional) Set the code version to pull a particular workflow object.
-                                        Required if using a workflow version other than the default.
-  --disable-sv-calling:      (Optional) Disable structural variant calling for the somatic step of the pipeline.
+  -h | --help                                    Print this help message and exit.
+  -c | --comment                                 (Required) A comment to add to the payload, which will be visible in the workflow run details in OrcaUI.
+  -f | --force                                   (Optional) Don't confirm before pushing the event to EventBridge.
+  -o | --output-uri-prefix=<output_uri_prefix>   (Optional) S3 URI prefix, Outputs written to <output_uri_prefix><portal_run_id> (prefix value must end with a slash).
+  -l | --logs-uri-prefix=<logs_uri_prefix>       (Optional) S3 URI prefix, Logs written to <logs_uri_prefix><portal_run_id> (prefix value must end with a slash).
+  -p | --project-id=<project_id>                 (Optional) ICAv2 Project ID to associate with the workflow run
+  --save-draft-payload=<output_file>             (Optional) Save the generated draft event to a local file <output_file> after pushing to event bridge for record purposes.
+  --workflow-version=<workflow_version>          (Optional) The workflow version to use, defaults to ${WORKFLOW_VERSION},
+                                                            but can also be set to 4.4.6, this is particularly useful for SV calling.
+  --code-version=<code_version>                  (Optional) Set the code version to pull a particular workflow object.
+                                                            Required if using a workflow version other than the default.
+  --disable-sv-calling:                          (Optional) Disable structural variant calling for the somatic step of the pipeline.
 
 Environment:
   PORTAL_TOKEN: (Required) Your personal portal token from https://portal.${hostname}/
@@ -130,7 +111,7 @@ Binaries:
 
 Example usage:
 bash generate-WRU-draft.sh tumor_library_id normal_library_id \\
-  --comment 'Initial test of WRU event generation script'
+  --comment 'Redriving analysis after failure'
 bash generate-WRU-draft.sh tumor_library_id normal_library_id \\
   --comment 'Redriving analysis after failure' \\
   --output-uri-prefix s3://project-bucket/analysis/dragen-wgts-dna/ \\
@@ -167,7 +148,7 @@ check_binaries(){
   for binary in aws semver jq curl openssl awk; do
     if ! command -v "${binary}" > /dev/null 2>&1; then
       echo_stderr "Error: ${binary} is not installed. Please install ${binary} and try again. Exiting."
-      exit 1
+      return 1
     fi
   done
 
@@ -175,26 +156,26 @@ check_binaries(){
   jq_version="$(jq --version | cut -d'-' -f2)"
   if [[ "${jq_version}" =~ ^1.\d$ && ! "${jq_version}" == "1.7" ]]; then
     echo_stderr "Error: jq version 1.7 or higher is required. Please update jq and try again. Exiting."
-    exit 1
+    return 1
   fi
   # After version 1.7, jq changed their versioning to semver, so we can use semver to compare versions
   if [[ ! "$(semver compare "${jq_version}" "${MIN_REQUIREMENTS["jq"]}")" -ge 0 ]]; then
     echo_stderr "Error: jq version ${MIN_REQUIREMENTS["jq"]} or higher is required. Please update jq and try again. Exiting."
-    exit 1
+    return 1
   fi
 
   # Check aws cli version is 2.0.0 or higher, as we use the --cli-binary-format option which was added in 2.0.0
   aws_version="$(aws --version 2>&1 | awk '{print $1}' | cut -d'/' -f2)"
   if [[ ! "$(semver compare "${aws_version}" "${MIN_REQUIREMENTS["aws"]}")" -ge 0 ]]; then
     echo_stderr "Error: AWS CLI version ${MIN_REQUIREMENTS["aws"]} or higher is required. Please update AWS CLI and try again. Exiting."
-    exit 1
+    return 1
   fi
 
   # Check curl version is 7.76.0 or higher, as we use the --fail-with-body option which was added in 7.76.0
   curl_version="$(curl --version | head -n1 | awk '{print $2}')"
   if [[ ! "$(semver compare "${curl_version}" "${MIN_REQUIREMENTS["curl"]}")" -ge 0 ]]; then
     echo_stderr "Error: curl version ${MIN_REQUIREMENTS["curl"]} or higher is required. Please update curl and try again. Exiting."
-    exit 1
+    return 1
   fi
 }
 
@@ -250,7 +231,7 @@ get_aws_account_prefix(){
   echo "${PREFIX_BY_AWS_ACCOUNT_ID[${aws_account_id}]:-"unknown_aws_account_prefix"}"
 }
 
-get_cognito_user_pool_id(){
+get_cognito_user_pool_id_prefix(){
   local cognito_user_pool_id
   cognito_user_pool_id="$( \
     jq --raw-output \
@@ -516,13 +497,6 @@ if [[ -n "${SAVE_DRAFT_PAYLOAD}" ]]; then
   fi
 fi
 
-# Check binaries are installed
-if ! check_binaries; then
-  echo_stderr "Error: One or more required binaries are not installed. Please install the required binaries and try again. Exiting."
-  print_usage
-  exit 1
-fi
-
 # Check AWS CLI configuration
 if ! aws sts get-caller-identity --output json > /dev/null 2>&1; then
   echo_stderr "Error: AWS CLI is not configured properly. Please configure your AWS CLI with appropriate credentials and region. Exiting."
@@ -535,12 +509,45 @@ HOSTNAME="$(get_hostname_from_ssm)"
 # Check script version
 compare_script_version_to_repo
 
+# Check that we're running bash and it's version 4 or higher before declaring associative arrays
+if [[ ! -v BASH_VERSION || "${BASH_VERSINFO[0]}" -lt 4 ]]; then
+  echo_stderr "Error! This script is not being run with bash, or bash version is less than 4.0. Exiting"
+  print_usage
+  exit 1
+fi
+
+# SCRIPT BINARY VERSION MIN REQUIREMENTS
+declare -A MIN_REQUIREMENTS=(
+  ["jq"]="1.7.0"     # For if without else options
+  ["aws"]="2.0.0"    # Because what are you doing still on V1?
+  ["curl"]="7.76.0"  # For --fail-with-body option
+)
+
+# Check binaries are installed
+if ! check_binaries; then
+  echo_stderr "Error: One or more required binaries are not installed. Please install the required binaries and try again. Exiting."
+  print_usage
+  exit 1
+fi
+
+# AWS Account ID by prefix
+declare -A PREFIX_BY_AWS_ACCOUNT_ID=(
+  ["843407916570"]="dev"
+  ["455634345446"]="stg"
+  ["472057503814"]="prod"
+)
+declare -A COGNITO_USER_POOL_ID_BY_PREFIX=(
+  ["ap-southeast-2_iWOHnsurL"]="dev"
+  ["ap-southeast-2_wWDrdTyzP"]="stg"
+  ["ap-southeast-2_HFrQ3aWm8"]="prod"
+)
+
 # Confirm that the aws account id associated with the credentials
 # Matches the cognito user pool id associated with the portal token,
 # to help catch users who have multiple AWS profiles configured and are using the wrong one
-if [[ "$(get_aws_account_prefix)" != "$(get_cognito_user_pool_id)" ]]; then
+if [[ "$(get_aws_account_prefix)" != "$(get_cognito_user_pool_id_prefix)" ]]; then
   echo_stderr "Warning: The AWS account prefix associated with your AWS credentials ($(get_aws_account_prefix)) "
-  echo_stderr "         does not match the expected prefix for the portal token you provided ($(get_cognito_user_pool_id))."
+  echo_stderr "         does not match the expected prefix for the portal token you provided ($(get_cognito_user_pool_id_prefix))."
   echo_stderr "         This may cause API calls to fail due to authentication issues."
   echo_stderr "         Please check that you are using the correct AWS profile and that your portal token is valid."
 fi
@@ -572,6 +579,13 @@ libraries="$(get_linked_libraries)"
 if [[ -z "${libraries}" || "$(jq 'length' <<< "${libraries}")" == 0 ]]; then
   echo_stderr "Error: No valid libraries found for the provided library IDs. Exiting."
   exit 1
+# Check length of libraries matches length of library id array, to catch cases where some library ids were invalid
+elif [[ "$(jq 'length' <<< "${libraries}")" -ne "${#LIBRARY_ID_ARRAY[@]}" ]]; then
+  echo_stderr "Error: One or more library IDs provided are invalid and did not return a library object."
+  echo_stderr "       Please check the provided library IDs. Exiting."
+  exit 1
+# Check that none of the library objects have null libraryId or orcabusId,
+# which would indicate an invalid library object was returned for a valid library id
 elif [[ "$(jq 'map(select(.libraryId == null or .orcabusId == null)) | length' <<< "${libraries}")" -gt 0 ]]; then
   echo_stderr "Error: One or more library objects are null. Please check the provided library IDs. Exiting."
   exit 1
@@ -583,20 +597,20 @@ fi
 echo_stderr "Generating engine parameters"
 engine_parameters=$( \
   jq --null-input --raw-output --compact-output \
-  --arg outputUriPrefix "${OUTPUT_URI_PREFIX}" \
-  --arg logsUriPrefix "${LOGS_URI_PREFIX}" \
-  --arg projectId "${PROJECT_ID}" \
-  --arg portalRunId "${portal_run_id}" \
-  '
-    # Get the engine parameters
-    {
-      "outputUri": ( if $outputUriPrefix != "" then ($outputUriPrefix + $portalRunId + "/") else "" end ),
-      "logsUri": ( if $logsUriPrefix != "" then ($logsUriPrefix + $portalRunId + "/") else "" end ),
-      "projectId": $projectId
-    } |
-    # Remove empty values
-    with_entries(select(.value != ""))
-  ' \
+    --arg outputUriPrefix "${OUTPUT_URI_PREFIX}" \
+    --arg logsUriPrefix "${LOGS_URI_PREFIX}" \
+    --arg projectId "${PROJECT_ID}" \
+    --arg portalRunId "${portal_run_id}" \
+    '
+      # Get the engine parameters
+      {
+        "outputUri": ( if $outputUriPrefix != "" then ($outputUriPrefix + $portalRunId + "/") else "" end ),
+        "logsUri": ( if $logsUriPrefix != "" then ($logsUriPrefix + $portalRunId + "/") else "" end ),
+        "projectId": $projectId
+      } |
+      # Remove empty values
+      with_entries(select(.value != ""))
+    ' \
 )
 
 # Generate the event
