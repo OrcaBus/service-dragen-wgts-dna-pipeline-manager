@@ -124,14 +124,26 @@ bash generate-WRU-draft.sh tumor_library_id normal_library_id \\
 compare_script_version_to_repo(){
   : '
   Compare the version of this script to the version in the repo, and print a warning if they are different
+  If anywhere along the way fails, return unknown
   '
   repo_script_version="$( \
-    curl --silent --fail-with-body --location --show-error \
-      --header "Accept: text/html" \
-      --url "https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/${THIS_SCRIPT_PATH}" 2>/dev/null | \
     (
-      grep -m1 "SOP_VERSION" | \
-      cut -d'"' -f2
+      # Read the document from the main branch
+      curl --silent --fail-with-body --location --show-error \
+        --header "Accept: text/html" \
+        --url "https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/${THIS_SCRIPT_PATH}" | \
+      ( \
+        # Read through the whole document to prevent curl erroring out
+        tac | tac \
+      ) | \
+      (
+        # Get the first occurence with grep -m1 (SOP_VERSION="YYYY.MM.DD")
+        # Remove the SOP_VERSION= prefix ("YYYY.MM.DD")
+        # Remove quotes (YYYY.MM.DD)
+        grep -m1 "SOP_VERSION" | \
+        sed 's/^SOP_VERSION=//' | \
+        jq --raw-output
+      ) \
     ) || echo "unknown"
   )"
 
