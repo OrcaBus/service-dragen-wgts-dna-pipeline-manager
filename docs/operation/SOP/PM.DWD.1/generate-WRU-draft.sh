@@ -129,7 +129,7 @@ compare_script_version_to_repo(){
   repo_script_version="$( \
     (
       # Read the document from the main branch
-      curl --silent --fail-with-body --location --show-error \
+      curl --silent --fail --location --show-error \
         --header "Accept: text/html" \
         --url "https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/${THIS_SCRIPT_PATH}" | \
       ( \
@@ -707,11 +707,11 @@ aws lambda invoke \
   "${LAMBDA_DATA_PIPE}" 1>/dev/null & \
 jq --raw-output \
   '
-  if .statusCode != 200 then
-    .body | fromjson
-  else
-    empty
-  end
+    if .statusCode != 200 then
+      .body | fromjson
+    else
+      empty
+    end
   ' \
   < "${LAMBDA_DATA_PIPE}" \
   > "${errors_json}" & \
