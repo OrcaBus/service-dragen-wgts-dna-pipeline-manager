@@ -3,16 +3,41 @@
 """
 Get the libraries from the input, check their metadata,
 """
-from typing import List
+from typing import List, cast, TypedDict, Optional, Union
 
 from orcabus_api_tools.metadata import get_library_from_library_orcabus_id
-from orcabus_api_tools.metadata.models import LibraryBase
+from orcabus_api_tools.metadata.models import LibraryBase, Library
 
 
-def get_rgid_list_from_library_object(library_object: LibraryBase) -> List[str]:
+class ReadSet(TypedDict):
+    orcabusId: str
+    rgid: str
+
+
+class LibraryWithReadsets(LibraryBase):
+    readsets: Optional[ReadSet]
+
+
+def get_rgid_list_from_library_object(
+        library_object: Union[LibraryWithReadsets | Library],
+        library_list: Optional[List[LibraryWithReadsets]] = None
+) -> List[str]:
+    if 'phenotype' in library_object.keys():
+        if library_list is None:
+            raise ValueError("Must set library_list if library_object is of type Library")
+        # library object
+        library_object: LibraryWithReadsets = next(filter(
+            lambda library_iter_: library_iter_['libraryId'] == library_object['libraryId'],
+            library_list
+        ))
+
     return list(map(
         lambda readset_iter_: readset_iter_['rgid'],
-        library_object.get('readsets', [])
+        (
+            cast(list, library_object.get('readsets'))
+            if library_object.get('readsets') is not None
+            else []
+        )
     ))
 
 
@@ -23,7 +48,7 @@ def handler(event, context):
     :param context:
     :return:
     """
-    libraries: List[LibraryBase] = event.get("libraries", [])
+    libraries: List[LibraryWithReadsets] = event.get("libraries", [])
     if not libraries:
         raise ValueError("No libraries provided in the input")
 
@@ -34,7 +59,7 @@ def handler(event, context):
         # If only one library is provided, then we have a germline library
         return {
             "libraryId": libraries[0]['libraryId'],
-            "rgidList": get_rgid_list_from_library_object(libraries[0])
+            "fastqRgidList": get_rgid_list_from_library_object(libraries[0])
         }
 
     # Get library metadata for both libraries
@@ -64,6 +89,6 @@ def handler(event, context):
     return {
         "libraryId": library_obj['libraryId'],
         "tumorLibraryId": tumor_library_obj['libraryId'],
-        "fastqRgidList": get_rgid_list_from_library_object(library_obj),
-        "tumorFastqRgidList": get_rgid_list_from_library_object(tumor_library_obj)
+        "fastqRgidList": get_rgid_list_from_library_object(library_obj, libraries),
+        "tumorFastqRgidList": get_rgid_list_from_library_object(tumor_library_obj, libraries)
     }
