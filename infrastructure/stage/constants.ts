@@ -19,7 +19,7 @@ export const STACK_PREFIX = 'orca-dragen-wgts-dna';
 export const WORKFLOW_NAME = 'dragen-wgts-dna';
 export const DEFAULT_WORKFLOW_VERSION: WorkflowVersionType = '4.4.4';
 export const DEFAULT_PAYLOAD_VERSION = '2025.06.04';
-export const DEFAULT_ORA_VERSION = '2.7.0';
+export const DEFAULT_ORA_VERSION: OraReferenceVersionType = '2.7.0';
 
 export const WORKFLOW_LOGS_PREFIX = `s3://{__CACHE_BUCKET__}/{__CACHE_PREFIX__}logs/${WORKFLOW_NAME}/`;
 export const WORKFLOW_OUTPUT_PREFIX = `s3://{__CACHE_BUCKET__}/{__CACHE_PREFIX__}analysis/${WORKFLOW_NAME}/`;
