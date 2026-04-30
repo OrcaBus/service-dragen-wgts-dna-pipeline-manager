@@ -19,7 +19,7 @@ class LibraryWithReadsets(LibraryBase):
 
 
 def get_rgid_list_from_library_object(
-        library_object: Union[LibraryWithReadsets | Library],
+        library_object: Union[LibraryWithReadsets, Library],
         library_list: Optional[List[LibraryWithReadsets]] = None
 ) -> List[str]:
     if 'phenotype' in library_object.keys():
