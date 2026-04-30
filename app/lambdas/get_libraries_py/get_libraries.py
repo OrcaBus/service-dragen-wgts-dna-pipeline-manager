@@ -15,7 +15,7 @@ class ReadSet(TypedDict):
 
 
 class LibraryWithReadsets(LibraryBase):
-    readsets: Optional[ReadSet]
+    readsets: Optional[List[ReadSet]]
 
 
 def get_rgid_list_from_library_object(
@@ -26,10 +26,15 @@ def get_rgid_list_from_library_object(
         if library_list is None:
             raise ValueError("Must set library_list if library_object is of type Library")
         # library object
-        library_object: LibraryWithReadsets = next(filter(
-            lambda library_iter_: library_iter_['libraryId'] == library_object['libraryId'],
-            library_list
-        ))
+        try:
+            library_object: LibraryWithReadsets = next(filter(
+                lambda library_iter_: library_iter_['libraryId'] == library_object['libraryId'],
+                library_list
+            ))
+        except StopIteration:
+            raise ValueError(
+                f"Library with libraryId '{library_object['libraryId']}' was not found in library_list"
+            )
 
     return list(map(
         lambda readset_iter_: readset_iter_['rgid'],
