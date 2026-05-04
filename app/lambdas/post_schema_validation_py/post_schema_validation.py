@@ -197,6 +197,25 @@ def handler(event, context) -> Dict[str, bool]:
             "isValid": False
         }
 
+    # Ensure that we comment if downsampling has been added
+    if payload_data.get("inputs", {}).get("alignmentOptions", {}).get("enableFractionalDownSampler"):
+        comment = "Downsampling has been turned on for this workflow run"
+        if payload_data.get("inputs", {}).get("alignmentOptions", {}).get("downSamplerTumorSubsample"):
+            comment += ' - tumor has been downsampled to {}'.format(
+                payload_data.get("inputs", {}).get("alignmentOptions", {}).get("downSamplerTumorSubsample")
+            )
+        if payload_data.get("inputs", {}).get("alignmentOptions", {}).get("downSamplerNormalSubsample"):
+            comment += ' - normal has been downsampled to {}'.format(
+                payload_data.get("inputs", {}).get("alignmentOptions", {}).get("downSamplerNormalSubsample")
+            )
+        add_comment_to_workflow_run(
+            workflow_run_orcabus_id=workflow_run_id,
+            comment=comment,
+            author=COMMENT_AUTHOR.format(
+                WORKFLOW_NAME=environ.get(WORKFLOW_NAME_ENV_VAR)
+            )
+        )
+
     return {
         "isValid": True
     }

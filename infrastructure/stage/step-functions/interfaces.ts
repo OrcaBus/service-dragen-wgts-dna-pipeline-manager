@@ -83,6 +83,7 @@ export const stepFunctionToLambdasMap: Record<StateMachineNameList, LambdaNameLi
     'getQcSummaryStatsFromRgidList',
     'checkNtsmInternal',
     'checkNtsmExternal',
+    'calculateDownsamplingRatios',
     'getProjectBaseUriFromProjectId',
   ],
   validateDraftDataAndPutReadyEvent: ['validateDraftCompleteSchema', 'postSchemaValidation'],
