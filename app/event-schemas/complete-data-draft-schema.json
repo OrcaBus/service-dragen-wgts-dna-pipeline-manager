@@ -13,6 +13,33 @@
       "type": "string",
       "pattern": "^s3://[a-zA-Z0-9_-]*/[a-zA-Z0-9_/-]*/$"
     },
+    "logsUri": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/s3UriDirectory"
+        },
+        {
+          "type": "string",
+          "pattern": ".*/logs/.*"
+        }
+      ]
+    },
+    "outputUri": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/s3UriDirectory"
+        },
+        {
+          "oneOf": [
+            { "type": "string", "pattern": ".*/analysis/.*" },
+            {
+              "type": "string",
+              "pattern": ".*/output/.*"
+            }
+          ]
+        }
+      ]
+    },
     "reference": {
       "type": "object",
       "properties": {
@@ -156,10 +183,10 @@
           "type": "string"
         },
         "outputUri": {
-          "$ref": "#/$defs/s3UriDirectory"
+          "$ref": "#/$defs/outputUri"
         },
         "logsUri": {
-          "$ref": "#/$defs/s3UriDirectory"
+          "$ref": "#/$defs/logsUri"
         }
       },
       "required": ["projectId", "pipelineId", "outputUri", "logsUri"],
