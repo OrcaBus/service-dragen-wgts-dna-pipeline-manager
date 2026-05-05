@@ -1061,7 +1061,7 @@
     },
     "Add qc tags": {
       "Type": "Parallel",
-      "Next": "Put DRAFT update event",
+      "Next": "Add in downsampling to alignment options inputs",
       "Branches": [
         {
           "StartAt": "Get coverage and dup-frac estimates",
@@ -1282,6 +1282,75 @@
       ],
       "Assign": {
         "tags": "{% /* https://try.jsonata.org/05K2l3beH */\n/* List to merge together */\n[\n    /* Start with the tags */\n    $tags,\n    /* Merge the results list together */\n    $merge($states.result)\n] \n/* Then merge these initial tags with states.result  */\n~> $merge\n/* Remove any keys with values */\n~> $sift(function($v, $k){$v != null}) %}"
+      }
+    },
+    "Add in downsampling to alignment options inputs": {
+      "Type": "Parallel",
+      "Next": "Put DRAFT update event",
+      "Branches": [
+        {
+          "StartAt": "Has tumor rgid list (add in downsampling)",
+          "States": {
+            "Has tumor rgid list (add in downsampling)": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Condition": "{% $tags.tumorFastqRgidList ? true : false %}",
+                  "Comment": "Has tumor inputs",
+                  "Next": "Add downsampling"
+                }
+              ],
+              "Default": "Has tumor placeholder (downsampling)"
+            },
+            "Add downsampling": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Arguments": {
+                "FunctionName": "${__calculate_downsampling_ratios_lambda_function_arn__}",
+                "Payload": {
+                  "normalCoverageEst": "{% $tags.preLaunchCoverageEst %}",
+                  "normalDupFracEst": "{% $tags.preLaunchDupFracEst %}",
+                  "tumorCoverageEst": "{% $tags.tumorPreLaunchCoverageEst %}",
+                  "tumorDupFracEst": "{% $tags.tumorPreLaunchDupFracEst %}"
+                }
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "Output": "{% $states.result.Payload ? $states.result.Payload : {} %}",
+              "End": true
+            },
+            "Has tumor placeholder (downsampling)": {
+              "Type": "Pass",
+              "End": true,
+              "Output": {}
+            }
+          }
+        },
+        {
+          "StartAt": "Downsampling placeholder",
+          "States": {
+            "Downsampling placeholder": {
+              "Type": "Pass",
+              "End": true,
+              "Output": {}
+            }
+          }
+        }
+      ],
+      "Assign": {
+        "inputs": "{% (\n    /* Assign results to new alignment options dict */\n    $newAlignmentOptions := ( [ $states.result ] ~> $merge );\n    $inputs.alignmentOptions ? \n    /* Consider when alignment options is already an input */\n    (\n        $inputs ~> \n        | alignmentOptions | $newAlignmentOptions |\n    ) : \n    /* When Alignment options is not already an input */\n    (\n        $inputs ~> \n        | $ | { \"alignmentOptions\": $newAlignmentOptions } |\n    )\n) %}"
       }
     },
     "Put DRAFT update event": {

@@ -16,6 +16,7 @@ export type LambdaNameList =
   | 'getQcSummaryStatsFromRgidList'
   | 'checkNtsmInternal'
   | 'checkNtsmExternal'
+  | 'calculateDownsamplingRatios'
   // Validation Functions
   | 'validateDraftCompleteSchema'
   | 'postSchemaValidation'
@@ -40,6 +41,7 @@ export const lambdaNameList: LambdaNameList[] = [
   'getQcSummaryStatsFromRgidList',
   'checkNtsmInternal',
   'checkNtsmExternal',
+  'calculateDownsamplingRatios',
   // Validation Functions
   'validateDraftCompleteSchema',
   'postSchemaValidation',
@@ -92,6 +94,9 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
   },
   checkNtsmExternal: {
     needsOrcabusApiTools: true,
+  },
+  calculateDownsamplingRatios: {
+    // Just some quick maths!
   },
   // Validation Functions
   validateDraftCompleteSchema: {
