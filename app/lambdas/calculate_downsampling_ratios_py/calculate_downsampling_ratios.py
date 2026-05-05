@@ -14,9 +14,10 @@ Ensure that
 (tumorCoverageEst * (1 - tumorDupFracEst)) /
 (normalCoverageEst * (1 - normalDupFracEst))
 
-is less than 3
+stays between 1 and 3 inclusive.
 
-If ratio is less than 3 we need to add in a downsampler.
+If the ratio is greater than 3 or less than 1, we need to add in a
+downsampler.
 """
 from typing import Optional, Dict, Union
 

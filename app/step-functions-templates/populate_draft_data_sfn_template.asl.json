@@ -1308,10 +1308,10 @@
               "Arguments": {
                 "FunctionName": "${__calculate_downsampling_ratios_lambda_function_arn__}",
                 "Payload": {
-                  "normalCoverageEst": "{% $inputs.preLaunchCoverageEst %}",
-                  "normalDupFracEst": "{% $inputs.preLaunchDupFracEst %}",
-                  "tumorCoverageEst": "{% $inputs.tumorPreLaunchCoverageEst %}",
-                  "tumorDupFracEst": "{% $inputs.tumorPreLaunchDupFracEst %}"
+                  "normalCoverageEst": "{% $tags.preLaunchCoverageEst %}",
+                  "normalDupFracEst": "{% $tags.preLaunchDupFracEst %}",
+                  "tumorCoverageEst": "{% $tags.tumorPreLaunchCoverageEst %}",
+                  "tumorDupFracEst": "{% $tags.tumorPreLaunchDupFracEst %}"
                 }
               },
               "Retry": [
@@ -1328,7 +1328,7 @@
                   "JitterStrategy": "FULL"
                 }
               ],
-              "Output": "{% $states.result.Payload %}",
+              "Output": "{% $states.result.Payload ? $states.result.Payload : {} %}",
               "End": true
             },
             "Has tumor placeholder (downsampling)": {

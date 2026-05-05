@@ -200,11 +200,11 @@ def handler(event, context) -> Dict[str, bool]:
     # Ensure that we comment if downsampling has been added
     if payload_data.get("inputs", {}).get("alignmentOptions", {}).get("enableFractionalDownSampler"):
         comment = "Downsampling has been turned on for this workflow run"
-        if payload_data.get("inputs", {}).get("alignmentOptions", {}).get("downSamplerTumorSubsample"):
+        if payload_data.get("inputs", {}).get("alignmentOptions", {}).get("downSamplerTumorSubsample") is not None:
             comment += ' - tumor has been downsampled to {}'.format(
                 payload_data.get("inputs", {}).get("alignmentOptions", {}).get("downSamplerTumorSubsample")
             )
-        if payload_data.get("inputs", {}).get("alignmentOptions", {}).get("downSamplerNormalSubsample"):
+        if payload_data.get("inputs", {}).get("alignmentOptions", {}).get("downSamplerNormalSubsample") is not None:
             comment += ' - normal has been downsampled to {}'.format(
                 payload_data.get("inputs", {}).get("alignmentOptions", {}).get("downSamplerNormalSubsample")
             )
