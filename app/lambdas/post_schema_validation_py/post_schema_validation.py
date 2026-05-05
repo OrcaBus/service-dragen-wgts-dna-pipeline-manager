@@ -198,15 +198,15 @@ def handler(event, context) -> Dict[str, bool]:
         }
 
     # Ensure that we comment if downsampling has been added
-    if payload_data.get("inputs", {}).get("alignmentOptions", {}).get("enableFractionalDownSampler"):
+    if payload_data.get("inputs", {}).get("somaticAlignmentOptions", {}).get("enableFractionalDownSampler"):
         comment = "Downsampling has been turned on for this workflow run"
-        if payload_data.get("inputs", {}).get("alignmentOptions", {}).get("downSamplerTumorSubsample") is not None:
+        if payload_data.get("inputs", {}).get("somaticAlignmentOptions", {}).get("downSamplerTumorSubsample") is not None:
             comment += ' - tumor has been downsampled to {}'.format(
-                payload_data.get("inputs", {}).get("alignmentOptions", {}).get("downSamplerTumorSubsample")
+                payload_data.get("inputs", {}).get("somaticAlignmentOptions", {}).get("downSamplerTumorSubsample")
             )
-        if payload_data.get("inputs", {}).get("alignmentOptions", {}).get("downSamplerNormalSubsample") is not None:
+        if payload_data.get("inputs", {}).get("somaticAlignmentOptions", {}).get("downSamplerNormalSubsample") is not None:
             comment += ' - normal has been downsampled to {}'.format(
-                payload_data.get("inputs", {}).get("alignmentOptions", {}).get("downSamplerNormalSubsample")
+                payload_data.get("inputs", {}).get("somaticAlignmentOptions", {}).get("downSamplerNormalSubsample")
             )
         add_comment_to_workflow_run(
             workflow_run_orcabus_id=workflow_run_id,
