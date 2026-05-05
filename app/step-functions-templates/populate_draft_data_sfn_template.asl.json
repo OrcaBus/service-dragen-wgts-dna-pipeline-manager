@@ -1350,7 +1350,7 @@
         }
       ],
       "Assign": {
-        "inputs": "{% (\n    /* Assign results to new alignment options dict */\n    $newAlignmentOptions := ( [ $states.result ] ~> $merge );\n    $inputs.alignmentOptions ? \n    /* Consider when alignment options is already an input */\n    (\n        $inputs ~> \n        | alignmentOptions | $newAlignmentOptions |\n    ) : \n    /* When Alignment options is not already an input */\n    (\n        $inputs ~> \n        | $ | { \"alignmentOptions\": $newAlignmentOptions } |\n    )\n) %}"
+        "inputs": "{% (\n    /* Assign results to new alignment options dict */\n    $newSomaticAlignmentOptions := ( [ $states.result ] ~> $merge );\n    $inputs.somaticAlignmentOptions ? \n    /* Consider when alignment options is already an input */\n    (\n        $inputs ~> \n        | somaticAlignmentOptions | $newSomaticAlignmentOptions |\n    ) : \n    /* When Alignment options is not already an input */\n    (\n        $inputs ~> \n        | $ | { \"somaticAlignmentOptions\": $newSomaticAlignmentOptions } |\n    )\n) %}"
       }
     },
     "Put DRAFT update event": {
