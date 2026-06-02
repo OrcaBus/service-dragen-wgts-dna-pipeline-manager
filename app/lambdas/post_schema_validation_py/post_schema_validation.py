@@ -117,10 +117,10 @@ def validate_engine_parameters(
     portal_run_id = get_workflow_run(workflow_run_id)['portalRunId']
 
     # Confirm that the output uri, logs uri end with the portal run id
-    if not output_uri.endswith(f"/{ANALYSIS_MIDFIX}/{environ[WORKFLOW_NAME_ENV_VAR]}/{portal_run_id}/"):
-        return False, f"outputUri '{output_uri}' does not end with '/{ANALYSIS_MIDFIX}/{environ[WORKFLOW_NAME_ENV_VAR]}/{portal_run_id}'"
-    if not logs_uri.endswith(f"/{LOGS_MIDFIX}/{environ[WORKFLOW_NAME_ENV_VAR]}/{portal_run_id}/"):
-        return False, f"logsUri '{logs_uri}' does not end with the portal run id '/{LOGS_MIDFIX}/{environ[WORKFLOW_NAME_ENV_VAR]}/{portal_run_id}'"
+    if not output_uri.endswith(f"/{ANALYSIS_MIDFIX}/{WORKFLOW_NAME}/{portal_run_id}/"):
+        return False, f"outputUri '{output_uri}' does not end with '/{ANALYSIS_MIDFIX}/{WORKFLOW_NAME}/{portal_run_id}'"
+    if not logs_uri.endswith(f"/{LOGS_MIDFIX}/{WORKFLOW_NAME}/{portal_run_id}/"):
+        return False, f"logsUri '{logs_uri}' does not end with the portal run id '/{LOGS_MIDFIX}/{WORKFLOW_NAME}/{portal_run_id}'"
 
     return True, ""
 
@@ -147,7 +147,6 @@ def validate_inputs(
                 fastq_obj.get("read2FileUri")
             ])
 
-
     # We may also have:
     # reference.tarball
     # somaticReference.tarball
@@ -161,11 +160,11 @@ def validate_inputs(
     # Or externally mounted data uris (e.g. s3://reference-data-bucket/...)
     data_uris = list(filter(
         lambda uri_iter_: (
-            uri_iter_ is not None and not (
-                uri_iter_.startswith(f"s3://{environ[REF_DATA_BUCKET_ENV_VAR]}/") or
-                uri_iter_.startswith(f"s3://{environ[TEST_BUCKET_ENV_VAR]}/") or
+                uri_iter_ is not None and not (
+                uri_iter_.startswith(f"s3://{REF_DATA_BUCKET}/") or
+                uri_iter_.startswith(f"s3://{TEST_BUCKET}/") or
                 uri_iter_.startswith(project_prefix)
-            )
+        )
         ),
         data_uris
     ))
@@ -247,20 +246,20 @@ def handler(event, context) -> Dict[str, bool]:
     # Ensure that we comment if downsampling has been added
     if payload_data.get("inputs", {}).get("somaticAlignmentOptions", {}).get("enableFractionalDownSampler"):
         comment = "Downsampling has been turned on for this workflow run"
-        if payload_data.get("inputs", {}).get("somaticAlignmentOptions", {}).get("downSamplerTumorSubsample") is not None:
+        if payload_data.get("inputs", {}).get("somaticAlignmentOptions", {}).get(
+                "downSamplerTumorSubsample") is not None:
             comment += ' - tumor has been downsampled to {}'.format(
                 payload_data.get("inputs", {}).get("somaticAlignmentOptions", {}).get("downSamplerTumorSubsample")
             )
-        if payload_data.get("inputs", {}).get("somaticAlignmentOptions", {}).get("downSamplerNormalSubsample") is not None:
+        if payload_data.get("inputs", {}).get("somaticAlignmentOptions", {}).get(
+                "downSamplerNormalSubsample") is not None:
             comment += ' - normal has been downsampled to {}'.format(
                 payload_data.get("inputs", {}).get("somaticAlignmentOptions", {}).get("downSamplerNormalSubsample")
             )
         add_comment_to_workflow_run(
             workflow_run_orcabus_id=workflow_run_id,
             comment=comment,
-            author=COMMENT_AUTHOR.format(
-                WORKFLOW_NAME=environ.get(WORKFLOW_NAME_ENV_VAR)
-            )
+            author=COMMENT_AUTHOR
         )
 
     return {
