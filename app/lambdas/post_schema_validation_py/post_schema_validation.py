@@ -91,12 +91,20 @@ def validate_engine_parameters(
     :return: A tuple of (is_valid, comment)
     """
     # Get the project id
-    project_id = engine_parameters.get("projectId")
+    project_id = cast(str, engine_parameters.get("projectId"))
 
     # Confirm that the outputUri and logsUri are a subset of the project prefix
     output_uri = engine_parameters.get("outputUri", "")
     logs_uri = engine_parameters.get("logsUri", "")
     pipeline_id = engine_parameters.get("pipelineId", "")
+
+    # Assert project id
+    if project_id is None:
+        return False, f"projectId is not set"
+    try:
+        get_project_obj_from_project_id(project_id)
+    except ApiException:
+        return False, f"Cannot find project id {project_id}"
 
     # Validate the uris are correct
     if not output_uri.startswith(project_prefix):
