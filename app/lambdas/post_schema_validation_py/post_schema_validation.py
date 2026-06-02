@@ -199,6 +199,49 @@ def validate_inputs(
     return True, ""
 
 
+def validate_clinical_input_metrics(tags: PreLaunchSomaticTags) -> Tuple[bool, List[str]]:
+    """
+    Perform the following checks on the input tags to ensure we are running the appropriate analysis
+
+    1. ntsmInternalPassing / tumorNtsmInternalPassing pass
+    2. ntsmExternalPassing passes
+    3. Raw germline coverage is above 30X and deduplicated coverage is above 25X
+    4. Raw tumor coverage is above 60X and deduplicated coverage is above 50X
+    """
+    # Initialise is_valid
+    is_valid = True
+    comments = []
+
+    # 1. Fingerprint checks
+    if not tags['ntsmInternalPassing']:
+        is_valid = False
+        comments.append("Normal internal fingerprint failed")
+    if not tags['tumorNtsmInternalPassing']:
+        is_valid = False
+        comments.append("Tumor internal fingerprint failed")
+    # 2. Cross fingerprint checks
+    if not tags['ntsmExternalPassing']:
+        is_valid = False
+        comments.append("Fingerprints between tumor & normal did not match")
+
+    # 3. Germline coverage checks
+    if not tags['preLaunchCoverageEst'] >= MIN_RAW_NORMAL_WGS_COVERAGE:
+        is_valid = False
+        comments.append(f"Normal did not meet raw threshold coverage of {MIN_RAW_NORMAL_WGS_COVERAGE} X")
+    if not (tags['preLaunchCoverageEst'] * tags['preLaunchDupFracEst'] ) >= MIN_DEDUP_NORMAL_WGS_COVERAGE:
+        is_valid = False
+        comments.append(f"Normal deduplicated coverage estimate did not meet {MIN_DEDUP_NORMAL_WGS_COVERAGE} X")
+    # 4. Somatic coverage checks
+    if not tags['tumorPreLaunchCoverageEst'] >= MIN_RAW_TUMOR_WGS_COVERAGE:
+        is_valid = False
+        comments.append(f"Tumor did not meet raw threshold coverage of {MIN_RAW_TUMOR_WGS_COVERAGE} X")
+    if not (tags['tumorPreLaunchCoverageEst'] * tags['tumorPreLaunchDupFracEst'] ) >= MIN_DEDUP_TUMOR_WGS_COVERAGE:
+        is_valid = False
+        comments.append(f"Tumor deduplicated coverage estimate did not meet {MIN_DEDUP_TUMOR_WGS_COVERAGE} X")
+
+    return is_valid, comments
+
+
 def handler(event, context) -> Dict[str, bool]:
     """
     Given a draft schema, validate it against the current schema and print the results.
@@ -213,10 +256,11 @@ def handler(event, context) -> Dict[str, bool]:
     workflow_run_id = event.get("workflowRunId", "")
 
     # Get the ICAv2 project id from the event
-    engine_parameters = payload_data.get("engineParameters")
+    engine_parameters = payload_data.get("engineParameters", {})
+    tags = payload_data.get("tags", {})
 
     # Get the project prefix
-    project_prefix = get_s3_key_prefix_by_project_id(engine_parameters.get("projectId"))
+    project_prefix = cast(str, get_s3_key_prefix_by_project_id(engine_parameters.get("projectId")))
 
     # Confirm the engine parameters match
     is_valid, comment = validate_engine_parameters(
@@ -235,18 +279,49 @@ def handler(event, context) -> Dict[str, bool]:
             inputs,
             project_id=engine_parameters.get("projectId"),
             # Get the key prefix for the project
-            project_prefix=get_s3_key_prefix_by_project_id(engine_parameters.get("projectId"))
+            project_prefix=cast(str, get_s3_key_prefix_by_project_id(engine_parameters.get("projectId")))
         )
+
+    # Check if this is a clinical sample and if we
+    # Need to hold off until coverage matches
+    if is_valid:
+        tumor_library_id = tags.get("tumorLibraryId", None)
+        # Germline only run
+        if tumor_library_id is None:
+            pass
+        # Not a clinical sample
+        elif not get_library_from_library_id(tumor_library_id)['workflow'] == CLINICAL_WORKFLOW_NAME:
+            pass
+        # Clinical TN Sample
+        else:
+            is_valid, comment = validate_clinical_input_metrics(
+                tags
+            )
 
     # Somewhere along the way, the validation failed
     if not is_valid:
-        add_comment_to_workflow_run(
-            workflow_run_orcabus_id=workflow_run_id,
-            comment=f"Post schema validation failed: {comment}",
-            author=COMMENT_AUTHOR.format(
-                WORKFLOW_NAME=environ.get(WORKFLOW_NAME_ENV_VAR)
+        if isinstance(comment, List):
+            if len(comment) == 1:
+                comment = comment[0]
+        if isinstance(comment, List):
+            add_comment_to_workflow_run(
+                workflow_run_orcabus_id=workflow_run_id,
+                comment=f"Post schema validation failed for {len(comment)} reasons",
+                author=COMMENT_AUTHOR
             )
-        )
+            for idx, comment_iter in enumerate(comment):
+                add_comment_to_workflow_run(
+                    workflow_run_orcabus_id=workflow_run_id,
+                    comment=f"Reason {idx}: {comment_iter}",
+                    author=COMMENT_AUTHOR
+                )
+                sleep(1)
+        else:
+            add_comment_to_workflow_run(
+                workflow_run_orcabus_id=workflow_run_id,
+                comment=f"Post schema validation failed: {comment}",
+                author=COMMENT_AUTHOR
+            )
         return {
             "isValid": False
         }
