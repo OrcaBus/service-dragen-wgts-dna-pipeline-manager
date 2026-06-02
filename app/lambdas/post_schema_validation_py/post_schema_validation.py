@@ -5,36 +5,83 @@ Confirm that the data uris in the inputs and engine parameters are appropriate
 """
 
 # Imports
-from typing import Dict, Tuple
+from typing import Dict, Tuple, cast, TypedDict, List
 import logging
 from os import environ
+from time import sleep
 
 # Wrapica imports
-from wrapica.project_data import coerce_data_id_or_uri_to_project_data_obj, get_project_data_obj_by_id
 from libica.openapi.v3 import ApiException
+from wrapica.project_data import coerce_data_id_or_uri_to_project_data_obj, get_project_data_obj_by_id
 from wrapica.storage_configuration import get_s3_key_prefix_by_project_id
 from wrapica.project_pipelines import get_project_pipeline_obj
+from wrapica.project import get_project_obj_from_project_id
 
 # Layer imports
 from orcabus_api_tools.workflow import add_comment_to_workflow_run, get_workflow_run
+from orcabus_api_tools.metadata import get_library_from_library_id
 from icav2_tools import set_icav2_env_vars
 
 # Globals
 WORKFLOW_NAME_ENV_VAR = "WORKFLOW_NAME"
-COMMENT_AUTHOR = "{WORKFLOW_NAME}-workflow-validation-service"
 TEST_BUCKET_ENV_VAR = "TEST_DATA_BUCKET_NAME"
 REF_DATA_BUCKET_ENV_VAR = "REF_DATA_BUCKET_NAME"
+# Get test / ref env var values
+TEST_BUCKET = environ[TEST_BUCKET_ENV_VAR]
+REF_DATA_BUCKET = environ[REF_DATA_BUCKET_ENV_VAR]
+# Get workflow env vars as values
+WORKFLOW_NAME = environ[WORKFLOW_NAME_ENV_VAR]
+COMMENT_AUTHOR = f"{WORKFLOW_NAME}-workflow-validation-service"
+# Coverage env vars
+MIN_RAW_TUMOR_WGS_COVERAGE_ENV_VAR = 'MIN_RAW_TUMOR_WGS_COVERAGE'
+MIN_DEDUP_TUMOR_WGS_COVERAGE_ENV_VAR = 'MIN_DEDUP_TUMOR_WGS_COVERAGE'
+MIN_RAW_NORMAL_WGS_COVERAGE_ENV_VAR = 'MIN_RAW_NORMAL_WGS_COVERAGE'
+MIN_DEDUP_NORMAL_WGS_COVERAGE_ENV_VAR = 'MIN_DEDUP_NORMAL_WGS_COVERAGE'
+# Get coverage env var values
+MIN_RAW_TUMOR_WGS_COVERAGE = int(environ[MIN_RAW_TUMOR_WGS_COVERAGE_ENV_VAR])
+MIN_DEDUP_TUMOR_WGS_COVERAGE = int(environ[MIN_DEDUP_TUMOR_WGS_COVERAGE_ENV_VAR])
+MIN_RAW_NORMAL_WGS_COVERAGE = int(environ[MIN_RAW_NORMAL_WGS_COVERAGE_ENV_VAR])
+MIN_DEDUP_NORMAL_WGS_COVERAGE = int(environ[MIN_DEDUP_NORMAL_WGS_COVERAGE_ENV_VAR])
+# Midfixes
 ANALYSIS_MIDFIX = "analysis"
 LOGS_MIDFIX = "logs"
+# Clinical workflow name
+CLINICAL_WORKFLOW_NAME = 'clinical'
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
+class PreLaunchSomaticTags(TypedDict):
+    """
+    Launch tags we can expect when running the workflow in somatic mode
+    """
+    # Metadata
+    libraryId: str
+    tumorLibraryId: str
+    subjectId: str
+    individualId: str
+    # Readsets
+    fastqRgidList: List[str]
+    tumorFastqRgidList: List[str]
+    # Fingerprint checking
+    ntsmExternalPassing: bool
+    ntsmInternalPassing: bool
+    tumorNtsmInternalPassing: bool
+    # Normal pre-launch estimates
+    preLaunchDupFracEst: float
+    preLaunchCoverageEst: float
+    preLaunchInsertSizeEst: float
+    # Tumor pre-launch estimates
+    tumorPreLaunchDupFracEst: float
+    tumorPreLaunchCoverageEst: float
+    tumorPreLaunchInsertSizeEst: float
+
+
 def validate_engine_parameters(
         engine_parameters: Dict,
-        workflow_run_id: str = None,
-        project_prefix: str = None
+        workflow_run_id: str,
+        project_prefix: str
 ) -> Tuple[bool, str]:
     """
     Validate the engine parameters.
