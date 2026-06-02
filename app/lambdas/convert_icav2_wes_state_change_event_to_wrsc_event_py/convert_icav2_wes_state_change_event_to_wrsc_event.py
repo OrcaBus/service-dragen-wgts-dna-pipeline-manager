@@ -125,9 +125,14 @@ def handler(event, context):
 
     # Get the portal run ID from the event tags
     portal_run_id = icav2_wes_event['tags']['portalRunId']
+    execution_id = icav2_wes_event['icav2AnalysisId']
 
     # Get the workflow run using the portal run ID
     workflow_run = get_workflow_run_from_portal_run_id(portal_run_id)
+
+    # Add the execution id to the payload if it doesn't exist
+    if not workflow_run.get("executionId"):
+        workflow_run['executionId'] = execution_id
 
     # Get the latest payload from the workflow run
     latest_payload = get_latest_payload_from_workflow_run(workflow_run['orcabusId'])
