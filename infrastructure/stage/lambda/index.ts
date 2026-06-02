@@ -8,6 +8,10 @@ import {
   SSM_SCHEMA_ROOT,
   REFERENCE_DATA_BUCKET_NAME,
   TEST_DATA_BUCKET_NAME,
+  MIN_RAW_TUMOR_WGS_COVERAGE,
+  MIN_DEDUP_TUMOR_WGS_COVERAGE,
+  MIN_RAW_NORMAL_WGS_COVERAGE,
+  MIN_DEDUP_NORMAL_WGS_COVERAGE,
 } from '../constants';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Duration } from 'aws-cdk-lib';
@@ -130,34 +134,33 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
   }
 
   /*
-    Special if the lambdaName is 'generateWorkflowRunNameAndPortalRunId'
-    We need to add a specific environment variable for this lambda
-     */
-  if (props.lambdaName === 'generateWorkflowRunNameAndPortalRunId') {
-    lambdaFunction.addEnvironment('WORKFLOW_NAME', WORKFLOW_NAME);
-    lambdaFunction.addEnvironment('WORKFLOW_VERSION', DEFAULT_WORKFLOW_VERSION);
-  }
-
-  /*
-    Special if the lambdaName is 'validateDraftCompleteSchema', we need to add in the ssm parameters
-    to the REGISTRY_NAME and SCHEMA_NAME
+  Coverage thresholds info for post schema validation
    */
-  if (props.lambdaName === 'validateDraftCompleteSchema') {
-    lambdaFunction.addEnvironment('WORKFLOW_NAME', WORKFLOW_NAME);
-    const draftSchemaName: SchemaNames = 'completeDataDraft';
-    lambdaFunction.addEnvironment('SSM_REGISTRY_NAME', path.join(SSM_SCHEMA_ROOT, 'registry'));
+  if (lambdaRequirements.needsCoverageThresholdsInfo) {
     lambdaFunction.addEnvironment(
-      'SSM_SCHEMA_NAME',
-      path.join(SSM_SCHEMA_ROOT, camelCaseToKebabCase(draftSchemaName), 'latest')
+      'MIN_RAW_TUMOR_WGS_COVERAGE',
+      MIN_RAW_TUMOR_WGS_COVERAGE.toString()
+    );
+    lambdaFunction.addEnvironment(
+      'MIN_DEDUP_TUMOR_WGS_COVERAGE',
+      MIN_DEDUP_TUMOR_WGS_COVERAGE.toString()
+    );
+    lambdaFunction.addEnvironment(
+      'MIN_RAW_NORMAL_WGS_COVERAGE',
+      MIN_RAW_NORMAL_WGS_COVERAGE.toString()
+    );
+    lambdaFunction.addEnvironment(
+      'MIN_DEDUP_NORMAL_WGS_COVERAGE',
+      MIN_DEDUP_NORMAL_WGS_COVERAGE.toString()
     );
   }
 
-  if (props.lambdaName === 'postSchemaValidation') {
+  /*
+  Workflow info, usually for comment generation on the workflow run in the OrcaUI
+   */
+  if (lambdaRequirements.needsWorkflowInfo) {
     lambdaFunction.addEnvironment('WORKFLOW_NAME', WORKFLOW_NAME);
-  }
-
-  if (props.lambdaName === 'addWesFailureComment') {
-    lambdaFunction.addEnvironment('WORKFLOW_NAME', WORKFLOW_NAME);
+    lambdaFunction.addEnvironment('WORKFLOW_VERSION', DEFAULT_WORKFLOW_VERSION);
   }
 
   /* Return the function */
