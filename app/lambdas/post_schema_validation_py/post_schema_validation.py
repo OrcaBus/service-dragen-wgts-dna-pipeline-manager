@@ -228,14 +228,14 @@ def validate_clinical_input_metrics(tags: PreLaunchSomaticTags) -> Tuple[bool, L
     if not tags['preLaunchCoverageEst'] >= MIN_RAW_NORMAL_WGS_COVERAGE:
         is_valid = False
         comments.append(f"Normal did not meet raw threshold coverage of {MIN_RAW_NORMAL_WGS_COVERAGE} X")
-    if not (tags['preLaunchCoverageEst'] * tags['preLaunchDupFracEst'] ) >= MIN_DEDUP_NORMAL_WGS_COVERAGE:
+    if (tags['preLaunchCoverageEst'] * (1 - tags['preLaunchDupFracEst'])) < MIN_DEDUP_NORMAL_WGS_COVERAGE:
         is_valid = False
         comments.append(f"Normal deduplicated coverage estimate did not meet {MIN_DEDUP_NORMAL_WGS_COVERAGE} X")
     # 4. Somatic coverage checks
     if not tags['tumorPreLaunchCoverageEst'] >= MIN_RAW_TUMOR_WGS_COVERAGE:
         is_valid = False
         comments.append(f"Tumor did not meet raw threshold coverage of {MIN_RAW_TUMOR_WGS_COVERAGE} X")
-    if not (tags['tumorPreLaunchCoverageEst'] * tags['tumorPreLaunchDupFracEst'] ) >= MIN_DEDUP_TUMOR_WGS_COVERAGE:
+    if (tags['tumorPreLaunchCoverageEst'] * (1 - tags['tumorPreLaunchDupFracEst'])) < MIN_DEDUP_TUMOR_WGS_COVERAGE:
         is_valid = False
         comments.append(f"Tumor deduplicated coverage estimate did not meet {MIN_DEDUP_TUMOR_WGS_COVERAGE} X")
 
@@ -300,11 +300,9 @@ def handler(event, context) -> Dict[str, bool]:
 
     # Somewhere along the way, the validation failed
     if not is_valid:
-        if isinstance(comment, List):
-            if len(comment) == 1:
-                comment = comment[0]
-        if isinstance(comment, List):
-            add_comment_to_workflow_run(
+        if isinstance(comment, list) and len(comment) == 1:
+            comment = comment[0]
+        if isinstance(comment, list):
                 workflow_run_orcabus_id=workflow_run_id,
                 comment=f"Post schema validation failed for {len(comment)} reasons",
                 author=COMMENT_AUTHOR
