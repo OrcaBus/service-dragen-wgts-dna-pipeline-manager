@@ -47,6 +47,7 @@ ANALYSIS_MIDFIX = "analysis"
 LOGS_MIDFIX = "logs"
 # Clinical workflow name
 CLINICAL_WORKFLOW_NAME = 'clinical'
+AUTOMATED_WORKFLOW_PREFIX = "umccr--automated"
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
