@@ -299,12 +299,20 @@ def handler(event, context) -> Dict[str, bool]:
         if tumor_library_id is None:
             pass
         # Not a clinical sample
-        elif not get_library_from_library_id(tumor_library_id)['workflow'] == CLINICAL_WORKFLOW_NAME:
-            pass
-        # Clinical TN Sample
+        # Or not an automated run
+        elif (
+                not get_library_from_library_id(tumor_library_id)['workflow'] == CLINICAL_WORKFLOW_NAME or
+                not get_workflow_run(workflow_run_id)["workflowRunName"].startswith(AUTOMATED_WORKFLOW_PREFIX)
+        ):
+            is_valid, comment = validate_clinical_input_metrics(
+                tags,
+                invalidate_on_failure=False
+            )
+        # Automated Clinical TN Sample
         else:
             is_valid, comment = validate_clinical_input_metrics(
-                tags
+                tags,
+                invalidate_on_failure=True
             )
 
     # Somewhere along the way, the validation failed
