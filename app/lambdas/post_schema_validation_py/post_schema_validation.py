@@ -320,6 +320,7 @@ def handler(event, context) -> Dict[str, bool]:
         if isinstance(comment, list) and len(comment) == 1:
             comment = comment[0]
         if isinstance(comment, list):
+            add_comment_to_workflow_run(
                 workflow_run_orcabus_id=workflow_run_id,
                 comment=f"Post schema validation failed for {len(comment)} reasons",
                 author=COMMENT_AUTHOR
@@ -327,7 +328,7 @@ def handler(event, context) -> Dict[str, bool]:
             for idx, comment_iter in enumerate(comment):
                 add_comment_to_workflow_run(
                     workflow_run_orcabus_id=workflow_run_id,
-                    comment=f"Reason {idx}: {comment_iter}",
+                    comment=f"Reason {idx} of {len(comment)}: {comment_iter}",
                     author=COMMENT_AUTHOR
                 )
                 sleep(1)
