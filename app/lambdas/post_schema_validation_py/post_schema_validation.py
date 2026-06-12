@@ -340,6 +340,23 @@ def handler(event, context) -> Dict[str, bool]:
         return {
             "isValid": False
         }
+    elif (
+            is_valid and comment
+    ):
+        if isinstance(comment, list):
+            for idx, comment_iter in enumerate(comment):
+                add_comment_to_workflow_run(
+                    workflow_run_orcabus_id=workflow_run_id,
+                    comment=f"Post schema validation note {idx} of {len(comment)}: {comment_iter}",
+                    author=COMMENT_AUTHOR
+                )
+                sleep(1)
+        else:
+            add_comment_to_workflow_run(
+                workflow_run_orcabus_id=workflow_run_id,
+                comment=f"Post schema validation note: {comment}",
+                author=COMMENT_AUTHOR
+            )
 
     # Ensure that we comment if downsampling has been added
     if payload_data.get("inputs", {}).get("somaticAlignmentOptions", {}).get("enableFractionalDownSampler"):
