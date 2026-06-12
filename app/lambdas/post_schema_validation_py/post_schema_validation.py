@@ -200,7 +200,10 @@ def validate_inputs(
     return True, ""
 
 
-def validate_clinical_input_metrics(tags: PreLaunchSomaticTags) -> Tuple[bool, List[str]]:
+def validate_clinical_input_metrics(
+        tags: PreLaunchSomaticTags,
+        invalidate_on_failure: bool = True,
+) -> Tuple[bool, List[str]]:
     """
     Perform the following checks on the input tags to ensure we are running the appropriate analysis
 
@@ -239,6 +242,11 @@ def validate_clinical_input_metrics(tags: PreLaunchSomaticTags) -> Tuple[bool, L
     if (tags['tumorPreLaunchCoverageEst'] * (1 - tags['tumorPreLaunchDupFracEst'])) < MIN_DEDUP_TUMOR_WGS_COVERAGE:
         is_valid = False
         comments.append(f"Tumor deduplicated coverage estimate did not meet {MIN_DEDUP_TUMOR_WGS_COVERAGE} X")
+
+    # Don't worry about failing an invalid run here
+    # But we want the comments regardless
+    if not invalidate_on_failure:
+        return True, comments
 
     return is_valid, comments
 
