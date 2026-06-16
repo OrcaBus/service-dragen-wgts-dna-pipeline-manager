@@ -27,7 +27,7 @@
     "@types/node": "^25.9.3",
     "aws-cdk": "^2.1126.0",
     "cdk-nag": "^2.38.2",
-    "eslint": "^10.4.1",
+    "eslint": "^10.5.0",
     "globals": "^17.6.0",
     "jest": "^30.4.2",
     "prettier": "^3.8.4",
@@ -40,7 +40,7 @@
   "dependencies": {
     "@aws-cdk/aws-lambda-python-alpha": "2.258.1-alpha.0",
     "@orcabus/platform-cdk-constructs": "1.7.0",
-    "aws-cdk-lib": "^2.258.1",
+    "aws-cdk-lib": "^2.259.0",
     "constructs": "^10.6.0"
   }
 }
