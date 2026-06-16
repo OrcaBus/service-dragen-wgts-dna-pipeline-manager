@@ -60,12 +60,14 @@ export interface LambdaRequirements {
   needsSsmParametersAccess?: boolean;
   needsSchemaRegistryAccess?: boolean;
   needsExternalBucketInfo?: boolean;
+  needsCoverageThresholdsInfo?: boolean;
+  needsWorkflowInfo?: boolean;
 }
 
 // Lambda requirements mapping
 export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> = {
   // Needs Orcabus API tools to generate the workflow run name and portal run ID
-  generateWorkflowRunNameAndPortalRunId: { needsOrcabusApiTools: true },
+  generateWorkflowRunNameAndPortalRunId: { needsOrcabusApiTools: true, needsWorkflowInfo: true },
   // Pre-draft-complete Lambda functions
   getMetadataTags: {
     needsOrcabusApiTools: true,
@@ -103,18 +105,21 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
     needsSchemaRegistryAccess: true,
     needsSsmParametersAccess: true,
     needsOrcabusApiTools: true,
+    needsWorkflowInfo: true,
   },
   postSchemaValidation: {
     needsOrcabusApiTools: true,
     needsIcav2Tools: true,
     needsExternalBucketInfo: true,
+    needsCoverageThresholdsInfo: true,
+    needsWorkflowInfo: true,
   },
   // Pre-submission Lambda functions
   dragenWgtsDnaReadyToIcav2WesRequest: {},
   // Needs Orcabus API tools to fetch the existing workflow run state
   convertIcav2WesStateChangeEventToWrscEvent: { needsOrcabusApiTools: true },
   addPostAnalysisTags: { needsOrcabusApiTools: true },
-  addWesFailureComment: { needsOrcabusApiTools: true },
+  addWesFailureComment: { needsOrcabusApiTools: true, needsWorkflowInfo: true },
 };
 
 export interface LambdaInput {

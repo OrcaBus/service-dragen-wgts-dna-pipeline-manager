@@ -237,3 +237,9 @@ export const READY_STATUS = 'READY';
 /* Schema constants */
 export const SCHEMA_REGISTRY_NAME = DATA_SCHEMA_REGISTRY_NAME;
 export const SSM_SCHEMA_ROOT = path.join(SSM_PARAMETER_PATH_PREFIX, 'schemas');
+
+/* Orchestration constants */
+export const MIN_RAW_TUMOR_WGS_COVERAGE = 60; // 60 X Coverage
+export const MIN_DEDUP_TUMOR_WGS_COVERAGE = 50; // 50 X Coverage
+export const MIN_RAW_NORMAL_WGS_COVERAGE = 30; // 30 X Coverage
+export const MIN_DEDUP_NORMAL_WGS_COVERAGE = 25; // 25 X Coverage
