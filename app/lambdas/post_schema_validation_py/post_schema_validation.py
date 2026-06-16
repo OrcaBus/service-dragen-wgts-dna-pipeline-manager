@@ -229,14 +229,14 @@ def validate_clinical_input_metrics(
         comments.append("Fingerprints between tumor & normal did not match")
 
     # 3. Germline coverage checks
-    if not tags['preLaunchCoverageEst'] >= MIN_RAW_NORMAL_WGS_COVERAGE:
+    if tags['preLaunchCoverageEst'] < MIN_RAW_NORMAL_WGS_COVERAGE:
         is_valid = False
         comments.append(f"Normal did not meet raw threshold coverage of {MIN_RAW_NORMAL_WGS_COVERAGE} X")
     if (tags['preLaunchCoverageEst'] * (1 - tags['preLaunchDupFracEst'])) < MIN_DEDUP_NORMAL_WGS_COVERAGE:
         is_valid = False
         comments.append(f"Normal deduplicated coverage estimate did not meet {MIN_DEDUP_NORMAL_WGS_COVERAGE} X")
     # 4. Somatic coverage checks
-    if not tags['tumorPreLaunchCoverageEst'] >= MIN_RAW_TUMOR_WGS_COVERAGE:
+    if tags['tumorPreLaunchCoverageEst'] < MIN_RAW_TUMOR_WGS_COVERAGE:
         is_valid = False
         comments.append(f"Tumor did not meet raw threshold coverage of {MIN_RAW_TUMOR_WGS_COVERAGE} X")
     if (tags['tumorPreLaunchCoverageEst'] * (1 - tags['tumorPreLaunchDupFracEst'])) < MIN_DEDUP_TUMOR_WGS_COVERAGE:
