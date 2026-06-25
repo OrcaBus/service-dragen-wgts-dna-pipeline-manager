@@ -652,6 +652,13 @@ engine_parameters=$( \
     ' \
 )
 
+# Load input data if provided
+if [[ -n "${INPUT_DATA_FILE}" ]]; then
+  input_data_json_str="$(jq < "${INPUT_DATA_FILE}")"
+else
+  input_data_json_str="null"
+fi
+
 # Generate the event
 lambda_payload="$( \
   jq --null-input --raw-output \
@@ -661,6 +668,7 @@ lambda_payload="$( \
     --argjson libraries "${libraries}" \
     --argjson engineParameters "${engine_parameters}" \
     --argjson disableSvCalling "${DISABLE_SV_CALLING}" \
+    --argjson inputData "${input_data_json_str}" \
     '
     {
       "status": "DRAFT",
@@ -672,7 +680,8 @@ lambda_payload="$( \
     } |
     if (
       $disableSvCalling or
-      ( ($engineParameters | length) > 0 )
+      ( ($engineParameters | length) > 0 ) or
+      $inputData
     ) then
       # We have a payload to add
       # So we initialise with a version and an empty data object
@@ -680,15 +689,22 @@ lambda_payload="$( \
         "version": $payloadVersion,
         "data": {}
       } |
+      # Check if we have input data to merge first (as a base)
+      if $inputData then
+        .["payload"]["data"] = ($inputData * .["payload"]["data"])
+      end |
       # Separately edit each of the payload data fields
       # Check if the SV calling is to be disabled
       # And edit inputs.somaticSvCallerOptions if so
       if $disableSvCalling then
-        .["payload"]["data"]["inputs"] = {
-          "somaticSvCallerOptions": {
-            "enableSv": false
+        .["payload"]["data"]["inputs"] = (
+          (.["payload"]["data"]["inputs"] // {}) +
+          {
+            "somaticSvCallerOptions": {
+              "enableSv": false
+            }
           }
-        }
+        )
       end |
       # Check if there are engine parameters to add
       # And set engineParameters if so
