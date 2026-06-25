@@ -60,6 +60,7 @@ generate-WRU-draft.sh (library_id)...
                       [--save-draft-payload <output_file>]
                       [--workflow-version <workflow_version>]
                       [--code-version <code_version>]
+                      [--input-data <input_data_path>]
                       [--disable-sv-calling]
 
 Description:
@@ -73,6 +74,18 @@ You will also need to ensure that the ICA pipeline ID attributed to the workflow
 available in the ICA project id specified.
 
 The output uri prefix, logs uri prefixes must be set to a location inside the s3 prefix that the ICA project is mounted on.
+
+Input data note:
+The populate draft data service will try to auto-populate inputs based on the information it already has.
+This may include things such as downsampling when tumor coverage is significantly larger than the normal coverage.
+In this circumstance it is recommended to use the '--input-data <json_file>' to generate an existing data object to populate, for example:
+{
+  \"inputs\": {
+    \"somaticAlignmentOptions\": {
+      \"enableFractionalDownSampler\": false
+    }
+  }
+}
 
 Positional arguments:
   library_id:   One or more library IDs to link to the WorkflowRunUpdate event.
@@ -89,6 +102,9 @@ Keyword arguments:
                                                             but can also be set to 4.4.6, this is particularly useful for SV calling.
   --code-version=<code_version>                  (Optional) Set the code version to pull a particular workflow object.
                                                             Required if using a workflow version other than the default.
+  --input-data=<input_data_file>                 (Optional) Add existing input data to the data section of the payload.
+                                                            This might be used to explicitly set input files.
+                                                            See input data note for more information.
   --disable-sv-calling:                          (Optional) Disable structural variant calling for the somatic step of the pipeline.
 
 Environment:
@@ -119,6 +135,9 @@ bash generate-WRU-draft.sh tumor_library_id normal_library_id \\
   --logs-uri-prefix s3://project-bucket/logs/dragen-wgts-dna \\
   --project-id project-uuid-1234-abcd \\
   --save-draft-payload tumor_library_id__normal_library_id__draft_payload.json
+bash generate-WRU-draft.sh tumor_library_id normal_library_id \\
+  --comment 'Redriving with specific inputs' \\
+  --input-data /path/to/input_data.json
 "
 }
 
