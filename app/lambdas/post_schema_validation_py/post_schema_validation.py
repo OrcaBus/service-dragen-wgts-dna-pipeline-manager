@@ -5,7 +5,7 @@ Confirm that the data uris in the inputs and engine parameters are appropriate
 """
 
 # Imports
-from typing import Dict, Tuple, cast, TypedDict, List
+from typing import Dict, Tuple, cast, TypedDict, List, Any
 import logging
 from os import environ
 from time import sleep
@@ -201,6 +201,7 @@ def validate_inputs(
 
 
 def validate_clinical_input_metrics(
+        inputs: Dict[str, Any],
         tags: PreLaunchSomaticTags,
         invalidate_on_failure: bool = True,
 ) -> Tuple[bool, List[str]]:
@@ -217,10 +218,16 @@ def validate_clinical_input_metrics(
     comments = []
 
     # 1. Fingerprint checks
-    if not tags['ntsmInternalPassing']:
+    if (
+            len(inputs.get("sequenceData", {}).get("fastqListRows", [])) > 1 and
+            not tags.get('ntsmInternalPassing')
+    ):
         is_valid = False
         comments.append("Normal internal fingerprint failed")
-    if not tags['tumorNtsmInternalPassing']:
+    if (
+            len(inputs.get("tumorSequenceData", {}).get("fastqListRows", [])) > 1 and
+            not tags.get('tumorNtsmInternalPassing')
+    ):
         is_valid = False
         comments.append("Tumor internal fingerprint failed")
     # 2. Cross fingerprint checks
@@ -305,12 +312,14 @@ def handler(event, context) -> Dict[str, bool]:
                 not get_workflow_run(workflow_run_id)["workflowRunName"].startswith(AUTOMATED_WORKFLOW_PREFIX)
         ):
             is_valid, comment = validate_clinical_input_metrics(
+                inputs,
                 tags,
                 invalidate_on_failure=False
             )
         # Automated Clinical TN Sample
         else:
             is_valid, comment = validate_clinical_input_metrics(
+                inputs,
                 tags,
                 invalidate_on_failure=True
             )
