@@ -1297,7 +1297,17 @@
                 {
                   "Condition": "{% $tags.tumorFastqRgidList ? true : false %}",
                   "Comment": "Has tumor inputs",
-                  "Next": "Add downsampling"
+                  "Next": "Fractional downsampling not explicitly set to false?"
+                }
+              ],
+              "Default": "Has tumor placeholder (downsampling)"
+            },
+            "Fractional downsampling not explicitly set to false?": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Next": "Add downsampling",
+                  "Condition": "{% $inputs.somaticAlignmentOptions.enableFractionalDownSampler = false ? false : true %}"
                 }
               ],
               "Default": "Has tumor placeholder (downsampling)"
