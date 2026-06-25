@@ -519,6 +519,23 @@ if [[ -n "${SAVE_DRAFT_PAYLOAD}" ]]; then
   fi
 fi
 
+# Check input data file is valid if provided
+if [[ -n "${INPUT_DATA_FILE}" ]]; then
+  # Check if input data file exists
+  if [[ ! -f "${INPUT_DATA_FILE}" ]]; then
+    echo_stderr "Error: Input data file '${INPUT_DATA_FILE}' does not exist. Exiting."
+    print_usage
+    exit 1
+  fi
+
+  # Check input data is in json format
+  if ! jq -e 'type == "object"' < "${INPUT_DATA_FILE}" >/dev/null 2>&1; then
+    echo_stderr "Error: Input data file '${INPUT_DATA_FILE}' is not valid JSON or is not an object. Exiting."
+    print_usage
+    exit 1
+  fi
+fi
+
 # Check AWS CLI configuration
 if ! aws sts get-caller-identity --output json > /dev/null 2>&1; then
   echo_stderr "Error: AWS CLI is not configured properly. Please configure your AWS CLI with appropriate credentials and region. Exiting."
