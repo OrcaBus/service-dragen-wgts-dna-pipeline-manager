@@ -26,7 +26,7 @@ CODE_VERSION="724101a"
 PAYLOAD_VERSION="2025.06.24"
 
 # SOP constants
-SOP_VERSION="2026.03.05"
+SOP_VERSION="2026.06.25"
 SOP_ID="PM.DWD.1"
 GITHUB_REPO="OrcaBus/service-dragen-wgts-dna-pipeline-manager"
 THIS_SCRIPT_PATH="docs/operation/SOP/${SOP_ID}/generate-WRU-draft.sh"
