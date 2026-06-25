@@ -218,10 +218,16 @@ def validate_clinical_input_metrics(
     comments = []
 
     # 1. Fingerprint checks
-    if not tags['ntsmInternalPassing']:
+    if (
+            len(inputs.get("sequenceData", {}).get("fastqListRows", [])) > 1 and
+            not tags.get('ntsmInternalPassing')
+    ):
         is_valid = False
         comments.append("Normal internal fingerprint failed")
-    if not tags['tumorNtsmInternalPassing']:
+    if (
+            len(inputs.get("tumorSequenceData", {}).get("fastqListRows", [])) > 1 and
+            not tags.get('tumorNtsmInternalPassing')
+    ):
         is_valid = False
         comments.append("Tumor internal fingerprint failed")
     # 2. Cross fingerprint checks
