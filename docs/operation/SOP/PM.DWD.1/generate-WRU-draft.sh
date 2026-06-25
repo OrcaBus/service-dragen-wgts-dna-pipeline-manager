@@ -16,6 +16,7 @@ PROJECT_ID=""
 DISABLE_SV_CALLING="false"
 COMMENT=""  # Use -c or --comment to set a comment to be added to the payload
 SAVE_DRAFT_PAYLOAD=""
+INPUT_DATA_FILE=""
 
 # Workflow constants
 WORKFLOW_NAME="dragen-wgts-dna"
@@ -470,6 +471,15 @@ while [[ $# -gt 0 ]]; do
       ;;
     --code-version=*)
       CODE_VERSION="${1#*=}"
+      shift
+      ;;
+    # Input data
+    --input-data)
+      INPUT_DATA_FILE="$2"
+      shift 2
+      ;;
+    --input-data=*)
+      INPUT_DATA_FILE="${1#*=}"
       shift
       ;;
     # Positional arguments (library IDs)
