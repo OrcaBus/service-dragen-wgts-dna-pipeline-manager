@@ -16,6 +16,7 @@ PROJECT_ID=""
 DISABLE_SV_CALLING="false"
 COMMENT=""  # Use -c or --comment to set a comment to be added to the payload
 SAVE_DRAFT_PAYLOAD=""
+INPUT_DATA_FILE=""
 
 # Workflow constants
 WORKFLOW_NAME="dragen-wgts-dna"
@@ -25,7 +26,7 @@ CODE_VERSION="724101a"
 PAYLOAD_VERSION="2025.06.24"
 
 # SOP constants
-SOP_VERSION="2026.03.05"
+SOP_VERSION="2026.06.25"
 SOP_ID="PM.DWD.1"
 GITHUB_REPO="OrcaBus/service-dragen-wgts-dna-pipeline-manager"
 THIS_SCRIPT_PATH="docs/operation/SOP/${SOP_ID}/generate-WRU-draft.sh"
@@ -59,6 +60,7 @@ generate-WRU-draft.sh (library_id)...
                       [--save-draft-payload <output_file>]
                       [--workflow-version <workflow_version>]
                       [--code-version <code_version>]
+                      [--input-data <input_data_path>]
                       [--disable-sv-calling]
 
 Description:
@@ -72,6 +74,18 @@ You will also need to ensure that the ICA pipeline ID attributed to the workflow
 available in the ICA project id specified.
 
 The output uri prefix, logs uri prefixes must be set to a location inside the s3 prefix that the ICA project is mounted on.
+
+Input data note:
+The populate draft data service will try to auto-populate inputs based on the information it already has.
+This may include things such as downsampling when tumor coverage is significantly larger than the normal coverage.
+In this circumstance it is recommended to use the '--input-data <json_file>' to generate an existing data object to populate, for example:
+{
+  \"inputs\": {
+    \"somaticAlignmentOptions\": {
+      \"enableFractionalDownSampler\": false
+    }
+  }
+}
 
 Positional arguments:
   library_id:   One or more library IDs to link to the WorkflowRunUpdate event.
@@ -88,6 +102,9 @@ Keyword arguments:
                                                             but can also be set to 4.4.6, this is particularly useful for SV calling.
   --code-version=<code_version>                  (Optional) Set the code version to pull a particular workflow object.
                                                             Required if using a workflow version other than the default.
+  --input-data=<input_data_file>                 (Optional) Add existing input data to the data section of the payload.
+                                                            This might be used to explicitly set input files.
+                                                            See input data note for more information.
   --disable-sv-calling:                          (Optional) Disable structural variant calling for the somatic step of the pipeline.
 
 Environment:
@@ -118,6 +135,9 @@ bash generate-WRU-draft.sh tumor_library_id normal_library_id \\
   --logs-uri-prefix s3://project-bucket/logs/dragen-wgts-dna \\
   --project-id project-uuid-1234-abcd \\
   --save-draft-payload tumor_library_id__normal_library_id__draft_payload.json
+bash generate-WRU-draft.sh tumor_library_id normal_library_id \\
+  --comment 'Redriving with specific inputs' \\
+  --input-data /path/to/input_data.json
 "
 }
 
@@ -472,6 +492,15 @@ while [[ $# -gt 0 ]]; do
       CODE_VERSION="${1#*=}"
       shift
       ;;
+    # Input data
+    --input-data)
+      INPUT_DATA_FILE="$2"
+      shift 2
+      ;;
+    --input-data=*)
+      INPUT_DATA_FILE="${1#*=}"
+      shift
+      ;;
     # Positional arguments (library IDs)
       *)
       LIBRARY_ID_ARRAY+=("$1")
@@ -505,6 +534,23 @@ if [[ -n "${SAVE_DRAFT_PAYLOAD}" ]]; then
   if [[ -e "${SAVE_DRAFT_PAYLOAD}" ]]; then
     echo_stderr "Error: The file path provided for --save-draft-payload already exists. "
     echo_stderr "       Please provide a file path that does not already exist to avoid overwriting. Exiting."
+    exit 1
+  fi
+fi
+
+# Check input data file is valid if provided
+if [[ -n "${INPUT_DATA_FILE}" ]]; then
+  # Check if input data file exists
+  if [[ ! -f "${INPUT_DATA_FILE}" ]]; then
+    echo_stderr "Error: Input data file '${INPUT_DATA_FILE}' does not exist. Exiting."
+    print_usage
+    exit 1
+  fi
+
+  # Check input data is in json format
+  if ! jq -e 'type == "object"' < "${INPUT_DATA_FILE}" >/dev/null 2>&1; then
+    echo_stderr "Error: Input data file '${INPUT_DATA_FILE}' is not valid JSON or is not an object. Exiting."
+    print_usage
     exit 1
   fi
 fi
@@ -625,6 +671,13 @@ engine_parameters=$( \
     ' \
 )
 
+# Load input data if provided
+if [[ -n "${INPUT_DATA_FILE}" ]]; then
+  input_data_json_str="$(jq < "${INPUT_DATA_FILE}")"
+else
+  input_data_json_str="null"
+fi
+
 # Generate the event
 lambda_payload="$( \
   jq --null-input --raw-output \
@@ -634,6 +687,7 @@ lambda_payload="$( \
     --argjson libraries "${libraries}" \
     --argjson engineParameters "${engine_parameters}" \
     --argjson disableSvCalling "${DISABLE_SV_CALLING}" \
+    --argjson inputData "${input_data_json_str}" \
     '
     {
       "status": "DRAFT",
@@ -645,7 +699,8 @@ lambda_payload="$( \
     } |
     if (
       $disableSvCalling or
-      ( ($engineParameters | length) > 0 )
+      ( ($engineParameters | length) > 0 ) or
+      $inputData
     ) then
       # We have a payload to add
       # So we initialise with a version and an empty data object
@@ -653,15 +708,22 @@ lambda_payload="$( \
         "version": $payloadVersion,
         "data": {}
       } |
+      # Check if we have input data to merge first (as a base)
+      if $inputData then
+        .["payload"]["data"] = ($inputData * .["payload"]["data"])
+      end |
       # Separately edit each of the payload data fields
       # Check if the SV calling is to be disabled
       # And edit inputs.somaticSvCallerOptions if so
       if $disableSvCalling then
-        .["payload"]["data"]["inputs"] = {
-          "somaticSvCallerOptions": {
-            "enableSv": false
+        .["payload"]["data"]["inputs"] = (
+          (.["payload"]["data"]["inputs"] // {}) +
+          {
+            "somaticSvCallerOptions": {
+              "enableSv": false
+            }
           }
-        }
+        )
       end |
       # Check if there are engine parameters to add
       # And set engineParameters if so
