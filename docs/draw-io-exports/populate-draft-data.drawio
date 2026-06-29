@@ -1,0 +1,103 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.3.6 Chrome/140.0.7339.249 Electron/38.8.0 Safari/537.36" version="29.3.6">
+  <diagram name="populate-draft-data" id="populate-draft-data">
+    <mxGraphModel dx="1032" dy="707" grid="0" gridSize="10" guides="0" tooltips="1" connect="0" arrows="1" fold="0" page="0" pageScale="1" pageWidth="900" pageHeight="880" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="start" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1a1a1a;strokeWidth=2;fontStyle=1;fontSize=12;fontFamily=Helvetica;" value="Start" vertex="1">
+          <mxGeometry height="36" width="56" x="147" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="validate" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontFamily=Helvetica;arcSize=8;" value="Validate draft data" vertex="1">
+          <mxGeometry height="62" width="300" x="25" y="118" as="geometry" />
+        </mxCell>
+        <mxCell id="success-early" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;fontSize=12;fontFamily=Helvetica;" value="Success" vertex="1">
+          <mxGeometry height="38" width="130" x="416" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="engine-params" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontFamily=Helvetica;arcSize=8;" value="&lt;b&gt;Resolve engine parameters&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px;color:#555555;&quot;&gt;projectId · pipelineId · outputUri · logsUri&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="62" width="300" x="25" y="228" as="geometry" />
+        </mxCell>
+        <mxCell id="lib-tags" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontFamily=Helvetica;arcSize=8;" value="&lt;b&gt;Resolve library tags&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px;color:#555555;&quot;&gt;fastqRgidList · tumorFastqRgidList · metadata&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="62" width="300" x="25" y="338" as="geometry" />
+        </mxCell>
+        <mxCell id="decision" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontSize=12;fontFamily=Helvetica;" value="Tags or engine&lt;br/&gt;params changed?" vertex="1">
+          <mxGeometry height="62" width="240" x="55" y="448" as="geometry" />
+        </mxCell>
+        <mxCell id="draft-intermediate" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=12;fontFamily=Helvetica;arcSize=8;" value="&lt;b&gt;Put DRAFT update event&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&lt;font style=&quot;font-size:10px;color:#555555;&quot;&gt;tags / params updated&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="136" width="176" x="357" y="412" as="geometry" />
+        </mxCell>
+        <mxCell id="readsets" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontFamily=Helvetica;arcSize=8;" value="&lt;b&gt;Resolve readsets&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px;color:#555555;&quot;&gt;normal + tumor libraries&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="62" width="300" x="25" y="558" as="geometry" />
+        </mxCell>
+        <mxCell id="inputs" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontFamily=Helvetica;arcSize=8;" value="&lt;b&gt;Resolve inputs&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px;color:#555555;&quot;&gt;normal + tumor sequence data + default params&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="62" width="300" x="575" y="118" as="geometry" />
+        </mxCell>
+        <mxCell id="wait-fastqs" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;fontSize=13;fontFamily=Helvetica;arcSize=8;" value="&lt;b&gt;Wait for FASTQs&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px;color:#555555;&quot;&gt;+ tumor FASTQs if somatic&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="62" width="300" x="575" y="228" as="geometry" />
+        </mxCell>
+        <mxCell id="ref-data" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontFamily=Helvetica;arcSize=8;" value="&lt;b&gt;Add reference data&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px;color:#555555;&quot;&gt;germline · somatic · ORA&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="62" width="300" x="575" y="338" as="geometry" />
+        </mxCell>
+        <mxCell id="qc-tags" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontFamily=Helvetica;arcSize=8;" value="&lt;b&gt;Add QC tags&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px;color:#555555;&quot;&gt;coverage · dup-frac · NTSM internal · NTSM external&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="62" width="300" x="575" y="448" as="geometry" />
+        </mxCell>
+        <mxCell id="downsampling" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontFamily=Helvetica;arcSize=8;" value="&lt;b&gt;Add downsampling&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px;color:#555555;&quot;&gt;somatic only, if applicable&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="62" width="300" x="575" y="558" as="geometry" />
+        </mxCell>
+        <mxCell id="draft-final" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontFamily=Helvetica;arcSize=8;" value="&lt;b&gt;Put DRAFT update event&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px;color:#555555;&quot;&gt;fully populated payload&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="62" width="300" x="575" y="668" as="geometry" />
+        </mxCell>
+        <mxCell id="success-final" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;fontSize=13;fontFamily=Helvetica;" value="Success" vertex="1">
+          <mxGeometry height="46" width="200" x="625" y="778" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="start" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="validate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="validate" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#888888;strokeWidth=2;dashed=1;dashPattern=8 4;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=10;fontColor=#888888;fontStyle=2;" target="success-early" value="Already valid">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="validate" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=10;fontColor=#888888;fontStyle=2;align=left;" target="engine-params" value="Not yet valid">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="engine-params" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="lib-tags">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="lib-tags" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="decision">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="decision" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=10;fontColor=#888888;fontStyle=2;" target="draft-intermediate" value="Changed">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="decision" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#888888;strokeWidth=2;dashed=1;dashPattern=8 4;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=10;fontColor=#888888;fontStyle=2;align=left;" target="readsets" value="No change">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="readsets" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;rounded=0;" target="inputs">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="175" y="640" />
+              <mxPoint x="553" y="640" />
+              <mxPoint x="553" y="149" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="inputs" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#b85450;strokeWidth=2;dashed=1;dashPattern=8 4;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=10;fontColor=#b85450;fontStyle=2;align=left;" target="wait-fastqs" value="waitForTaskToken">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="wait-fastqs" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="ref-data">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="ref-data" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="qc-tags">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="qc-tags" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="downsampling">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="downsampling" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="draft-final">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="draft-final" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="success-final">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
