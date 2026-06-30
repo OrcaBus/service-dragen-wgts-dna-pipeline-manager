@@ -4,6 +4,7 @@ import {
   LAMBDA_DIR,
   WORKFLOW_NAME,
   DEFAULT_WORKFLOW_VERSION,
+  DEFAULT_PAYLOAD_VERSION,
   SCHEMA_REGISTRY_NAME,
   SSM_SCHEMA_ROOT,
   REFERENCE_DATA_BUCKET_NAME,
@@ -13,6 +14,7 @@ import {
   MIN_RAW_NORMAL_WGS_COVERAGE,
   MIN_DEDUP_NORMAL_WGS_COVERAGE,
 } from '../constants';
+import { REPO_NAME } from '../../toolchain/constants';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Duration } from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
@@ -40,18 +42,20 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
     includeIcav2Layer: lambdaRequirements.needsIcav2Tools,
   });
 
-  // AwsSolutions-L1 - We'll migrate to PYTHON_3_13 ASAP, soz
-  // AwsSolutions-IAM4 - We need to add this for the lambda to work
+  // AwsSolutions-L1 - Python 3.14 is not yet in the cdk-nag approved list but is our target runtime
+  // AwsSolutions-IAM4 - Basic execution role provides CloudWatch Logs permissions needed by all Lambdas
   NagSuppressions.addResourceSuppressions(
     lambdaFunction,
     [
       {
         id: 'AwsSolutions-L1',
-        reason: 'Will migrate to PYTHON_3_13 ASAP, soz',
+        reason:
+          'Python 3.14 is not yet in the cdk-nag approved list but is our target runtime for ARM64 Lambda functions',
       },
       {
         id: 'AwsSolutions-IAM4',
-        reason: 'We use the basic execution role for lambda functions',
+        reason:
+          'Basic execution managed policy provides CloudWatch Logs permissions required by all Lambda functions',
       },
     ],
     true
@@ -69,14 +73,13 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
         ],
       })
     );
-    /* Since we dont ask which schema, we give the lambda access to all schemas in the registry */
-    /* As such we need to add the wildcard to the resource */
     NagSuppressions.addResourceSuppressions(
       lambdaFunction,
       [
         {
           id: 'AwsSolutions-IAM5',
-          reason: 'We need to give the lambda access to all schemas in the registry',
+          reason:
+            'Wildcard covers SSM parameters under the schema root path; specific parameter names include schema versions determined at runtime',
         },
       ],
       true
@@ -164,6 +167,16 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
   if (lambdaRequirements.needsWorkflowInfo) {
     lambdaFunction.addEnvironment('WORKFLOW_NAME', WORKFLOW_NAME);
     lambdaFunction.addEnvironment('WORKFLOW_VERSION', DEFAULT_WORKFLOW_VERSION);
+  }
+
+  /*
+  Repository GitHub URL, used in user-facing comments to link to the README
+   */
+  if (lambdaRequirements.needsRepoUrl) {
+    lambdaFunction.addEnvironment(
+      'REPOSITORY_GITHUB_URL',
+      `https://github.com/OrcaBus/${REPO_NAME}`
+    );
   }
 
   /* Return the function */

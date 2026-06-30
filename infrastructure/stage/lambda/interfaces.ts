@@ -17,9 +17,15 @@ export type LambdaNameList =
   | 'checkNtsmInternal'
   | 'checkNtsmExternal'
   | 'calculateDownsamplingRatios'
+  // Payload comparison and WRU generation
+  | 'comparePayload'
+  | 'generateWruEventObjectWithMergedData'
+  | 'getMissingSchemaFields'
   // Validation Functions
   | 'validateDraftCompleteSchema'
   | 'postSchemaValidation'
+  // Commentary Functions
+  | 'addPopulateDraftComment'
   // Pre-READY Lambda functions
   // Pre-submission Lambda functions
   | 'dragenWgtsDnaReadyToIcav2WesRequest'
@@ -42,9 +48,15 @@ export const lambdaNameList: LambdaNameList[] = [
   'checkNtsmInternal',
   'checkNtsmExternal',
   'calculateDownsamplingRatios',
+  // Payload comparison and WRU generation
+  'comparePayload',
+  'generateWruEventObjectWithMergedData',
+  'getMissingSchemaFields',
   // Validation Functions
   'validateDraftCompleteSchema',
   'postSchemaValidation',
+  // Commentary Functions
+  'addPopulateDraftComment',
   // Pre-submission Lambda functions
   'dragenWgtsDnaReadyToIcav2WesRequest',
   // Post-submission Lambda functions/
@@ -62,6 +74,7 @@ export interface LambdaRequirements {
   needsExternalBucketInfo?: boolean;
   needsCoverageThresholdsInfo?: boolean;
   needsWorkflowInfo?: boolean;
+  needsRepoUrl?: boolean;
 }
 
 // Lambda requirements mapping
@@ -100,6 +113,10 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
   calculateDownsamplingRatios: {
     // Just some quick maths!
   },
+  // Payload comparison and WRU generation
+  comparePayload: {},
+  generateWruEventObjectWithMergedData: { needsOrcabusApiTools: true },
+  getMissingSchemaFields: { needsSchemaRegistryAccess: true, needsSsmParametersAccess: true },
   // Validation Functions
   validateDraftCompleteSchema: {
     needsSchemaRegistryAccess: true,
@@ -113,6 +130,12 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
     needsExternalBucketInfo: true,
     needsCoverageThresholdsInfo: true,
     needsWorkflowInfo: true,
+  },
+  // Commentary Functions
+  addPopulateDraftComment: {
+    needsOrcabusApiTools: true,
+    needsWorkflowInfo: true,
+    needsRepoUrl: true,
   },
   // Pre-submission Lambda functions
   dragenWgtsDnaReadyToIcav2WesRequest: {},
