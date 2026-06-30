@@ -26,6 +26,7 @@ export type LambdaNameList =
   | 'postSchemaValidation'
   // Commentary Functions
   | 'addPopulateDraftComment'
+  | 'addReadyComment'
   // Pre-READY Lambda functions
   // Pre-submission Lambda functions
   | 'dragenWgtsDnaReadyToIcav2WesRequest'
@@ -57,6 +58,7 @@ export const lambdaNameList: LambdaNameList[] = [
   'postSchemaValidation',
   // Commentary Functions
   'addPopulateDraftComment',
+  'addReadyComment',
   // Pre-submission Lambda functions
   'dragenWgtsDnaReadyToIcav2WesRequest',
   // Post-submission Lambda functions/
@@ -136,6 +138,10 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
     needsOrcabusApiTools: true,
     needsWorkflowInfo: true,
     needsRepoUrl: true,
+  },
+  addReadyComment: {
+    needsOrcabusApiTools: true,
+    needsWorkflowInfo: true,
   },
   // Pre-submission Lambda functions
   dragenWgtsDnaReadyToIcav2WesRequest: {},
