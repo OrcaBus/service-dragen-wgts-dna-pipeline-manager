@@ -91,7 +91,7 @@ export const stepFunctionToLambdasMap: Record<StateMachineNameList, LambdaNameLi
     'getMissingSchemaFields',
   ],
   validateDraftDataAndPutReadyEvent: ['validateDraftCompleteSchema', 'postSchemaValidation'],
-  readyEventToIcav2WesRequestEvent: ['dragenWgtsDnaReadyToIcav2WesRequest'],
+  readyEventToIcav2WesRequestEvent: ['addReadyComment', 'dragenWgtsDnaReadyToIcav2WesRequest'],
   icav2WesEventToWrscEvent: [
     'convertIcav2WesStateChangeEventToWrscEvent',
     'addPostAnalysisTags',

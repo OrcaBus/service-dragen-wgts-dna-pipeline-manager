@@ -1,13 +1,40 @@
 {
-  "Comment": "A description of my state machine",
+  "Comment": "Convert a READY event to an ICAv2 WES request event, with initial comment for traceability",
   "StartAt": "Save inputs",
   "States": {
     "Save inputs": {
       "Type": "Pass",
-      "Next": "Convert Dragen WGTS DNA Ready Event to ICAv2 WES Event",
+      "Next": "Add Ready Comment",
       "Assign": {
         "dragenWgtsDnaReadyEventDetail": "{% $states.input %}"
       }
+    },
+    "Add Ready Comment": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "${__add_ready_comment_lambda_function_arn__}",
+        "Payload": {
+          "workflowRunId": "{% $dragenWgtsDnaReadyEventDetail.orcabusId %}",
+          "executionArn": "{% $states.context.Execution.Id %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Convert Dragen WGTS DNA Ready Event to ICAv2 WES Event",
+      "Output": "{% $states.input %}"
     },
     "Convert Dragen WGTS DNA Ready Event to ICAv2 WES Event": {
       "Type": "Task",
