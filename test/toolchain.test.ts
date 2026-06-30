@@ -18,11 +18,31 @@ describe('cdk-nag-stateless-toolchain-stack', () => {
   Aspects.of(statelessStack).add(new AwsSolutionsChecks());
 
   NagSuppressions.addStackSuppressions(statelessStack, [
-    { id: 'AwsSolutions-IAM4', reason: 'Allow CDK Pipeline' },
-    { id: 'AwsSolutions-IAM5', reason: 'Allow CDK Pipeline' },
-    { id: 'AwsSolutions-S1', reason: 'Allow CDK Pipeline' },
-    { id: 'AwsSolutions-KMS5', reason: 'Allow CDK Pipeline' },
-    { id: 'AwsSolutions-CB3', reason: 'Allow CDK Pipeline' },
+    {
+      id: 'AwsSolutions-IAM4',
+      reason:
+        'CDK Pipeline construct creates managed policy attachments for CodeBuild and CodePipeline roles that cannot be individually scoped',
+    },
+    {
+      id: 'AwsSolutions-IAM5',
+      reason:
+        'CDK Pipeline construct creates wildcard permissions for S3 artifact access and CodeBuild actions that cannot be individually enumerated',
+    },
+    {
+      id: 'AwsSolutions-S1',
+      reason:
+        'CDK Pipeline artifact bucket does not require access logging for transient build artifacts',
+    },
+    {
+      id: 'AwsSolutions-KMS5',
+      reason:
+        'CDK Pipeline KMS key does not require key rotation for ephemeral encryption of build artifacts',
+    },
+    {
+      id: 'AwsSolutions-CB3',
+      reason:
+        'CDK Pipeline CodeBuild projects require privileged mode for Docker builds in the synth step',
+    },
   ]);
 
   test(`cdk-nag AwsSolutions Pack errors`, () => {
@@ -53,11 +73,31 @@ describe('cdk-nag-stateful-toolchain-stack', () => {
   Aspects.of(statefulStack).add(new AwsSolutionsChecks());
 
   NagSuppressions.addStackSuppressions(statefulStack, [
-    { id: 'AwsSolutions-IAM4', reason: 'Allow CDK Pipeline' },
-    { id: 'AwsSolutions-IAM5', reason: 'Allow CDK Pipeline' },
-    { id: 'AwsSolutions-S1', reason: 'Allow CDK Pipeline' },
-    { id: 'AwsSolutions-KMS5', reason: 'Allow CDK Pipeline' },
-    { id: 'AwsSolutions-CB3', reason: 'Allow CDK Pipeline' },
+    {
+      id: 'AwsSolutions-IAM4',
+      reason:
+        'CDK Pipeline construct creates managed policy attachments for CodeBuild and CodePipeline roles that cannot be individually scoped',
+    },
+    {
+      id: 'AwsSolutions-IAM5',
+      reason:
+        'CDK Pipeline construct creates wildcard permissions for S3 artifact access and CodeBuild actions that cannot be individually enumerated',
+    },
+    {
+      id: 'AwsSolutions-S1',
+      reason:
+        'CDK Pipeline artifact bucket does not require access logging for transient build artifacts',
+    },
+    {
+      id: 'AwsSolutions-KMS5',
+      reason:
+        'CDK Pipeline KMS key does not require key rotation for ephemeral encryption of build artifacts',
+    },
+    {
+      id: 'AwsSolutions-CB3',
+      reason:
+        'CDK Pipeline CodeBuild projects require privileged mode for Docker builds in the synth step',
+    },
   ]);
 
   test(`cdk-nag AwsSolutions Pack errors`, () => {
