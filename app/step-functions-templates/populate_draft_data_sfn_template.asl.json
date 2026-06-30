@@ -425,11 +425,67 @@
       "Choices": [
         {
           "Comment": "Tags Have Changed",
-          "Next": "Put DRAFT update event",
+          "Next": "Add change comment",
           "Condition": "{% ( ( $data.tags ? $data.tags : {} ) = $tags ~> $not ) or\n( ( $data.engineParameters ? $data.engineParameters : {} ) = $engineParameters ~> $not ) %}"
         }
       ],
-      "Default": "Get libraries with readsets"
+      "Default": "Add updating inputs comment"
+    },
+    "Add change comment": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "${__add_populate_draft_comment_lambda_function_arn__}",
+        "Payload": {
+          "workflowRunId": "{% $detail.orcabusId %}",
+          "commentType": "{% ( $tagsChanged := ( ( $data.tags ? $data.tags : {} ) = $tags ~> $not ); $engineParametersChanged := ( ( $data.engineParameters ? $data.engineParameters : {} ) = $engineParameters ~> $not ); $tagsChanged and $engineParametersChanged ? 'both_changed' : $tagsChanged ? 'tags_changed' : 'engine_parameters_changed' ) %}",
+          "executionArn": "{% $states.context.Execution.Id %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Put DRAFT update event",
+      "Output": "{% $states.input %}"
+    },
+    "Add updating inputs comment": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "${__add_populate_draft_comment_lambda_function_arn__}",
+        "Payload": {
+          "workflowRunId": "{% $detail.orcabusId %}",
+          "commentType": "updating_inputs",
+          "executionArn": "{% $states.context.Execution.Id %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Get libraries with readsets",
+      "Output": "{% $states.input %}"
     },
     "Get libraries with readsets": {
       "Type": "Parallel",
@@ -1133,6 +1189,7 @@
                     "Lambda.SdkClientException",
                     "Lambda.TooManyRequestsException"
                   ],
+                  "IntervalSeconds": 1,
                   "MaxAttempts": 3,
                   "BackoffRate": 2,
                   "JitterStrategy": "FULL"
@@ -1212,6 +1269,7 @@
                     "Lambda.TooManyRequestsException",
                     "States.TaskFailed"
                   ],
+                  "IntervalSeconds": 1,
                   "MaxAttempts": 3,
                   "BackoffRate": 2,
                   "JitterStrategy": "FULL"
@@ -1286,7 +1344,7 @@
     },
     "Add in downsampling to alignment options inputs": {
       "Type": "Parallel",
-      "Next": "Put DRAFT update event",
+      "Next": "Generate WRU event object",
       "Branches": [
         {
           "StartAt": "Has tumor rgid list (add in downsampling)",
@@ -1376,6 +1434,156 @@
           }
         ]
       },
+      "End": true
+    },
+    "Generate WRU event object": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "${__generate_wru_event_object_with_merged_data_lambda_function_arn__}",
+        "Payload": {
+          "portalRunId": "{% $detail.portalRunId %}",
+          "libraries": "{% $librariesList %}",
+          "payload": {
+            "version": "{% $payload.version ? $payload.version : '${__default_payload_version__}' %}",
+            "data": {
+              "inputs": "{% $inputs %}",
+              "tags": "{% $tags %}",
+              "engineParameters": "{% $engineParameters %}"
+            }
+          }
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Compare payload",
+      "Assign": {
+        "workflowRunUpdate": "{% $states.result.Payload.workflowRunUpdate %}"
+      }
+    },
+    "Compare payload": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "${__compare_payload_lambda_function_arn__}",
+        "Payload": {
+          "oldPayload": "{% $payload ~> | $ | {}, ['orcabusId', 'refId'] | %}",
+          "newPayload": "{% $workflowRunUpdate.payload %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Output": "{% $states.result.Payload %}",
+      "Next": "Has changed"
+    },
+    "Has changed": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Put DRAFT update event (full)",
+          "Condition": "{% $states.input.hasChanged %}",
+          "Comment": "Payload has changed"
+        }
+      ],
+      "Default": "Get missing schema fields"
+    },
+    "Put DRAFT update event (full)": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::events:putEvents",
+      "Arguments": {
+        "Entries": [
+          {
+            "Detail": "{% $merge([$workflowRunUpdate, {\"timestamp\": $states.context.State.EnteredTime}]) ~> $sift(function($v, $k){$v != null}) %}",
+            "DetailType": "${__workflow_run_update_event_detail_type__}",
+            "EventBusName": "${__event_bus_name__}",
+            "Source": "${__stack_source__}"
+          }
+        ]
+      },
+      "End": true
+    },
+    "Get missing schema fields": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "${__get_missing_schema_fields_lambda_function_arn__}",
+        "Payload": {
+          "data": "{% $workflowRunUpdate.payload.data %}",
+          "payloadVersion": "{% $payload.version ? $payload.version : '${__default_payload_version__}' %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Output": "{% $states.result.Payload %}",
+      "Next": "Add no change comment"
+    },
+    "Add no change comment": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Arguments": {
+        "FunctionName": "${__add_populate_draft_comment_lambda_function_arn__}",
+        "Payload": {
+          "workflowRunId": "{% $detail.orcabusId %}",
+          "commentType": "no_change_missing_fields",
+          "missingFields": "{% $states.input.missingFields %}",
+          "executionArn": "{% $states.context.Execution.Id %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Success (no change)",
+      "Output": "{% $states.input %}"
+    },
+    "Success (no change)": {
+      "Type": "Pass",
       "End": true
     }
   },
