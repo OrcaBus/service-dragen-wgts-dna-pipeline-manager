@@ -74,7 +74,10 @@ def handler(event, context):
             non_test_data_fastq_list_ids.append(fastq_id_iter_)
         else:
             test_data_fastq_list_rows.append(
-                to_fastq_list_row(fastq_id_iter_)
+                to_fastq_list_row(
+                    fastq_id_iter_,
+                    bucket=environ[TEST_DATA_BUCKET_NAME_ENV_VAR]
+                )
             )
 
     # Re-collect the test-data fastq list rows with the s3 uri prefix if provided
