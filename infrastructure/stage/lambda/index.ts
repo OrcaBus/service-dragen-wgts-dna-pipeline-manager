@@ -98,14 +98,13 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
       })
     );
 
-    /* Since we dont ask which schema, we give the lambda access to all schemas in the registry */
-    /* As such we need to add the wildcard to the resource */
     NagSuppressions.addResourceSuppressions(
       lambdaFunction,
       [
         {
           id: 'AwsSolutions-IAM5',
-          reason: 'We need to give the lambda access to all schemas in the registry',
+          reason:
+            'Wildcard covers all schema versions in the registry; individual schema ARNs cannot be enumerated at deploy time because versions are created dynamically',
         },
       ],
       true
@@ -114,14 +113,18 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
     /*
     Special if the lambdaName is 'validateDraftCompleteSchema',
     we need to add in the ssm parameters
-    to the REGISTRY_NAME and SCHEMA_NAME
+    to the REGISTRY_NAME and SCHEMA_PATH
    */
     const draftSchemaName: SchemaNames = 'completeDataDraft';
     lambdaFunction.addEnvironment('SSM_REGISTRY_NAME', path.join(SSM_SCHEMA_ROOT, 'registry'));
     lambdaFunction.addEnvironment(
-      'SSM_SCHEMA_NAME',
-      path.join(SSM_SCHEMA_ROOT, camelCaseToKebabCase(draftSchemaName), 'latest')
+      'SSM_SCHEMA_PATH',
+      path.join(SSM_SCHEMA_ROOT, camelCaseToKebabCase(draftSchemaName))
     );
+    /*
+    Add DEFAULT_PAYLOAD_VERSION env var too
+    */
+    lambdaFunction.addEnvironment('DEFAULT_PAYLOAD_VERSION', DEFAULT_PAYLOAD_VERSION);
   }
 
   /*

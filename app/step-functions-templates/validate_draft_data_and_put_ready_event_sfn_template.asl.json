@@ -23,7 +23,7 @@
         "Payload": {
           "data": "{% $payloadData %}",
           "workflowRunId": "{% $workflowRunId %}",
-          "addCommentOnError": true
+          "addCommentOnError": false
         }
       },
       "Retry": [
