@@ -65,21 +65,17 @@ def handler(event, context):
         fastq_rgid_list
     )))
 
-    # Test-data will have its own prefix
-    fastq_list_rows = list(map(
-        to_fastq_list_row,
-        all_fastq_ids
-    ))
-
     # Keep the test-data fastq list rows
     # (which are exempt from the requirement of being in a particular project prefix)
     non_test_data_fastq_list_ids = []
     test_data_fastq_list_rows = []
-    for fastq_id_iter, fastq_list_row_iter in zip(all_fastq_ids, fastq_list_rows):
-        if not fastq_list_row_iter['read1FileUri'].startswith(f"s3://{environ[TEST_DATA_BUCKET_NAME_ENV_VAR]}/"):
-            non_test_data_fastq_list_ids.append(fastq_id_iter)
+    for fastq_id_iter_ in all_fastq_ids:
+        if not is_fastq_id_in_test_data_project(fastq_id_iter_):
+            non_test_data_fastq_list_ids.append(fastq_id_iter_)
         else:
-            test_data_fastq_list_rows.append(fastq_list_row_iter)
+            test_data_fastq_list_rows.append(
+                to_fastq_list_row(fastq_id_iter_)
+            )
 
     # Re-collect the test-data fastq list rows with the s3 uri prefix if provided
     non_test_data_fastq_list_rows = list(map(
