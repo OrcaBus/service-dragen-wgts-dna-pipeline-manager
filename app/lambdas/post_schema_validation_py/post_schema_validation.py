@@ -52,6 +52,24 @@ AUTOMATED_WORKFLOW_PREFIX = "umccr--automated"
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+# Comment formatting constants
+MAX_COMMENT_LENGTH = 1024
+TRUNCATION_SUFFIX = "\n... [truncated, see execution ARN for full detail]"
+
+
+def _format_comment_with_arn(body: str, execution_arn: str) -> str:
+    """
+    Append the execution ARN footer to a comment and enforce the 1024 char limit.
+    """
+    footer = f"---\nStep Functions Execution: {execution_arn}"
+    full_comment = f"{body}\n{footer}"
+
+    if len(full_comment) > MAX_COMMENT_LENGTH:
+        available = MAX_COMMENT_LENGTH - len(footer) - len(TRUNCATION_SUFFIX) - 1
+        full_comment = f"{body[:available]}{TRUNCATION_SUFFIX}\n{footer}"
+
+    return full_comment
+
 
 class PreLaunchSomaticTags(TypedDict):
     """
@@ -270,6 +288,7 @@ def handler(event, context) -> Dict[str, bool]:
     # Get the event data
     payload_data = event.get('data')
     workflow_run_id = event.get("workflowRunId", "")
+    execution_arn = event.get("executionArn", "")
 
     # Get the ICAv2 project id from the event
     engine_parameters = payload_data.get("engineParameters", {})
@@ -331,20 +350,29 @@ def handler(event, context) -> Dict[str, bool]:
         if isinstance(comment, list):
             add_comment_to_workflow_run(
                 workflow_run_orcabus_id=workflow_run_id,
-                comment=f"Post schema validation failed for {len(comment)} reasons",
+                comment=_format_comment_with_arn(
+                    f"Post schema validation failed for {len(comment)} reasons",
+                    execution_arn
+                ),
                 author=COMMENT_AUTHOR
             )
             for idx, comment_iter in enumerate(comment, start=1):
                 add_comment_to_workflow_run(
                     workflow_run_orcabus_id=workflow_run_id,
-                    comment=f"Reason {idx} of {len(comment)}: {comment_iter}",
+                    comment=_format_comment_with_arn(
+                        f"Reason {idx} of {len(comment)}: {comment_iter}",
+                        execution_arn
+                    ),
                     author=COMMENT_AUTHOR
                 )
                 sleep(1)
         else:
             add_comment_to_workflow_run(
                 workflow_run_orcabus_id=workflow_run_id,
-                comment=f"Post schema validation failed: {comment}",
+                comment=_format_comment_with_arn(
+                    f"Post schema validation failed: {comment}",
+                    execution_arn
+                ),
                 author=COMMENT_AUTHOR
             )
         return {
@@ -357,14 +385,20 @@ def handler(event, context) -> Dict[str, bool]:
             for idx, comment_iter in enumerate(comment, start=1):
                 add_comment_to_workflow_run(
                     workflow_run_orcabus_id=workflow_run_id,
-                    comment=f"Post schema validation note {idx} of {len(comment)}: {comment_iter}",
+                    comment=_format_comment_with_arn(
+                        f"Post schema validation note {idx} of {len(comment)}: {comment_iter}",
+                        execution_arn
+                    ),
                     author=COMMENT_AUTHOR
                 )
                 sleep(1)
         else:
             add_comment_to_workflow_run(
                 workflow_run_orcabus_id=workflow_run_id,
-                comment=f"Post schema validation note: {comment}",
+                comment=_format_comment_with_arn(
+                    f"Post schema validation note: {comment}",
+                    execution_arn
+                ),
                 author=COMMENT_AUTHOR
             )
 
@@ -383,7 +417,7 @@ def handler(event, context) -> Dict[str, bool]:
             )
         add_comment_to_workflow_run(
             workflow_run_orcabus_id=workflow_run_id,
-            comment=comment,
+            comment=_format_comment_with_arn(comment, execution_arn),
             author=COMMENT_AUTHOR
         )
 

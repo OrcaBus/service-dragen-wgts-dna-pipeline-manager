@@ -167,7 +167,8 @@
         "Payload": {
           "errorType": "{% $errorType %}",
           "errorMessageUri": "{% $errorMessageUri %}",
-          "portalRunId": "{% $workflowRunStateChangeEvent.portalRunId %}"
+          "portalRunId": "{% $workflowRunStateChangeEvent.portalRunId %}",
+          "executionArn": "{% $states.context.Execution.Id %}"
         }
       },
       "Retry": [
