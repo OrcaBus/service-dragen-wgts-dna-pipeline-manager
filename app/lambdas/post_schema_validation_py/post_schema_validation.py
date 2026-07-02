@@ -164,8 +164,8 @@ def validate_inputs(
     Validate the inputs.
 
     Performs two-phase validation:
-    1. Filemanager existence check — confirms ALL file/folder URIs exist at the S3 level
-       (including ref data, test data, and project-prefix URIs)
+    1. Filemanager existence check — confirms file/folder URIs exist at the S3 level
+       (excludes reference data bucket URIs since they are not indexed by the Filemanager)
     2. ICA project context check — confirms URIs outside of ref/test/project-prefix
        are linked to the project
 
@@ -195,10 +195,14 @@ def validate_inputs(
     # Remove empty / None values from list
     data_uris = [uri for uri in data_uris if uri]
 
-    # Phase 1: Filemanager existence check — ALL URIs
+    # Phase 1: Filemanager existence check — ALL URIs except refdata bucket
     # This confirms every input file/folder actually exists at the S3 level,
     # regardless of which bucket it's in.
-    for data_uri in data_uris:
+    non_reference_data_uris = list(filter(
+        lambda uri: not uri.startswith(f"s3://{REF_DATA_BUCKET}/"),
+        data_uris
+    ))
+    for data_uri in non_reference_data_uris:
         # Check if it's a folder URI (ends with /)
         if data_uri.endswith("/"):
             # For folder URIs, verify at least 1 file exists under that prefix
@@ -221,14 +225,14 @@ def validate_inputs(
 
     # Phase 2: ICA project context validation
     # Only URIs outside ref/test/project-prefix need ICA project linking confirmed
-    uris_to_validate = [
-        uri for uri in data_uris
-        if not (
+    uris_to_validate = list(filter(
+        lambda uri: not (
                 uri.startswith(f"s3://{REF_DATA_BUCKET}/") or
                 uri.startswith(f"s3://{TEST_BUCKET}/") or
                 uri.startswith(project_prefix)
-        )
-    ]
+        ),
+        data_uris
+    ))
 
     # Validate each URI is accessible in the project context
     for data_uri in uris_to_validate:
