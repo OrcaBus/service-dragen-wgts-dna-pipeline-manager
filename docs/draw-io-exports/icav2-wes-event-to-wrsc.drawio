@@ -1,81 +1,74 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.3.6 Chrome/140.0.7339.249 Electron/38.8.0 Safari/537.36" version="29.3.6">
+<mxfile host="app.diagrams.net">
   <diagram name="icav2-wes-event-to-wrsc" id="icav2-wes-event-to-wrsc">
-    <mxGraphModel dx="1100" dy="700" grid="0" gridSize="10" guides="0" tooltips="1" connect="0" arrows="1" fold="0" page="0" pageScale="1" pageWidth="1100" pageHeight="700" math="0" shadow="0">
+    <mxGraphModel dx="1200" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
-        <mxCell id="0" />
-        <mxCell id="1" parent="0" />
-        <mxCell id="start" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1a1a1a;strokeWidth=2;fontStyle=1;fontSize=12;fontFamily=Helvetica;" value="Start" vertex="1">
-          <mxGeometry height="36" width="56" x="247" y="50" as="geometry" />
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ═══════════════ NODES ═══════════════ -->
+
+        <!-- Start oval -->
+        <mxCell id="n1" value="Start" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1a1a1a;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="147" y="30" width="56" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="convert" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontFamily=Helvetica;arcSize=8;" value="&lt;b&gt;Convert ICAv2 WES event to WRSC&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px;color:#555555;&quot;&gt;map ICAv2 status → WorkflowRunStateChange&lt;/font&gt;&lt;/i&gt;" vertex="1">
-          <mxGeometry height="62" width="300" x="125" y="128" as="geometry" />
+
+        <!-- Step: Convert ICAv2 WES event to WRSC Event -->
+        <mxCell id="n2" value="Convert ICAv2 WES event to WRSC Event" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="25" y="110" width="300" height="62" as="geometry"/>
         </mxCell>
-        <mxCell id="decision" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontSize=12;fontFamily=Helvetica;" value="Workflow status?" vertex="1">
-          <mxGeometry height="62" width="240" x="155" y="238" as="geometry" />
+
+        <!-- Decision: Workflow failed? -->
+        <mxCell id="n3" value="Workflow failed?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="55" y="220" width="240" height="62" as="geometry"/>
         </mxCell>
-        <mxCell id="add-tags" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontFamily=Helvetica;arcSize=8;" value="&lt;b&gt;Add post-analysis tags&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px;color:#555555;&quot;&gt;germline + somatic (if tumor present)&lt;/font&gt;&lt;/i&gt;" vertex="1">
-          <mxGeometry height="62" width="300" x="25" y="368" as="geometry" />
+
+        <!-- Step: Push WRSC Event -->
+        <mxCell id="n4" value="Push WRSC Event" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="25" y="380" width="300" height="62" as="geometry"/>
         </mxCell>
-        <mxCell id="add-failure" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontFamily=Helvetica;arcSize=8;" value="&lt;b&gt;Add failure comment&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px;color:#555555;&quot;&gt;write error to workflow run record&lt;/font&gt;&lt;/i&gt;" vertex="1">
-          <mxGeometry height="62" width="300" x="400" y="368" as="geometry" />
+
+        <!-- Terminal: Success -->
+        <mxCell id="n5" value="Success" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#1a1a1a;arcSize=50;" vertex="1" parent="1">
+          <mxGeometry x="75" y="490" width="200" height="46" as="geometry"/>
         </mxCell>
-        <mxCell id="push-wrsc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontFamily=Helvetica;arcSize=8;" value="&lt;b&gt;Push WRSC event&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px;color:#555555;&quot;&gt;emit WorkflowRunUpdate to OrcaBusMain&lt;/font&gt;&lt;/i&gt;" vertex="1">
-          <mxGeometry height="62" width="300" x="125" y="508" as="geometry" />
+
+        <!-- Step: Add comment for WES failure (side float) -->
+        <mxCell id="n6" value="Add comment for WES failure" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="400" y="220" width="300" height="62" as="geometry"/>
         </mxCell>
-        <mxCell id="success" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;fontSize=13;fontFamily=Helvetica;" value="Success" vertex="1">
-          <mxGeometry height="46" width="200" x="175" y="618" as="geometry" />
+
+        <!-- ═══════════════ EDGES ═══════════════ -->
+
+        <!-- Start → Convert ICAv2 WES event to WRSC Event -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n1" target="n2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e1" edge="1" parent="1" source="start" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="convert">
-          <mxGeometry relative="1" as="geometry" />
+
+        <!-- Convert ICAv2 WES event to WRSC Event → Workflow failed? -->
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n2" target="n3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e2" edge="1" parent="1" source="convert" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="decision">
-          <mxGeometry relative="1" as="geometry" />
+
+        <!-- Workflow failed? → Push WRSC Event (No / default, continues down) -->
+        <mxCell id="e3" value="No" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;fontSize=10;fontColor=#888888;fontStyle=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n3" target="n4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e3" edge="1" parent="1" source="decision" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=10;fontColor=#888888;fontStyle=2;" target="add-tags" value="SUCCEEDED">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="155" y="320" />
-              <mxPoint x="175" y="320" />
-            </Array>
-          </mxGeometry>
+
+        <!-- Workflow failed? → Add comment for WES failure (Yes, dashed, right) -->
+        <mxCell id="e4" value="Yes" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#888888;strokeWidth=2;dashed=1;dashPattern=8 4;fontSize=10;fontColor=#888888;fontStyle=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="n3" target="n6" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e4" edge="1" parent="1" source="decision" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=10;fontColor=#888888;fontStyle=2;" target="add-failure" value="FAILED">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="395" y="320" />
-              <mxPoint x="550" y="320" />
-            </Array>
-          </mxGeometry>
+
+        <!-- Add comment for WES failure → Push WRSC Event -->
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#888888;strokeWidth=2;dashed=1;dashPattern=8 4;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="n6" target="n4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e5" edge="1" parent="1" source="decision" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#888888;strokeWidth=2;dashed=1;dashPattern=8 4;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=10;fontColor=#888888;fontStyle=2;" target="push-wrsc" value="Other status">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="275" y="460" />
-              <mxPoint x="275" y="460" />
-            </Array>
-          </mxGeometry>
+
+        <!-- Push WRSC Event → Success -->
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n4" target="n5" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e6" edge="1" parent="1" source="add-tags" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="push-wrsc">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="175" y="460" />
-              <mxPoint x="100" y="460" />
-              <mxPoint x="100" y="539" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="e7" edge="1" parent="1" source="add-failure" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="push-wrsc">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="550" y="460" />
-              <mxPoint x="450" y="460" />
-              <mxPoint x="450" y="539" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="e8" edge="1" parent="1" source="push-wrsc" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="success">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
+
       </root>
     </mxGraphModel>
   </diagram>
