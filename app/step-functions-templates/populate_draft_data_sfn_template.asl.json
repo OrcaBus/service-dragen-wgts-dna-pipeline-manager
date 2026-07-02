@@ -717,7 +717,7 @@
                         "requirements": {
                           "hasQc": true,
                           "hasFingerprint": true,
-                          "hasActiveReadSet": true
+                          "hasActiveReadSet": "{% ($engineParameters.outputUri ~> $substring(0,$length('${__pipeline_cache_uri__}'))) = '${__pipeline_cache_uri__}' ? { 'bucket': '${__pipeline_cache_bucket__}', 'prefix': '${__pipeline_cache_prefix__}' } : true %}"
                         },
                         "forceUnarchiving": true
                       }
@@ -859,7 +859,7 @@
                         "requirements": {
                           "hasQc": true,
                           "hasFingerprint": true,
-                          "hasActiveReadSet": true
+                          "hasActiveReadSet": "{% ($engineParameters.outputUri ~> $substring(0,$length('${__pipeline_cache_uri__}'))) = '${__pipeline_cache_uri__}' ? { 'bucket': '${__pipeline_cache_bucket__}', 'prefix': '${__pipeline_cache_prefix__}' } : true %}"
                         },
                         "forceUnarchiving": true
                       }
