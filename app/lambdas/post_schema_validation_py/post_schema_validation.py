@@ -163,11 +163,17 @@ def validate_inputs(
     """
     Validate the inputs.
 
+    Performs two-phase validation:
+    1. Filemanager existence check — confirms ALL file/folder URIs exist at the S3 level
+       (including ref data, test data, and project-prefix URIs)
+    2. ICA project context check — confirms URIs outside of ref/test/project-prefix
+       are linked to the project
+
     :param inputs: The inputs to validate.
     :param project_id: The ICAv2 project id to validate against.
     :param project_prefix: The ICAv2 project prefix
     """
-    # Get all fastq uris from the inputs
+    # Get all data uris from the inputs
     data_uris = []
     for key in ["sequenceData", "tumorSequenceData"]:
         for fastq_obj in inputs.get(key, {}).get("fastqListRows", []):
@@ -186,28 +192,53 @@ def validate_inputs(
         data_uris.append(ref_obj.get("tarball"))
     data_uris.append(inputs.get("oraReference"))
 
-    # Remove empty values from list
-    # Or externally mounted data uris (e.g. s3://reference-data-bucket/...)
-    data_uris = list(filter(
-        lambda uri_iter_: (
-                uri_iter_ is not None and not (
-                uri_iter_.startswith(f"s3://{REF_DATA_BUCKET}/") or
-                uri_iter_.startswith(f"s3://{TEST_BUCKET}/") or
-                uri_iter_.startswith(project_prefix)
-        )
-        ),
-        data_uris
-    ))
+    # Remove empty / None values from list
+    data_uris = [uri for uri in data_uris if uri]
 
-    # Validate each fastq uri
+    # Phase 1: Filemanager existence check — ALL URIs
+    # This confirms every input file/folder actually exists at the S3 level,
+    # regardless of which bucket it's in.
     for data_uri in data_uris:
+        # Check if it's a folder URI (ends with /)
+        if data_uri.endswith("/"):
+            # For folder URIs, verify at least 1 file exists under that prefix
+            if not (
+                    len(
+                        list_files_recursively(
+                            urlparse(data_uri).netloc,
+                            str(Path(urlparse(data_uri).path)) + "/"
+                        )
+                    ) > 0
+            ):
+                return False, f"Folder URI '{data_uri}' has no files found under that prefix in the Filemanager"
+        else:
+            # For file URIs, confirm the file exists
+            try:
+                get_s3_object_id_from_s3_uri(data_uri)
+            except S3FileNotFoundError:
+                return False, f"Data URI '{data_uri}' cannot be found by the Filemanager, are you sure it exists?"
+
+
+    # Phase 2: ICA project context validation
+    # Only URIs outside ref/test/project-prefix need ICA project linking confirmed
+    uris_to_validate = [
+        uri for uri in data_uris
+        if not (
+                uri.startswith(f"s3://{REF_DATA_BUCKET}/") or
+                uri.startswith(f"s3://{TEST_BUCKET}/") or
+                uri.startswith(project_prefix)
+        )
+    ]
+
+    # Validate each URI is accessible in the project context
+    for data_uri in uris_to_validate:
         # Try get the icav2 object by uri
         try:
             project_data_obj = coerce_data_id_or_uri_to_project_data_obj(
                 data_id_or_uri=data_uri,
             )
         except ValueError as e:
-            return False, f"Data uri '{data_uri}' cannot be found in the project context '{project_id}'"
+            return False, f"Data URI '{data_uri}' cannot be found in the project context '{project_id}'"
 
         # Then try get it in this context
         try:
@@ -216,7 +247,7 @@ def validate_inputs(
                 data_id=project_data_obj.data.id
             )
         except ApiException as e:
-            return False, f"Data uri '{data_uri}' cannot be found in the project context '{project_id}'"
+            return False, f"Data URI '{data_uri}' cannot be found in the project context '{project_id}'"
 
     return True, ""
 
