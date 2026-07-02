@@ -88,6 +88,12 @@ function createStateMachineDefinitionSubstitutions(props: BuildStepFunctionProps
     definitionSubstitutions['__default_ora_version__'] = DEFAULT_ORA_VERSION;
   }
 
+  // Miscellaneous
+  definitionSubstitutions['__pipeline_cache_uri__'] =
+    `s3://${props.pipelineCacheBucketName}/${props.pipelineCachePrefix}`;
+  definitionSubstitutions['__pipeline_cache_bucket__'] = props.pipelineCacheBucketName;
+  definitionSubstitutions['__pipeline_cache_prefix__'] = props.pipelineCachePrefix;
+
   return definitionSubstitutions;
 }
 
@@ -199,9 +205,7 @@ export function buildAllStepFunctions(
     stepFunctionObjects.push(
       buildStepFunction(scope, {
         stateMachineName: stepFunctionName,
-        lambdaObjects: props.lambdaObjects,
-        eventBus: props.eventBus,
-        ssmParameterPaths: props.ssmParameterPaths,
+        ...props,
       })
     );
   }

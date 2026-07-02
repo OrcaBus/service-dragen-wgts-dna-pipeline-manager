@@ -32,6 +32,10 @@ export interface StatelessApplicationStackConfig {
 
   // Stage Name
   stageName: StageName;
+
+  // Automation service path
+  pipelineCacheBucketName: string;
+  pipelineCachePrefix: string;
 }
 
 export type WorkflowVersionType = '4.4.4' | '4.4.6';

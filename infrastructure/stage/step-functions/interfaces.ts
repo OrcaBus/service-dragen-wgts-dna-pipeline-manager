@@ -45,6 +45,8 @@ export interface BuildStepFunctionProps extends StepFunctionInput {
   lambdaObjects: LambdaObject[];
   eventBus: IEventBus;
   ssmParameterPaths: SsmParameterPaths;
+  pipelineCacheBucketName: string;
+  pipelineCachePrefix: string;
 }
 
 export interface StepFunctionObject extends StepFunctionInput {
