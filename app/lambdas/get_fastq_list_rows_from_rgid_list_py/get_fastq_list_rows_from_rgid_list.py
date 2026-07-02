@@ -29,13 +29,8 @@ def is_fastq_id_in_test_data_project(fastq_id: str) -> bool:
             fastq_id,
             bucket=environ[TEST_DATA_BUCKET_NAME_ENV_VAR]
         )
-    except HTTPError as e:
-        # Except a 409 exception, this implies that
-        # the fastq is not available under that particular prefix
-        if getattr(getattr(e, "response", None), "status_code", None) == 409:
-            return False
-        # Otherwise this is an unknown exception
-        raise
+    except HTTPError:
+        return False
 
     return True
 
