@@ -65,7 +65,15 @@ def handler(event, context):
     # Extract missing field paths
     missing_fields = []
     for error in errors:
-        path = ".".join(str(p) for p in error.absolute_path) if error.absolute_path else ""
+        # Get path of missing field
+        path = (
+            ".".join(list(map(
+                str,
+                error.absolute_path
+            )))
+            if error.absolute_path
+            else ""
+        )
         if error.validator == "required":
             # For required errors, list each missing property
             for missing_prop in error.validator_value:
@@ -74,7 +82,6 @@ def handler(event, context):
                     missing_fields.append(field_path)
         else:
             # For other errors (type, pattern, etc.)
-            if path:
-                missing_fields.append(f"{path} ({error.message[:50]})")
+            missing_fields.append(f"{path or '(root)'} ({error.message[:50]})")
 
     return {"missingFields": missing_fields}
