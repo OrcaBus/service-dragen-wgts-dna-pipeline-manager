@@ -338,11 +338,12 @@ def handler(event, context) -> Dict[str, bool]:
         project_prefix=project_prefix,
     )
 
+    # Get the inputs and confirm that the fastq uris are valid
+    # and are accessible in the right project context
+    inputs = payload_data.get("inputs")
+
     # Check if the inputs are also valid
     if is_valid:
-        # Get the inputs and confirm that the fastq uris are valid
-        # and are accessible in the right project context
-        inputs = payload_data.get("inputs")
         # Validate the inputs
         is_valid, comment = validate_inputs(
             inputs,
