@@ -71,6 +71,7 @@ export const lambdaNameList: LambdaNameList[] = [
 export interface LambdaRequirements {
   needsOrcabusApiTools?: boolean;
   needsIcav2Tools?: boolean;
+  needsHigherMemory?: boolean;
   needsSsmParametersAccess?: boolean;
   needsSchemaRegistryAccess?: boolean;
   needsExternalBucketInfo?: boolean;
@@ -147,7 +148,7 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
   dragenWgtsDnaReadyToIcav2WesRequest: {},
   // Needs Orcabus API tools to fetch the existing workflow run state
   convertIcav2WesStateChangeEventToWrscEvent: { needsOrcabusApiTools: true },
-  addPostAnalysisTags: { needsOrcabusApiTools: true },
+  addPostAnalysisTags: { needsOrcabusApiTools: true, needsHigherMemory: true },
   addWesFailureComment: { needsOrcabusApiTools: true, needsWorkflowInfo: true },
 };
 
