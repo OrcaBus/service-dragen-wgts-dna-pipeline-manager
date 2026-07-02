@@ -37,7 +37,8 @@ function buildLambda(scope: Construct, props: LambdaInput): LambdaObject {
     index: lambdaNameToSnakeCase + '.py',
     handler: 'handler',
     timeout: Duration.seconds(60),
-    memorySize: lambdaRequirements.needsIcav2Tools || lambdaRequirements.needsHigherMemory ? 1024 : 512,
+    memorySize:
+      lambdaRequirements.needsIcav2Tools || lambdaRequirements.needsHigherMemory ? 1024 : 512,
     includeOrcabusApiToolsLayer: lambdaRequirements.needsOrcabusApiTools,
     includeIcav2Layer: lambdaRequirements.needsIcav2Tools,
   });
