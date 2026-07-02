@@ -3,12 +3,13 @@
 """
 Confirm that the data uris in the inputs and engine parameters are appropriate
 """
-
 # Imports
+from pathlib import Path
 from typing import Dict, Tuple, cast, TypedDict, List, Any
 import logging
 from os import environ
 from time import sleep
+from urllib.parse import urlparse
 
 # Wrapica imports
 from libica.openapi.v3 import ApiException
@@ -20,6 +21,8 @@ from wrapica.project import get_project_obj_from_project_id
 # Layer imports
 from orcabus_api_tools.workflow import add_comment_to_workflow_run, get_workflow_run
 from orcabus_api_tools.metadata import get_library_from_library_id
+from orcabus_api_tools.filemanager import get_s3_object_id_from_s3_uri, list_files_recursively
+from orcabus_api_tools.filemanager.errors import S3FileNotFoundError
 from icav2_tools import set_icav2_env_vars
 
 # Globals
