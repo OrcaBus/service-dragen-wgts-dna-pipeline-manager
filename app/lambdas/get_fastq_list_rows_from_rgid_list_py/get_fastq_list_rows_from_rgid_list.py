@@ -7,11 +7,11 @@ Input is fastqRgidList
 
 Output is fastqListRows (list)
 """
-from http.client import HTTPException
 # Standard imports
 from urllib.parse import urlparse
 from pathlib import Path
 from os import environ
+from requests import HTTPError
 
 # Layer imports
 from orcabus_api_tools.fastq import to_fastq_list_row, get_fastq_by_rgid
@@ -29,10 +29,10 @@ def is_fastq_id_in_test_data_project(fastq_id: str) -> bool:
             fastq_id,
             bucket=environ[TEST_DATA_BUCKET_NAME_ENV_VAR]
         )
-    except HTTPException as e:
+    except HTTPError as e:
         # Except a 409 exception, this implies that
         # the fastq is not available under that particular prefix
-        if getattr(e, "status_code", None) == 409:
+        if getattr(getattr(e, "response", None), "status_code", None) == 409:
             return False
         # Otherwise this is an unknown exception
         raise

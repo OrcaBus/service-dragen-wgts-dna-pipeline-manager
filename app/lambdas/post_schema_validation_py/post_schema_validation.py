@@ -206,7 +206,7 @@ def validate_inputs(
                     len(
                         list_files_recursively(
                             urlparse(data_uri).netloc,
-                            str(Path(urlparse(data_uri).path)) + "/"
+                            (str(Path(urlparse(data_uri).path)).lstrip("/") + "/")
                         )
                     ) > 0
             ):
