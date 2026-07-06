@@ -17,9 +17,16 @@ export type LambdaNameList =
   | 'checkNtsmInternal'
   | 'checkNtsmExternal'
   | 'calculateDownsamplingRatios'
+  // Payload comparison and WRU generation
+  | 'comparePayload'
+  | 'generateWruEventObjectWithMergedData'
+  | 'getMissingSchemaFields'
   // Validation Functions
   | 'validateDraftCompleteSchema'
   | 'postSchemaValidation'
+  // Commentary Functions
+  | 'addPopulateDraftComment'
+  | 'addReadyComment'
   // Pre-READY Lambda functions
   // Pre-submission Lambda functions
   | 'dragenWgtsDnaReadyToIcav2WesRequest'
@@ -42,9 +49,16 @@ export const lambdaNameList: LambdaNameList[] = [
   'checkNtsmInternal',
   'checkNtsmExternal',
   'calculateDownsamplingRatios',
+  // Payload comparison and WRU generation
+  'comparePayload',
+  'generateWruEventObjectWithMergedData',
+  'getMissingSchemaFields',
   // Validation Functions
   'validateDraftCompleteSchema',
   'postSchemaValidation',
+  // Commentary Functions
+  'addPopulateDraftComment',
+  'addReadyComment',
   // Pre-submission Lambda functions
   'dragenWgtsDnaReadyToIcav2WesRequest',
   // Post-submission Lambda functions/
@@ -57,11 +71,13 @@ export const lambdaNameList: LambdaNameList[] = [
 export interface LambdaRequirements {
   needsOrcabusApiTools?: boolean;
   needsIcav2Tools?: boolean;
+  needsHigherMemory?: boolean;
   needsSsmParametersAccess?: boolean;
   needsSchemaRegistryAccess?: boolean;
   needsExternalBucketInfo?: boolean;
   needsCoverageThresholdsInfo?: boolean;
   needsWorkflowInfo?: boolean;
+  needsRepoUrl?: boolean;
 }
 
 // Lambda requirements mapping
@@ -100,6 +116,10 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
   calculateDownsamplingRatios: {
     // Just some quick maths!
   },
+  // Payload comparison and WRU generation
+  comparePayload: {},
+  generateWruEventObjectWithMergedData: { needsOrcabusApiTools: true },
+  getMissingSchemaFields: { needsSchemaRegistryAccess: true, needsSsmParametersAccess: true },
   // Validation Functions
   validateDraftCompleteSchema: {
     needsSchemaRegistryAccess: true,
@@ -114,11 +134,21 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
     needsCoverageThresholdsInfo: true,
     needsWorkflowInfo: true,
   },
+  // Commentary Functions
+  addPopulateDraftComment: {
+    needsOrcabusApiTools: true,
+    needsWorkflowInfo: true,
+    needsRepoUrl: true,
+  },
+  addReadyComment: {
+    needsOrcabusApiTools: true,
+    needsWorkflowInfo: true,
+  },
   // Pre-submission Lambda functions
   dragenWgtsDnaReadyToIcav2WesRequest: {},
   // Needs Orcabus API tools to fetch the existing workflow run state
   convertIcav2WesStateChangeEventToWrscEvent: { needsOrcabusApiTools: true },
-  addPostAnalysisTags: { needsOrcabusApiTools: true },
+  addPostAnalysisTags: { needsOrcabusApiTools: true, needsHigherMemory: true },
   addWesFailureComment: { needsOrcabusApiTools: true, needsWorkflowInfo: true },
 };
 

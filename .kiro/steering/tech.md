@@ -14,7 +14,7 @@
 
 ## Key AWS Services Used
 
-- **AWS Lambda** (Python, ARM64, 2048 MB, 60s timeout)
+- **AWS Lambda** (Python, ARM64, 512 MB default / 1024 MB with ICAv2 layer or pandas, 60s timeout)
 - **AWS Step Functions** (ASL JSON templates in `app/step-functions-templates/`)
 - **Amazon EventBridge** — event bus `OrcaBusMain`, source `orcabus.dragenwgtsdna`
 - **AWS SSM Parameter Store** — configuration under `/orcabus/workflows/dragen-wgts-dna/`

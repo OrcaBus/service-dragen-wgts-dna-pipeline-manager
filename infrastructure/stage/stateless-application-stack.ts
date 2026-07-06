@@ -38,7 +38,7 @@ export class StatelessApplicationStack extends GitStack {
     const stateMachines = buildAllStepFunctions(this, {
       lambdaObjects: lambdas,
       eventBus: orcabusMainEventBus,
-      ssmParameterPaths: props.ssmParameterPaths,
+      ...props,
     });
 
     // Add event rules

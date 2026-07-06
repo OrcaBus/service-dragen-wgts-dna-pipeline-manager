@@ -27,6 +27,10 @@ import { StatefulApplicationStackConfig, StatelessApplicationStackConfig } from 
 import { StageName } from '@orcabus/platform-cdk-constructs/shared-config/accounts';
 import { ICAV2_PROJECT_ID } from '@orcabus/platform-cdk-constructs/shared-config/icav2';
 import { substituteBucketConstants } from './utils';
+import {
+  PIPELINE_CACHE_BUCKET,
+  PIPELINE_CACHE_PREFIX,
+} from '@orcabus/platform-cdk-constructs/shared-config/s3';
 
 /**
  * Stateful stack properties for the workflow.
@@ -109,5 +113,9 @@ export const getStatelessStackProps = (stage: StageName): StatelessApplicationSt
 
     // Stage Name
     stageName: stage,
+
+    // Pipeline cache bucket
+    pipelineCacheBucketName: PIPELINE_CACHE_BUCKET[stage],
+    pipelineCachePrefix: PIPELINE_CACHE_PREFIX[stage],
   };
 };

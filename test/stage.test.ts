@@ -43,16 +43,26 @@ describe('cdk-nag-stateless-toolchain-stack', () => {
  * @param stack
  */
 function applyNagSuppression(stack: Stack) {
-  // These are example suppressions for this stack and should be removed and replaced with the
-  // service-specific suppressions of your app.
   NagSuppressions.addStackSuppressions(
     stack,
-    [{ id: 'AwsSolutions-S10', reason: 'not require requests to use SSL' }],
+    [
+      {
+        id: 'AwsSolutions-S10',
+        reason:
+          'EventBridge schema registry backing bucket is AWS-managed and does not support enforcing SSL at the bucket policy level',
+      },
+    ],
     true
   );
   NagSuppressions.addStackSuppressions(
     stack,
-    [{ id: 'AwsSolutions-S1', reason: 'this is an example bucket' }],
+    [
+      {
+        id: 'AwsSolutions-S1',
+        reason:
+          'EventBridge schema registry backing bucket is AWS-managed and does not support enabling access logging',
+      },
+    ],
     true
   );
 }

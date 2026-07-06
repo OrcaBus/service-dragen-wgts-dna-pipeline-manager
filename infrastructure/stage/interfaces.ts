@@ -32,11 +32,20 @@ export interface StatelessApplicationStackConfig {
 
   // Stage Name
   stageName: StageName;
+
+  // Automation service path
+  pipelineCacheBucketName: string;
+  pipelineCachePrefix: string;
 }
 
 export type WorkflowVersionType = '4.4.4' | '4.4.6';
 
+export type PayloadVersionType = '2025.06.04';
+
 export type OraReferenceVersionType = '2.7.0';
+
+/* Consts of types */
+export const payloadVersionList: PayloadVersionType[] = ['2025.06.04'];
 
 export interface Reference {
   name: string;

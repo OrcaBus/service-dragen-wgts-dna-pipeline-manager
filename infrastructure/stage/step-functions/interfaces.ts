@@ -45,6 +45,8 @@ export interface BuildStepFunctionProps extends StepFunctionInput {
   lambdaObjects: LambdaObject[];
   eventBus: IEventBus;
   ssmParameterPaths: SsmParameterPaths;
+  pipelineCacheBucketName: string;
+  pipelineCachePrefix: string;
 }
 
 export interface StepFunctionObject extends StepFunctionInput {
@@ -85,9 +87,13 @@ export const stepFunctionToLambdasMap: Record<StateMachineNameList, LambdaNameLi
     'checkNtsmExternal',
     'calculateDownsamplingRatios',
     'getProjectBaseUriFromProjectId',
+    'addPopulateDraftComment',
+    'comparePayload',
+    'generateWruEventObjectWithMergedData',
+    'getMissingSchemaFields',
   ],
   validateDraftDataAndPutReadyEvent: ['validateDraftCompleteSchema', 'postSchemaValidation'],
-  readyEventToIcav2WesRequestEvent: ['dragenWgtsDnaReadyToIcav2WesRequest'],
+  readyEventToIcav2WesRequestEvent: ['addReadyComment', 'dragenWgtsDnaReadyToIcav2WesRequest'],
   icav2WesEventToWrscEvent: [
     'convertIcav2WesStateChangeEventToWrscEvent',
     'addPostAnalysisTags',

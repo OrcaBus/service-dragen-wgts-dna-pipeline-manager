@@ -17,6 +17,7 @@ import logging
 from jsonschema import ValidationError
 from os import environ
 import json
+from pathlib import Path
 
 # Layer imports
 from orcabus_api_tools.workflow import add_comment_to_workflow_run
@@ -28,8 +29,9 @@ if typing.TYPE_CHECKING:
 
 # Globals
 SSM_REGISTRY_NAME_ENV_VAR = "SSM_REGISTRY_NAME"
-SSM_SCHEMA_NAME_ENV_VAR = "SSM_SCHEMA_NAME"
+SSM_SCHEMA_PATH_ENV_VAR = "SSM_SCHEMA_PATH"
 WORKFLOW_NAME_ENV_VAR = "WORKFLOW_NAME"
+DEFAULT_PAYLOAD_VERSION_ENV_VAR = "DEFAULT_PAYLOAD_VERSION"
 COMMENT_AUTHOR = "{WORKFLOW_NAME}-workflow-validation-service"
 
 logger = logging.getLogger()
@@ -80,7 +82,7 @@ def get_schema_from_registry(
 def validate_draft_schema(
         json_schema: str,
         json_body: str,
-        workflow_run_id: str = None,
+        workflow_run_id: str,
         comment_error: bool = False
 ) -> bool:
     """
@@ -116,13 +118,16 @@ def handler(event, context) -> Dict[str, bool]:
     :return:
     """
     # Get the event data
+    payload_version = event.get("payloadVersion", environ[DEFAULT_PAYLOAD_VERSION_ENV_VAR])
     payload_data = event.get('data')
     workflow_run_id = event.get("workflowRunId", "")
     comment_error = event.get("addCommentOnError", False)
 
     # Get the SSM parameters
     schema_registry = get_ssm_parameter_value(environ[SSM_REGISTRY_NAME_ENV_VAR])
-    schema_name = json.loads(get_ssm_parameter_value(environ[SSM_SCHEMA_NAME_ENV_VAR]))['schemaName']
+    schema_name = json.loads(get_ssm_parameter_value(
+        str(Path(environ[SSM_SCHEMA_PATH_ENV_VAR]) / payload_version)
+    ))['schemaName']
 
     # Get the current schema from the schema registry
     current_schema = get_schema_from_registry(
