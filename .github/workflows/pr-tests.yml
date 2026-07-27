@@ -3,14 +3,6 @@ name: Pull Request Tests
 on:
   merge_group:
   pull_request:
-    paths-ignore:
-      # The ignore only works only if changes to the main branch only include the following files.
-      # So if the commit only contain .md changes but the PR change contain more, the ignore fails
-      # https://github.com/actions/runner/issues/2324#issuecomment-1703345084
-      - '**.md'
-      - '**.svg'
-      - '**.drawio'
-      - '**.png'
     types:
       - opened
       - reopened
@@ -29,6 +21,7 @@ permissions: read-all
 #  https://github.com/marketplace/actions/checkout
 #  https://github.com/marketplace/actions/cache
 #  https://github.com/actions-rust-lang/setup-rust-toolchain
+#  https://github.com/dorny/paths-filter
 
 jobs:
   pre-commit-lint-security:
@@ -77,10 +70,34 @@ jobs:
         run: |
           make check
 
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      should_test: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            code:
+              - '**/*.ts'
+              - '**/*.sh'
+              - '**/*.py'
+              - '**/package.json'
+              - '**/pnpm-lock.yaml'
+              - 'infrastructure/**'
+              - 'app/**'
+              - 'test/**'
+              - 'Makefile'
+
   test-iac:
     runs-on: ubuntu-22.04-arm
     # Template service base is broken with
-    if: ${{ !github.event.pull_request.draft  && github.repository != 'OrcaBus/template-service-base' }}
+    if: >-
+      !github.event.pull_request.draft &&
+      github.repository != 'OrcaBus/template-service-base' &&
+      needs.check-changes.outputs.should_test == 'true'
+    needs: check-changes
     steps:
       - uses: actions/checkout@v4
 
@@ -96,3 +113,17 @@ jobs:
       - run: pnpm install --frozen-lockfile --ignore-scripts
 
       - run: pnpm test
+
+  # This is the job you set as "required" in branch protection
+  ci-gate:
+    runs-on: ubuntu-latest
+    needs: test-iac
+    if: always()
+    steps:
+      - name: Check results
+        run: |
+          if [[ "${{ needs.test-iac.result }}" == "failure" ]]; then
+            echo "Tests failed"
+            exit 1
+          fi
+          echo "CI passed (tests passed or were skipped)"
