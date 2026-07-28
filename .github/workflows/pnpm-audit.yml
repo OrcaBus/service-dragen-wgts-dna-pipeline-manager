@@ -62,7 +62,7 @@ jobs:
           git fetch origin "$PR_BRANCH"
           git checkout "$PR_BRANCH"
 
-          pnpm install --frozen-lockfile
+          pnpm install --frozen-lockfile --ignore-scripts
 
           if pnpm audit --prod > /dev/null 2>&1; then
             echo "pr_still_valid=true" >> "$GITHUB_OUTPUT"
@@ -101,7 +101,7 @@ jobs:
         if: |
           steps.check-existing.outputs.existing_pr != 'true' ||
           steps.test-existing.outputs.pr_still_valid == 'false'
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Run pnpm audit
         id: audit
@@ -109,6 +109,7 @@ jobs:
           steps.check-existing.outputs.existing_pr != 'true' ||
           steps.test-existing.outputs.pr_still_valid == 'false'
         run: |
+          set -o pipefail
           if pnpm audit --prod 2>&1 | tee audit-output.txt; then
             echo "has_vulnerabilities=false" >> "$GITHUB_OUTPUT"
           else
@@ -119,6 +120,7 @@ jobs:
         id: upgrade
         if: steps.audit.outputs.has_vulnerabilities == 'true'
         run: |
+          set -o pipefail
           # Try a standard upgrade to resolve vulnerabilities
           pnpm upgrade
 
@@ -133,6 +135,7 @@ jobs:
         id: audit-fix
         if: steps.upgrade.outputs.upgrade_fixed == 'false'
         run: |
+          set -o pipefail
           # Use pnpm audit --fix to add overrides for vulnerable transitive deps
           pnpm audit --fix 2>&1 | tee audit-fix-output.txt || true
 
