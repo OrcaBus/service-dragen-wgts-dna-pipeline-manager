@@ -2,8 +2,8 @@ name: pnpm Audit & Auto-fix
 
 on:
   schedule:
-    # Run daily at 06:00 UTC
-    - cron: '0 6 * * *'
+    # Run daily at 00:05 UTC (10:05 AEST) — offset to avoid caching delays on CVE publication
+    - cron: '5 0 * * *'
   workflow_dispatch: {}
 
 permissions:
@@ -26,6 +26,9 @@ jobs:
           cache: 'pnpm'
 
       - run: corepack enable
+
+      - name: Install yq
+        uses: mikefarah/yq@master
 
       - name: Check existing open audit PRs
         id: check-existing
@@ -64,7 +67,7 @@ jobs:
 
           pnpm install --frozen-lockfile --ignore-scripts
 
-          if pnpm audit --prod > /dev/null 2>&1; then
+          if pnpm audit > /dev/null 2>&1; then
             echo "pr_still_valid=true" >> "$GITHUB_OUTPUT"
             echo "Existing PR still passes audit — nothing to do."
           else
@@ -110,7 +113,7 @@ jobs:
           steps.test-existing.outputs.pr_still_valid == 'false'
         run: |
           set -o pipefail
-          if pnpm audit --prod 2>&1 | tee audit-output.txt; then
+          if pnpm audit 2>&1 | tee audit-output.txt; then
             echo "has_vulnerabilities=false" >> "$GITHUB_OUTPUT"
           else
             echo "has_vulnerabilities=true" >> "$GITHUB_OUTPUT"
@@ -122,28 +125,35 @@ jobs:
         run: |
           set -o pipefail
           # Try a standard upgrade to resolve vulnerabilities
-          pnpm upgrade
+          # --ignore-scripts avoids running lifecycle hooks (e.g. prepare: pre-commit install)
+          pnpm upgrade --ignore-scripts
 
           # Re-run audit to see if upgrade resolved issues
-          if pnpm audit --prod 2>&1 | tee audit-after-upgrade.txt; then
+          if pnpm audit 2>&1 | tee audit-after-upgrade.txt; then
             echo "upgrade_fixed=true" >> "$GITHUB_OUTPUT"
           else
             echo "upgrade_fixed=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Attempt pnpm audit --fix (overrides)
+      - name: Attempt pnpm audit --fix=override
         id: audit-fix
         if: steps.upgrade.outputs.upgrade_fixed == 'false'
         run: |
           set -o pipefail
-          # Use pnpm audit --fix to add overrides for vulnerable transitive deps
-          pnpm audit --fix 2>&1 | tee audit-fix-output.txt || true
+          # Remove existing overrides to prevent stale/conflicting ranges accumulating
+          if [ -f pnpm-workspace.yaml ]; then yq -i 'del(.overrides)' pnpm-workspace.yaml; fi
+
+          # Reinstall to regenerate lockfile without old overrides
+          pnpm install --no-frozen-lockfile --ignore-scripts
+
+          # Use pnpm audit --fix=override to add fresh overrides for vulnerable transitive deps
+          pnpm audit --fix=override 2>&1 | tee audit-fix-output.txt || true
 
           # Reinstall with the new overrides
-          pnpm install
+          pnpm install --no-frozen-lockfile --ignore-scripts
 
           # Verify the fix resolved the issues
-          if pnpm audit --prod 2>&1 | tee audit-after-fix.txt; then
+          if pnpm audit 2>&1 | tee audit-after-fix.txt; then
             echo "audit_fix_resolved=true" >> "$GITHUB_OUTPUT"
           else
             echo "audit_fix_resolved=false" >> "$GITHUB_OUTPUT"
@@ -158,7 +168,7 @@ jobs:
           if [[ "${{ steps.upgrade.outputs.upgrade_fixed }}" == "true" ]]; then
             echo "method=pnpm upgrade" >> "$GITHUB_OUTPUT"
           else
-            echo "method=pnpm audit --fix (overrides)" >> "$GITHUB_OUTPUT"
+            echo "method=pnpm audit --fix=override" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Create tracking issue
@@ -192,6 +202,10 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           branch: chore/pnpm-audit-fix-${{ github.run_id }}
+          add-paths: |
+            package.json
+            pnpm-workspace.yaml
+            pnpm-lock.yaml
           commit-message: 'chore: fix security vulnerabilities via ${{ steps.fix-method.outputs.method }}'
           title: 'chore: fix pnpm audit vulnerabilities (${{ github.run_id }})'
           body: |
@@ -204,7 +218,7 @@ jobs:
             Closes #${{ steps.create-issue.outputs.issue_number }}
 
             ### What happened
-            - `pnpm audit` detected vulnerabilities in production dependencies
+            - `pnpm audit` detected vulnerabilities in dependencies
             - The workflow attempted to resolve them automatically
             - All vulnerabilities were resolved
 
@@ -214,6 +228,7 @@ jobs:
             - Merge when satisfied
           labels: security,dependencies
           delete-branch: true
+          sign-commits: true
 
       - name: Create issue for unresolved vulnerabilities
         if: |
@@ -256,7 +271,7 @@ jobs:
 
           ### Remediation attempts
           1. ❌ \`pnpm upgrade\` — did not resolve all issues
-          2. ❌ \`pnpm audit --fix\` (overrides) — did not resolve all issues
+          2. ❌ \`pnpm audit --fix=override\` — did not resolve all issues
 
           ### Audit output
           \`\`\`
