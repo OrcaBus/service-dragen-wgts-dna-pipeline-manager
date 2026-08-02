@@ -28,7 +28,7 @@ jobs:
       - run: corepack enable
 
       - name: Install yq
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@v4.53.3
 
       - name: Check existing open audit PRs
         id: check-existing
