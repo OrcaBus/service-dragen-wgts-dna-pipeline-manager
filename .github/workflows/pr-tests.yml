@@ -1,14 +1,13 @@
 name: Pull Request Tests
 
 on:
-  merge_group:
+  merge_group: {}
   pull_request:
     types:
       - opened
       - reopened
       - synchronize
       - ready_for_review
-      - auto_merge_enabled
     branches:
       - main
 
@@ -73,7 +72,7 @@ jobs:
     outputs:
       should_test: ${{ steps.filter.outputs.code }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: dorny/paths-filter@v4
@@ -91,9 +90,12 @@ jobs:
               - 'test/**'
               - 'Makefile'
               - '.github/**'
+              - 'cdk.json'
+              - 'tsconfig.json'
+              - 'jest.config.*'
   test-iac:
     runs-on: ubuntu-22.04-arm
-    # Template service base is broken with
+    # Excluded for template-service-base which has no application code to test
     if: >-
       !github.event.pull_request.draft &&
       github.repository != 'OrcaBus/template-service-base' &&
@@ -118,13 +120,21 @@ jobs:
   # This is the job you set as "required" in branch protection
   ci-gate:
     runs-on: ubuntu-latest
-    needs: test-iac
+    needs: [pre-commit-lint-security, check-changes, test-iac]
     if: always()
     steps:
       - name: Check results
         run: |
-          if [[ "${{ needs.test-iac.result }}" == "failure" ]]; then
-            echo "Tests failed"
+          if [[ "${{ needs.pre-commit-lint-security.result }}" != "success" && "${{ needs.pre-commit-lint-security.result }}" != "skipped" ]]; then
+            echo "Lint/security checks did not succeed (result: ${{ needs.pre-commit-lint-security.result }})"
+            exit 1
+          fi
+          if [[ "${{ needs.check-changes.result }}" != "success" ]]; then
+            echo "Change detection did not succeed (result: ${{ needs.check-changes.result }})"
+            exit 1
+          fi
+          if [[ "${{ needs.test-iac.result }}" != "success" && "${{ needs.test-iac.result }}" != "skipped" ]]; then
+            echo "Tests did not succeed (result: ${{ needs.test-iac.result }})"
             exit 1
           fi
           echo "CI passed (tests passed or were skipped)"
