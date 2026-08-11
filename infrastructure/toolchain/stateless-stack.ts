@@ -11,7 +11,14 @@ export class StatelessStack extends cdk.Stack {
 
     new DeploymentStackPipeline(this, 'StatelessDragenWgtsDnaPipeline', {
       unitAppTestConfig: {
-        command: [],
+        command: [
+          // Install Python test dependencies
+          'python3.14 -m pip install -r app/tests/requirements-test.txt --quiet',
+          // Run Lambda unit tests
+          'python3.14 -m pytest app/lambdas/tests/ -v --tb=short',
+          // Run ASL validation
+          'python3.14 -m pytest app/step-functions-templates/tests/test_asl_validation.py -v --tb=short',
+        ],
       },
       githubBranch: 'main',
       githubRepo: REPO_NAME,

@@ -1,0 +1,21 @@
+{
+  "scenario_name": "happy_path",
+  "description": "An ICAv2 WES SUCCEEDED event is converted to a WRSC event, post-analysis tags are added, and the event is pushed to EventBridge",
+  "state_machine_template": "icav2_wes_event_to_wrsc_event_sfn_template.asl.json",
+  "test_case_name": "HappyPath",
+  "input": {
+    "analysisId": "analysis-12345",
+    "status": "SUCCEEDED",
+    "portalRunId": "portal-run-001",
+    "workflowRunId": "wfr.ABCDEF123456",
+    "outputUri": "icav2://proj-12345/output/portal-run-001/"
+  },
+  "expected_status": "SUCCEEDED",
+  "expected_output": null,
+  "expected_states_visited": [
+    "Convert ICAv2 WES event to WRSC Event",
+    "Workflow status decision tree",
+    "Add post analysis tags",
+    "Push WRSC Event"
+  ]
+}
