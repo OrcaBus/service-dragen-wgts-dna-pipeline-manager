@@ -197,6 +197,10 @@ def handler(event, context):
     if outputs:
         latest_payload['data']['outputs'] = outputs
 
+    # Propagate the ICAv2 analysis ID to engineParameters.analysisId
+    if execution_id:
+        latest_payload['data']['engineParameters']['analysisId'] = execution_id
+
     # Update the workflow object to contain 'name' and 'version'
     workflow = dict(deepcopy(workflow_run['workflow']))
     if 'workflowName' in workflow:
