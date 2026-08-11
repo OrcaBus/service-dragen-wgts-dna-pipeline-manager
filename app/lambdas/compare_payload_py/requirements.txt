@@ -1,1 +1,1 @@
-deepdiff
+deepdiff==8.6.0
