@@ -1,0 +1,14 @@
+{
+  "service_name": "dragen-wgts-dna",
+  "stateless_stack_name": "{stage_prefix}-StatelessDragenWgtsDnaPipelineManager",
+  "stateful_stack_name": "{stage_prefix}-StatefulDragenWgtsDnaPipeline",
+  "expected_lambda_count": 22,
+  "expected_state_machine_count": 4,
+  "ssm_parameter_prefix": "/orcabus/workflows/dragen-wgts-dna/",
+  "state_machine_permissions": {
+    "populateDraftData": ["lambda:InvokeFunction", "ssm:GetParameter", "events:PutEvents"],
+    "validateDraftDataAndPutReadyEvent": ["lambda:InvokeFunction", "events:PutEvents"],
+    "readyEventToIcav2WesRequestEvent": ["lambda:InvokeFunction", "events:PutEvents"],
+    "icav2WesEventToWrscEvent": ["lambda:InvokeFunction", "events:PutEvents"]
+  }
+}
