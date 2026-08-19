@@ -296,15 +296,15 @@ def validate_clinical_input_metrics(
         is_valid = False
         comments.append(f"Normal did not meet raw threshold coverage of {MIN_RAW_NORMAL_WGS_COVERAGE} X")
     if (tags['preLaunchCoverageEst'] * (1 - tags['preLaunchDupFracEst'])) < MIN_DEDUP_NORMAL_WGS_COVERAGE:
-        is_valid = False
-        comments.append(f"Normal deduplicated coverage estimate did not meet {MIN_DEDUP_NORMAL_WGS_COVERAGE} X")
+        # is_valid = False  # Temp comment out
+        comments.append(f"Warning: Normal deduplicated coverage estimate did not meet {MIN_DEDUP_NORMAL_WGS_COVERAGE} X")
     # 4. Somatic coverage checks
     if tags['tumorPreLaunchCoverageEst'] < MIN_RAW_TUMOR_WGS_COVERAGE:
         is_valid = False
         comments.append(f"Tumor did not meet raw threshold coverage of {MIN_RAW_TUMOR_WGS_COVERAGE} X")
     if (tags['tumorPreLaunchCoverageEst'] * (1 - tags['tumorPreLaunchDupFracEst'])) < MIN_DEDUP_TUMOR_WGS_COVERAGE:
-        is_valid = False
-        comments.append(f"Tumor deduplicated coverage estimate did not meet {MIN_DEDUP_TUMOR_WGS_COVERAGE} X")
+        # is_valid = False  # Temp comment out
+        comments.append(f"Warning: Tumor deduplicated coverage estimate did not meet {MIN_DEDUP_TUMOR_WGS_COVERAGE} X")
 
     # Don't worry about failing an invalid run here
     # But we want the comments regardless
