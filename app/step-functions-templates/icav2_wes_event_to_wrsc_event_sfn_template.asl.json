@@ -65,7 +65,8 @@
                 "FunctionName": "${__add_post_analysis_tags_lambda_function_arn__}",
                 "Payload": {
                   "variantCallingOutputUri": "{% $workflowRunStateChangeEvent.payload.data.engineParameters.outputUri & $workflowRunStateChangeEvent.payload.data.outputs.dragenGermlineVariantCallingOutputRelPath %}",
-                  "variantCallingSampleName": "{% $workflowRunStateChangeEvent.payload.data.inputs.sampleName %}"
+                  "variantCallingSampleName": "{% $workflowRunStateChangeEvent.payload.data.inputs.sampleName %}",
+                  "rgidList": "{% $workflowRunStateChangeEvent.payload.data.tags.fastqRgidList ? $workflowRunStateChangeEvent.payload.data.tags.fastqRgidList : [] %}"
                 }
               },
               "Retry": [
@@ -113,7 +114,8 @@
                 "Payload": {
                   "variantCallingOutputUri": "{% $workflowRunStateChangeEvent.payload.data.engineParameters.outputUri & $workflowRunStateChangeEvent.payload.data.outputs.dragenSomaticVariantCallingOutputRelPath %}",
                   "variantCallingSampleName": "{% $workflowRunStateChangeEvent.payload.data.inputs.tumorSampleName %}",
-                  "isTumor": true
+                  "isTumor": true,
+                  "rgidList": "{% $workflowRunStateChangeEvent.payload.data.tags.tumorFastqRgidList ? $workflowRunStateChangeEvent.payload.data.tags.tumorFastqRgidList : [] %}"
                 }
               },
               "Retry": [
