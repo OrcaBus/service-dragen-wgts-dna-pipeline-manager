@@ -26,7 +26,7 @@ For each directory collect the following metrics:
 """
 
 # Standard imports
-from typing import Optional, Union
+from typing import Optional, Union, List
 from io import StringIO
 import pandas as pd
 import requests
@@ -350,10 +350,22 @@ def get_contamination_rate(
 def get_duplication_rate(
         output_uri: str,
         sample_name: str,
+        rgid_list: List[str],
 ) -> Optional[float]:
     """
-    Get the duplication rate from the metrics.json file
+    Get the duplication rate from the metrics.json file.
+
+    The global metrics duplicateMarkedReads value corresponds to the germline caller and is
+    therefore not appropriate to use for the tumor sample. Instead we collect the per-read-group
+    duplication rate for each rgid in rgid_list from
+    .modules.mapAlign.perReadGroupMetrics["<rgid>"].duplicateMarkedReads.percentage.
+
+    When more than one rgid is present for a library, we compute a weighted average using
+    .modules.mapAlign.perReadGroupMetrics["<rgid>"].totalBases.value as the weight.
     """
+    if not rgid_list:
+        return None
+
     metrics_file_name = FILENAME_BY_METRIC["METRICS_JSON"].format(
         SAMPLE_NAME=sample_name
     )
@@ -363,8 +375,31 @@ def get_duplication_rate(
     if metrics_json is None:
         return None
 
+    per_read_group_metrics = (
+        metrics_json.get("modules", {}).get("mapAlign", {}).get("perReadGroupMetrics", {})
+    )
+
+    weighted_numerator = 0.0
+    total_weight = 0.0
+    for rgid in rgid_list:
+        rgid_metrics = per_read_group_metrics.get(rgid)
+        if rgid_metrics is None:
+            continue
+
+        percentage = rgid_metrics.get("duplicateMarkedReads", {}).get("percentage")
+        total_bases = rgid_metrics.get("totalBases", {}).get("value")
+
+        if percentage is None or pd.isna(percentage) or total_bases is None or pd.isna(total_bases):
+            continue
+
+        weighted_numerator += float(percentage) * float(total_bases)
+        total_weight += float(total_bases)
+
+    if total_weight == 0:
+        return None
+
     return na_round(
-        metrics_json.get("modules", {}).get("mapAlign", {}).get("globalMetrics", {}).get("duplicateMarkedReads", {}).get("percentage") / 100,
+        (weighted_numerator / total_weight) / 100,
         4
     )
 
@@ -424,6 +459,7 @@ def handler(event, context):
     sample_name = event.get("variantCallingSampleName")
     output_uri = event.get("variantCallingOutputUri")
     is_tumor = event.get("isTumor", False)
+    rgid_list = event.get("rgidList", []) or []
 
     if not sample_name or not output_uri:
         raise ValueError("Missing required inputs")
@@ -442,7 +478,7 @@ def handler(event, context):
         tags["avg_autosomal_coverage_over_genome"] = get_avg_cov_over_genome(output_uri, sample_name, is_tumor=False)
 
     tags["contamination_rate"] = get_contamination_rate(output_uri, sample_name)
-    tags["duplication_frac"] = get_duplication_rate(output_uri, sample_name)
+    tags["duplication_frac"] = get_duplication_rate(output_uri, sample_name, rgid_list)
     tags["total_post_filter_variants"] = get_total_variants(output_uri, sample_name)
     tags["ti_tv_ratio"] = get_ti_tv_ratio(output_uri, sample_name)
 
@@ -484,7 +520,10 @@ def handler(event, context):
 #             {
 #                 "variantCallingSampleName": "L2300902",
 #                 "variantCallingOutputUri": "s3://project-data-889522050439-ap-southeast-2/byob-icav2/project-wgs-accreditation/analysis/dragen-wgts-dna/202509114694b95e/L2300902__L2300901__hg38__linear__dragen_wgts_dna_somatic_variant_calling/",
-#                 "isTumor": True
+#                 "isTumor": True,
+#                 "rgidList": [
+#                     "AAGTCCAA+TACTCATA.2.241024_A00130_0336_BHW7MVDSXC"
+#                 ]
 #             },
 #             None
 #         ),
