@@ -54,7 +54,6 @@ def handler(event, context):
         "status": "DRAFT",
         "workflow": workflow_run["workflow"],
         "workflowRunName": workflow_run["workflowRunName"],
-        "linkedLibraries": workflow_run.get("linkedLibraries", []),
         "libraries": list(map(
             lambda lib: {
                 "libraryId": lib["libraryId"],
