@@ -3,3 +3,4 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - js-yaml@4.1.2
   - brace-expansion@5.0.8
+  - '@orcabus/platform-cdk-constructs@1.9.3'
