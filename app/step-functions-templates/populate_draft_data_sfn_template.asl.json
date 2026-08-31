@@ -456,7 +456,7 @@
           "JitterStrategy": "FULL"
         }
       ],
-      "Next": "Put DRAFT update event",
+      "Next": "Generate WRU event object",
       "Output": "{% $states.input %}"
     },
     "Add updating inputs comment": {
@@ -1420,21 +1420,6 @@
       "Assign": {
         "inputs": "{% (\n    /* Assign results to new alignment options dict */\n    $newSomaticAlignmentOptions := ( [ $states.result ] ~> $merge );\n    $inputs.somaticAlignmentOptions ? \n    /* Consider when alignment options is already an input */\n    (\n        $inputs ~> \n        | somaticAlignmentOptions | $newSomaticAlignmentOptions |\n    ) : \n    /* When Alignment options is not already an input */\n    (\n        $inputs ~> \n        | $ | { \"somaticAlignmentOptions\": $newSomaticAlignmentOptions } |\n    )\n) %}"
       }
-    },
-    "Put DRAFT update event": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::events:putEvents",
-      "Arguments": {
-        "Entries": [
-          {
-            "Detail": "{% $merge([\n  $detail,\n  {\n    \"id\": null,\n    \"status\": \"${__draft_event_status__}\",\n    \"timestamp\": $states.context.State.EnteredTime,\n    \"libraries\": $librariesList,\n    \"payload\": (\n      $merge([\n        $payload,\n        {\n          \"refId\": null,\n          \"data\": ( \n            {\n              \"inputs\": ( $inputs ? $inputs : null ),\n              \"engineParameters\": ( $engineParameters ? $engineParameters : null ),\n              \"tags\": ( $tags ? $tags : null )\n            }\n            /* Remove null inputs like refId */\n            ~> $sift(function($v, $k){$v != null})\n          )\n        }\n      ])\n      /* Remove null inputs like refId */\n      ~> $sift(function($v, $k){$v != null})\n    )\n  }\n])\n/* Remove null inputs like id */\n~> $sift(function($v, $k){$v != null}) %}",
-            "DetailType": "${__workflow_run_update_event_detail_type__}",
-            "EventBusName": "${__event_bus_name__}",
-            "Source": "${__stack_source__}"
-          }
-        ]
-      },
-      "End": true
     },
     "Generate WRU event object": {
       "Type": "Task",
