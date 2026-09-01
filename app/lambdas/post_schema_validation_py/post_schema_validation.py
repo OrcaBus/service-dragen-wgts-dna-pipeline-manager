@@ -5,7 +5,7 @@ Confirm that the data uris in the inputs and engine parameters are appropriate
 """
 # Imports
 from pathlib import Path
-from typing import Dict, Tuple, cast, TypedDict, List, Any
+from typing import Dict, Tuple, TypedDict, List, Any
 import logging
 from os import environ
 from time import sleep
@@ -46,7 +46,7 @@ MIN_DEDUP_TUMOR_WGS_COVERAGE = int(environ[MIN_DEDUP_TUMOR_WGS_COVERAGE_ENV_VAR]
 MIN_RAW_NORMAL_WGS_COVERAGE = int(environ[MIN_RAW_NORMAL_WGS_COVERAGE_ENV_VAR])
 MIN_DEDUP_NORMAL_WGS_COVERAGE = int(environ[MIN_DEDUP_NORMAL_WGS_COVERAGE_ENV_VAR])
 # Midfixes
-ANALYSIS_MIDFIX = "analysis"
+ANALYSIS_MIDFIXES = ["analysis", "output", "outputs"]
 LOGS_MIDFIX = "logs"
 # Clinical workflow name
 CLINICAL_WORKFLOW_NAME = 'clinical'
@@ -104,62 +104,82 @@ def validate_engine_parameters(
         engine_parameters: Dict,
         workflow_run_id: str,
         project_prefix: str
-) -> Tuple[bool, str]:
+) -> Tuple[bool, List[str]]:
     """
     Validate the engine parameters.
     :param engine_parameters: The engine parameters to validate.
     :param workflow_run_id: The workflow run ID
     :param project_prefix: The project prefix
-    :return: A tuple of (is_valid, comment)
+    :return: A tuple of (is_valid, list of failure comments)
     """
-    # Get the project id
-    project_id = cast(str, engine_parameters.get("projectId"))
+    failures: List[str] = []
 
-    # Confirm that the outputUri and logsUri are a subset of the project prefix
+    # Get the project id
+    project_id = engine_parameters.get("projectId")
+
+    # Assert project id is set and resolves to a valid ICAv2 project
+    if project_id is None:
+        failures.append("projectId is not set")
+        return False, failures
+    try:
+        get_project_obj_from_project_id(project_id)
+    except ApiException:
+        failures.append(f"Cannot find project id {project_id}")
+        return False, failures
+
+    # Get URIs
     output_uri = engine_parameters.get("outputUri", "")
     logs_uri = engine_parameters.get("logsUri", "")
     pipeline_id = engine_parameters.get("pipelineId", "")
 
-    # Assert project id
-    if project_id is None:
-        return False, f"projectId is not set"
-    try:
-        get_project_obj_from_project_id(project_id)
-    except ApiException:
-        return False, f"Cannot find project id {project_id}"
-
-    # Validate the uris are correct
+    # Validate the URIs start with the project prefix
     if not output_uri.startswith(project_prefix):
-        return False, f"outputUri '{output_uri}' is not in the project context '{project_prefix}'"
+        failures.append(f"outputUri '{output_uri}' is not in the project context '{project_prefix}'")
     if not logs_uri.startswith(project_prefix):
-        return False, f"logsUri '{logs_uri}' is not in the project context '{project_prefix}'"
+        failures.append(f"logsUri '{logs_uri}' is not in the project context '{project_prefix}'")
 
-    # Confirm the pipeline is in the project
+    # Get the portal run id from the workflow run id
+    portal_run_id = get_workflow_run(workflow_run_id)['portalRunId']
+
+    # Validate outputUri ends with /<analysis-midfix>/<workflow-name>/<portal-run-id>/
+    output_uri_valid = any(
+        output_uri.endswith(f"/{midfix}/{WORKFLOW_NAME}/{portal_run_id}/")
+        for midfix in ANALYSIS_MIDFIXES
+    )
+    if not output_uri_valid:
+        valid_suffixes = ", ".join(
+            f"/{midfix}/{WORKFLOW_NAME}/{portal_run_id}/" for midfix in ANALYSIS_MIDFIXES
+        )
+        failures.append(
+            f"outputUri '{output_uri}' does not end with a valid suffix. "
+            f"Expected one of: {valid_suffixes}"
+        )
+
+    # Validate logsUri ends with /logs/<workflow-name>/<portal-run-id>/
+    if not logs_uri.endswith(f"/{LOGS_MIDFIX}/{WORKFLOW_NAME}/{portal_run_id}/"):
+        failures.append(
+            f"logsUri '{logs_uri}' does not end with '/{LOGS_MIDFIX}/{WORKFLOW_NAME}/{portal_run_id}/'"
+        )
+
+    # Confirm the pipeline is accessible in the project
     try:
         _ = get_project_pipeline_obj(
             project_id=project_id,
             pipeline_id=pipeline_id,
         )
-    except ValueError as e:
-        return False, f"The pipeline {pipeline_id} cannot be found in the project {project_id}"
+    except ValueError:
+        failures.append(f"The pipeline {pipeline_id} cannot be found in the project {project_id}")
 
-    # Get the portal run id from the workflow run id
-    portal_run_id = get_workflow_run(workflow_run_id)['portalRunId']
-
-    # Confirm that the output uri, logs uri end with the portal run id
-    if not output_uri.endswith(f"/{ANALYSIS_MIDFIX}/{WORKFLOW_NAME}/{portal_run_id}/"):
-        return False, f"outputUri '{output_uri}' does not end with '/{ANALYSIS_MIDFIX}/{WORKFLOW_NAME}/{portal_run_id}'"
-    if not logs_uri.endswith(f"/{LOGS_MIDFIX}/{WORKFLOW_NAME}/{portal_run_id}/"):
-        return False, f"logsUri '{logs_uri}' does not end with the portal run id '/{LOGS_MIDFIX}/{WORKFLOW_NAME}/{portal_run_id}'"
-
-    return True, ""
+    if failures:
+        return False, failures
+    return True, []
 
 
 def validate_inputs(
         inputs: Dict,
         project_id: str,
         project_prefix: str,
-) -> Tuple[bool, str]:
+) -> Tuple[bool, List[str]]:
     """
     Validate the inputs.
 
@@ -172,7 +192,10 @@ def validate_inputs(
     :param inputs: The inputs to validate.
     :param project_id: The ICAv2 project id to validate against.
     :param project_prefix: The ICAv2 project prefix
+    :return: A tuple of (is_valid, list of failure comments)
     """
+    failures: List[str] = []
+
     # Get all data uris from the inputs
     data_uris = []
     for key in ["sequenceData", "tumorSequenceData"]:
@@ -214,14 +237,21 @@ def validate_inputs(
                         )
                     ) > 0
             ):
-                return False, f"Folder URI '{data_uri}' has no files found under that prefix in the Filemanager"
+                failures.append(
+                    f"Folder URI '{data_uri}' has no files found under that prefix in the Filemanager"
+                )
         else:
             # For file URIs, confirm the file exists
             try:
                 get_s3_object_id_from_s3_uri(data_uri)
             except S3FileNotFoundError:
-                return False, f"Data URI '{data_uri}' cannot be found by the Filemanager, are you sure it exists?"
+                failures.append(
+                    f"Data URI '{data_uri}' cannot be found by the Filemanager, are you sure it exists?"
+                )
 
+    # If Filemanager checks failed, return early
+    if failures:
+        return False, failures
 
     # Phase 2: ICA project context validation
     # Only URIs outside ref/test/project-prefix need ICA project linking confirmed
@@ -241,8 +271,9 @@ def validate_inputs(
             project_data_obj = coerce_data_id_or_uri_to_project_data_obj(
                 data_id_or_uri=data_uri,
             )
-        except ValueError as e:
-            return False, f"Data URI '{data_uri}' cannot be found in the project context '{project_id}'"
+        except ValueError:
+            failures.append(f"Data URI '{data_uri}' cannot be found in the project context '{project_id}'")
+            continue
 
         # Then try get it in this context
         try:
@@ -250,10 +281,12 @@ def validate_inputs(
                 project_id=project_id,
                 data_id=project_data_obj.data.id
             )
-        except ApiException as e:
-            return False, f"Data URI '{data_uri}' cannot be found in the project context '{project_id}'"
+        except ApiException:
+            failures.append(f"Data URI '{data_uri}' cannot be found in the project context '{project_id}'")
 
-    return True, ""
+    if failures:
+        return False, failures
+    return True, []
 
 
 def validate_clinical_input_metrics(
@@ -369,110 +402,109 @@ def handler(event, context) -> Dict[str, bool]:
         )
         return {"isValid": False}
 
-    # Confirm the engine parameters match
-    is_valid, comment = validate_engine_parameters(
-        engine_parameters,
-        workflow_run_id=workflow_run_id,
-        project_prefix=project_prefix,
-    )
+    # Collect all failures (hard failures that invalidate the run) and
+    # notes (informational comments that do not invalidate the run)
+    all_failures: List[str] = []
+    notes: List[str] = []
 
     # Get the inputs and confirm that the fastq uris are valid
     # and are accessible in the right project context
     inputs = payload_data.get("inputs")
 
-    # Check if the inputs are also valid
+    # Validate the engine parameters
+    is_valid, failures = validate_engine_parameters(
+        engine_parameters,
+        workflow_run_id=workflow_run_id,
+        project_prefix=project_prefix,
+    )
+    all_failures.extend(failures)
+
+    # Validate the inputs (only if engine params are valid — we need project context)
     if is_valid:
-        # Validate the inputs
-        is_valid, comment = validate_inputs(
+        is_valid, failures = validate_inputs(
             inputs,
             project_id=project_id,
             project_prefix=project_prefix
         )
+        all_failures.extend(failures)
 
     # Check if this is a clinical sample and if we
-    # Need to hold off until coverage matches
+    # need to hold off until coverage matches
     if is_valid:
         tumor_library_id = tags.get("tumorLibraryId", None)
         # Germline only run
         if tumor_library_id is None:
             pass
         # Not a clinical sample
-        # Or not an automated run
+        # Or not an automated run — collect coverage comments as notes only
         elif (
                 not get_library_from_library_id(tumor_library_id)['workflow'] == CLINICAL_WORKFLOW_NAME or
                 not get_workflow_run(workflow_run_id)["workflowRunName"].startswith(AUTOMATED_WORKFLOW_PREFIX)
         ):
-            is_valid, comment = validate_clinical_input_metrics(
+            _, clinical_comments = validate_clinical_input_metrics(
                 inputs,
                 tags,
                 invalidate_on_failure=False
             )
-        # Automated Clinical TN Sample
+            notes.extend(clinical_comments)
+        # Automated Clinical TN Sample — coverage comments are hard failures
         else:
-            is_valid, comment = validate_clinical_input_metrics(
+            clinical_valid, clinical_comments = validate_clinical_input_metrics(
                 inputs,
                 tags,
                 invalidate_on_failure=True
             )
+            if not clinical_valid:
+                all_failures.extend(clinical_comments)
+            else:
+                notes.extend(clinical_comments)
 
     # Somewhere along the way, the validation failed
-    if not is_valid:
-        if isinstance(comment, list) and len(comment) == 1:
-            comment = comment[0]
-        if isinstance(comment, list):
+    if all_failures:
+        if len(all_failures) == 1:
             add_comment_to_workflow_run(
                 workflow_run_orcabus_id=workflow_run_id,
                 comment=_format_comment_with_arn(
-                    f"Post schema validation failed for {len(comment)} reasons",
+                    f"Post schema validation failed: {all_failures[0]}",
                     execution_arn
                 ),
                 author=COMMENT_AUTHOR
             )
-            for idx, comment_iter in enumerate(comment, start=1):
+        else:
+            add_comment_to_workflow_run(
+                workflow_run_orcabus_id=workflow_run_id,
+                comment=_format_comment_with_arn(
+                    f"Post schema validation failed for {len(all_failures)} reasons",
+                    execution_arn
+                ),
+                author=COMMENT_AUTHOR
+            )
+            for idx, failure in enumerate(all_failures, start=1):
                 add_comment_to_workflow_run(
                     workflow_run_orcabus_id=workflow_run_id,
                     comment=_format_comment_with_arn(
-                        f"Reason {idx} of {len(comment)}: {comment_iter}",
+                        f"Reason {idx} of {len(all_failures)}: {failure}",
                         execution_arn
                     ),
                     author=COMMENT_AUTHOR
                 )
                 sleep(1)
-        else:
-            add_comment_to_workflow_run(
-                workflow_run_orcabus_id=workflow_run_id,
-                comment=_format_comment_with_arn(
-                    f"Post schema validation failed: {comment}",
-                    execution_arn
-                ),
-                author=COMMENT_AUTHOR
-            )
         return {
             "isValid": False
         }
-    elif (
-            is_valid and comment
-    ):
-        if isinstance(comment, list):
-            for idx, comment_iter in enumerate(comment, start=1):
-                add_comment_to_workflow_run(
-                    workflow_run_orcabus_id=workflow_run_id,
-                    comment=_format_comment_with_arn(
-                        f"Post schema validation note {idx} of {len(comment)}: {comment_iter}",
-                        execution_arn
-                    ),
-                    author=COMMENT_AUTHOR
-                )
-                sleep(1)
-        else:
+
+    # Validation passed — write any informational notes
+    if notes:
+        for idx, note in enumerate(notes, start=1):
             add_comment_to_workflow_run(
                 workflow_run_orcabus_id=workflow_run_id,
                 comment=_format_comment_with_arn(
-                    f"Post schema validation note: {comment}",
+                    f"Post schema validation note {idx} of {len(notes)}: {note}",
                     execution_arn
                 ),
                 author=COMMENT_AUTHOR
             )
+            sleep(1)
 
     # Ensure that we comment if downsampling has been added
     if payload_data.get("inputs", {}).get("somaticAlignmentOptions", {}).get("enableFractionalDownSampler"):
