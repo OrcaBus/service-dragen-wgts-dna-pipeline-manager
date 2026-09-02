@@ -4,12 +4,14 @@
 Given a payload data object, validate it against the schema and return the list of missing/invalid fields.
 """
 
+# Standard imports
 import boto3
 import json
 import typing
 import jsonschema
-from os import environ
 from pathlib import Path
+from os import environ
+from typing import List, Dict, Union, Any
 
 if typing.TYPE_CHECKING:
     from mypy_boto3_schemas import SchemasClient
@@ -30,6 +32,97 @@ def get_schema_from_registry(registry_name: str, schema_name: str) -> str:
     schemas_client: "SchemasClient" = boto3.client("schemas")
     response = schemas_client.describe_schema(RegistryName=registry_name, SchemaName=schema_name)
     return response["Content"]
+
+
+def resolve_schema_ref(schema: dict, ref: str) -> dict:
+    """
+    Resolve a local JSON schema $ref like '#/$defs/FastqInputs'.
+    """
+    if not ref.startswith("#/"):
+        return {}
+
+    resolved = schema
+    for ref_part in ref.lstrip("#/").split("/"):
+        resolved = resolved.get(ref_part, {})
+
+    return resolved
+
+
+def get_missing_required_fields_for_schema_option(
+        schema_option: dict,
+        instance: dict,
+        path: str
+) -> list[str]:
+    """
+    Given a resolved oneOf schema option, return the missing required field paths.
+    """
+    missing_fields = []
+
+    for required_field in schema_option.get("required", []):
+        if not isinstance(instance, dict) or required_field not in instance:
+            field_path = f"{path}.{required_field}" if path else required_field
+            missing_fields.append(field_path)
+
+    return missing_fields
+
+
+def get_one_of_option_label(option: dict, path: str, idx: int) -> str:
+    """
+    Build a human-friendly label for a single oneOf option.
+
+    For $ref options, use the referenced definition name (e.g. 'fastqDataInputs').
+    For inline options, fall back to the required fields that distinguish the option,
+    otherwise a positional 'option N' label.
+    """
+    if "$ref" in option:
+        option_name = option["$ref"].rsplit("/", 1)[-1]
+    elif option.get("required"):
+        option_name = "+".join(option["required"])
+    else:
+        option_name = f"option {idx}"
+
+    return f"{path}: {option_name} path" if path else f"{option_name} path"
+
+
+def get_one_of_missing_field_summaries(
+        schema: dict,
+        error: jsonschema.ValidationError,
+        path: str
+) -> list[dict[str, list[str]]]:
+    """
+    Summarise oneOf validation failures without exposing every nested conditional.
+
+    Handles both $ref options and inline schema options. For each option, resolve the
+    schema (following a $ref where present) and collect the missing required fields,
+    producing one concise summary entry per option so the caller can render an
+    'either X or Y' message instead of duplicated nested errors.
+    """
+    missing_field_options = []
+
+    for idx, option in enumerate(error.validator_value, start=1):
+        if not isinstance(option, dict):
+            continue
+
+        # Resolve $ref options, use inline options directly.
+        if "$ref" in option:
+            resolved_option = resolve_schema_ref(schema, option["$ref"])
+        else:
+            resolved_option = option
+
+        option_missing_fields = get_missing_required_fields_for_schema_option(
+            resolved_option,
+            error.instance,
+            path
+        )
+
+        if option_missing_fields:
+            missing_field_options.append(
+                {
+                    get_one_of_option_label(option, path, idx): option_missing_fields
+                }
+            )
+
+    return missing_field_options
 
 
 def handler(event, context):
@@ -63,25 +156,39 @@ def handler(event, context):
     errors = list(validator.iter_errors(data))
 
     # Extract missing field paths
-    missing_fields = []
+    missing_fields: List[Union[Dict[str, Any], str]] = []
     for error in errors:
-        # Get path of missing field
-        path = (
-            ".".join(list(map(
-                str,
-                error.absolute_path
-            )))
-            if error.absolute_path
-            else ""
-        )
+        path = ".".join(str(p) for p in error.absolute_path) if error.absolute_path else ""
         if error.validator == "required":
             # For required errors, list each missing property
             for missing_prop in error.validator_value:
                 if missing_prop not in error.instance:
                     field_path = f"{path}.{missing_prop}" if path else missing_prop
                     missing_fields.append(field_path)
+        elif error.validator == "oneOf":
+            missing_fields.append(
+                {
+                    "oneOf": get_one_of_missing_field_summaries(
+                        schema,
+                        error,
+                        path
+                    )
+                }
+            )
         else:
             # For other errors (type, pattern, etc.)
-            missing_fields.append(f"{path or '(root)'} ({error.message[:50]})")
+            if path:
+                missing_fields.append(f"{path} ({error.message[:50]})")
+
+    # Reduce string duplicates
+    missing_fields_str = sorted(set(list(filter(
+        lambda missing_field_iter: isinstance(missing_field_iter, str),
+        missing_fields
+    ))))
+
+    missing_fields = missing_fields_str + list(filter(
+        lambda missing_field_iter: isinstance(missing_field_iter, dict),
+        missing_fields
+    ))
 
     return {"missingFields": missing_fields}
