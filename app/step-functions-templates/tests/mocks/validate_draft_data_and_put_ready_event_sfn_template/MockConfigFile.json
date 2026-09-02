@@ -1,0 +1,57 @@
+{
+  "StateMachines": {
+    "ValidateDraftDataAndPutReadyEventSfn": {
+      "TestCases": {
+        "HappyPath": {
+          "Validate Draft Complete Event": "ValidateDraftCompleteValid",
+          "Run post-schema validation": "PostSchemaValidationValid",
+          "Push READY Event": "PushReadyEvent"
+        },
+        "ErrorPath": {
+          "Validate Draft Complete Event": "ValidateDraftCompleteInvalid"
+        }
+      }
+    }
+  },
+  "MockedResponses": {
+    "ValidateDraftCompleteValid": {
+      "0": {
+        "Return": {
+          "Payload": {
+            "isValid": true
+          }
+        }
+      }
+    },
+    "ValidateDraftCompleteInvalid": {
+      "0": {
+        "Return": {
+          "Payload": {
+            "isValid": false
+          }
+        }
+      }
+    },
+    "PostSchemaValidationValid": {
+      "0": {
+        "Return": {
+          "Payload": {
+            "isValid": true
+          }
+        }
+      }
+    },
+    "PushReadyEvent": {
+      "0": {
+        "Return": {
+          "Entries": [
+            {
+              "EventId": "evt-12345"
+            }
+          ],
+          "FailedEntryCount": 0
+        }
+      }
+    }
+  }
+}

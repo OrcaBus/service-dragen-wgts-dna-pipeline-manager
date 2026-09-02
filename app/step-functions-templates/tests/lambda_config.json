@@ -1,0 +1,88 @@
+{
+  "lambdas": {
+    "add_populate_draft_comment": {
+      "placeholder": "${__add_populate_draft_comment_lambda_function_arn__}",
+      "entry": "app/lambdas/add_populate_draft_comment_py"
+    },
+    "add_post_analysis_tags": {
+      "placeholder": "${__add_post_analysis_tags_lambda_function_arn__}",
+      "entry": "app/lambdas/add_post_analysis_tags_py"
+    },
+    "add_ready_comment": {
+      "placeholder": "${__add_ready_comment_lambda_function_arn__}",
+      "entry": "app/lambdas/add_ready_comment_py"
+    },
+    "add_wes_failure_comment": {
+      "placeholder": "${__add_wes_failure_comment_lambda_function_arn__}",
+      "entry": "app/lambdas/add_wes_failure_comment_py"
+    },
+    "calculate_downsampling_ratios": {
+      "placeholder": "${__calculate_downsampling_ratios_lambda_function_arn__}",
+      "entry": "app/lambdas/calculate_downsampling_ratios_py"
+    },
+    "check_ntsm_external": {
+      "placeholder": "${__check_ntsm_external_lambda_function_arn__}",
+      "entry": "app/lambdas/check_ntsm_external_py"
+    },
+    "check_ntsm_internal": {
+      "placeholder": "${__check_ntsm_internal_lambda_function_arn__}",
+      "entry": "app/lambdas/check_ntsm_internal_py"
+    },
+    "compare_payload": {
+      "placeholder": "${__compare_payload_lambda_function_arn__}",
+      "entry": "app/lambdas/compare_payload_py"
+    },
+    "convert_icav2_wes_state_change_event_to_wrsc_event": {
+      "placeholder": "${__convert_icav2_wes_state_change_event_to_wrsc_event_lambda_function_arn__}",
+      "entry": "app/lambdas/convert_icav2_wes_state_change_event_to_wrsc_event_py"
+    },
+    "dragen_wgts_dna_ready_to_icav2_wes_request": {
+      "placeholder": "${__dragen_wgts_dna_ready_to_icav2_wes_request_lambda_function_arn__}",
+      "entry": "app/lambdas/dragen_wgts_dna_ready_to_icav2_wes_request_py"
+    },
+    "generate_wru_event_object_with_merged_data": {
+      "placeholder": "${__generate_wru_event_object_with_merged_data_lambda_function_arn__}",
+      "entry": "app/lambdas/generate_wru_event_object_with_merged_data_py"
+    },
+    "get_fastq_id_list_from_rgid_list": {
+      "placeholder": "${__get_fastq_id_list_from_rgid_list_lambda_function_arn__}",
+      "entry": "app/lambdas/get_fastq_id_list_from_rgid_list_py"
+    },
+    "get_fastq_list_rows_from_rgid_list": {
+      "placeholder": "${__get_fastq_list_rows_from_rgid_list_lambda_function_arn__}",
+      "entry": "app/lambdas/get_fastq_list_rows_from_rgid_list_py"
+    },
+    "get_fastq_rgids_from_library_id": {
+      "placeholder": "${__get_fastq_rgids_from_library_id_lambda_function_arn__}",
+      "entry": "app/lambdas/get_fastq_rgids_from_library_id_py"
+    },
+    "get_libraries": {
+      "placeholder": "${__get_libraries_lambda_function_arn__}",
+      "entry": "app/lambdas/get_libraries_py"
+    },
+    "get_metadata_tags": {
+      "placeholder": "${__get_metadata_tags_lambda_function_arn__}",
+      "entry": "app/lambdas/get_metadata_tags_py"
+    },
+    "get_missing_schema_fields": {
+      "placeholder": "${__get_missing_schema_fields_lambda_function_arn__}",
+      "entry": "app/lambdas/get_missing_schema_fields_py"
+    },
+    "get_project_base_uri_from_project_id": {
+      "placeholder": "${__get_project_base_uri_from_project_id_lambda_function_arn__}",
+      "entry": "app/lambdas/get_project_base_uri_from_project_id_py"
+    },
+    "get_qc_summary_stats_from_rgid_list": {
+      "placeholder": "${__get_qc_summary_stats_from_rgid_list_lambda_function_arn__}",
+      "entry": "app/lambdas/get_qc_summary_stats_from_rgid_list_py"
+    },
+    "post_schema_validation": {
+      "placeholder": "${__post_schema_validation_lambda_function_arn__}",
+      "entry": "app/lambdas/post_schema_validation_py"
+    },
+    "validate_draft_complete_schema": {
+      "placeholder": "${__validate_draft_complete_schema_lambda_function_arn__}",
+      "entry": "app/lambdas/validate_draft_complete_schema_py"
+    }
+  }
+}
