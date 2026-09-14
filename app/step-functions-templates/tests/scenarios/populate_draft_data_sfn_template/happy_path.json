@@ -1,0 +1,40 @@
+{
+  "scenario_name": "happy_path",
+  "description": "Draft data is incomplete (isValid=false), so the state machine populates engine parameters, tags, and input data from SSM and Lambda lookups, then emits a DRAFT update event",
+  "state_machine_template": "populate_draft_data_sfn_template.asl.json",
+  "test_case_name": "HappyPath",
+  "input": {
+    "orcabusId": "wfr.ABCDEF123456",
+    "portalRunId": "portal-run-001",
+    "workflow": {
+      "workflowName": "dragen-wgts-dna",
+      "version": "4.3.6",
+      "executionEnginePipelineId": null
+    },
+    "libraries": [
+      {
+        "libraryId": "L001",
+        "readsets": null
+      },
+      {
+        "libraryId": "L002",
+        "readsets": null
+      }
+    ],
+    "payload": {
+      "version": "1.0",
+      "data": {}
+    }
+  },
+  "expected_status": "SUCCEEDED",
+  "expected_output": null,
+  "expected_states_visited": [
+    "Get draft payload var",
+    "Validate draft data",
+    "Draft data is valid",
+    "Get Engine parameters",
+    "Do we have matching libraries",
+    "Get primitive tags from linked libraries",
+    "Get tags"
+  ]
+}

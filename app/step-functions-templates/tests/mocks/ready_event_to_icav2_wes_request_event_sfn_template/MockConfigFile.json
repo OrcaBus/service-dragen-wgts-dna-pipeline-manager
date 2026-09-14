@@ -1,0 +1,65 @@
+{
+  "StateMachines": {
+    "ReadyEventToIcav2WesRequestEventSfn": {
+      "TestCases": {
+        "HappyPath": {
+          "Add Ready Comment": "AddReadyComment",
+          "Convert Dragen WGTS DNA Ready Event to ICAv2 WES Event": "ConvertReadyToIcav2Wes",
+          "Push WES Event": "PushWesEvent"
+        },
+        "ErrorPath": {
+          "Add Ready Comment": "AddReadyComment",
+          "Convert Dragen WGTS DNA Ready Event to ICAv2 WES Event": "ConvertReadyToIcav2WesError"
+        }
+      }
+    }
+  },
+  "MockedResponses": {
+    "AddReadyComment": {
+      "0": {
+        "Return": {
+          "Payload": {}
+        }
+      }
+    },
+    "ConvertReadyToIcav2Wes": {
+      "0": {
+        "Return": {
+          "Payload": {
+            "icav2WesRequestEventDetail": {
+              "workflowRunId": "wfr.12345",
+              "portalRunId": "portal-run-001",
+              "pipelineId": "pipeline-abcdef-1234",
+              "projectId": "proj-12345",
+              "inputJson": "{\"fastq_list_rows\": []}",
+              "engineParameters": {
+                "outputUri": "icav2://proj-12345/output/portal-run-001/",
+                "logsUri": "icav2://proj-12345/logs/portal-run-001/"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ConvertReadyToIcav2WesError": {
+      "0": {
+        "Throw": {
+          "Error": "ValueError",
+          "Cause": "Missing required field 'pipelineId' in ready event payload"
+        }
+      }
+    },
+    "PushWesEvent": {
+      "0": {
+        "Return": {
+          "Entries": [
+            {
+              "EventId": "evt-67890"
+            }
+          ],
+          "FailedEntryCount": 0
+        }
+      }
+    }
+  }
+}

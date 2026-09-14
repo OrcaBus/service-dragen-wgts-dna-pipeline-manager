@@ -1,0 +1,104 @@
+{
+  "StateMachines": {
+    "Icav2WesEventToWrscEventSfn": {
+      "TestCases": {
+        "HappyPath": {
+          "Convert ICAv2 WES event to WRSC Event": "ConvertIcav2WesToWrscSucceeded",
+          "Add post analysis tags (germline)": "AddPostAnalysisTagsGermline",
+          "Push WRSC Event": "PushWrscEvent"
+        },
+        "ErrorPath": {
+          "Convert ICAv2 WES event to WRSC Event": "ConvertIcav2WesToWrscFailed",
+          "Add comment for WES failure": "AddWesFailureComment",
+          "Push WRSC Event": "PushWrscEvent"
+        }
+      }
+    }
+  },
+  "MockedResponses": {
+    "ConvertIcav2WesToWrscSucceeded": {
+      "0": {
+        "Return": {
+          "Payload": {
+            "workflowRunStateChangeEvent": {
+              "orcabusId": "wfr.12345",
+              "portalRunId": "portal-run-001",
+              "status": "SUCCEEDED",
+              "timestamp": "2024-01-01T00:00:00Z",
+              "payload": {
+                "version": "1.0",
+                "data": {
+                  "inputs": {},
+                  "engineParameters": {
+                    "outputUri": "icav2://proj-12345/output/portal-run-001/"
+                  },
+                  "outputs": {
+                    "dragenGermlineVariantCallingOutputRelPath": "germline/",
+                    "dragenSomaticVariantCallingOutputRelPath": "somatic/"
+                  },
+                  "tags": {
+                    "libraryId": "L001",
+                    "tumorLibraryId": "L002",
+                    "subjectId": "SBJ001"
+                  }
+                }
+              }
+            },
+            "errorMessageUri": null,
+            "errorType": null
+          }
+        }
+      }
+    },
+    "ConvertIcav2WesToWrscFailed": {
+      "0": {
+        "Return": {
+          "Payload": {
+            "workflowRunStateChangeEvent": {
+              "orcabusId": "wfr.12345",
+              "portalRunId": "portal-run-001",
+              "status": "FAILED",
+              "timestamp": "2024-01-01T01:00:00Z",
+              "payload": {
+                "version": "1.0",
+                "data": {}
+              }
+            },
+            "errorMessageUri": "s3://logs/error.log",
+            "errorType": "InternalError"
+          }
+        }
+      }
+    },
+    "AddPostAnalysisTagsGermline": {
+      "0": {
+        "Return": {
+          "Payload": {
+            "tags": {
+              "germlineVcfUri": "s3://output/germline/variants.vcf.gz"
+            }
+          }
+        }
+      }
+    },
+    "AddWesFailureComment": {
+      "0": {
+        "Return": {
+          "Payload": {}
+        }
+      }
+    },
+    "PushWrscEvent": {
+      "0": {
+        "Return": {
+          "Entries": [
+            {
+              "EventId": "evt-wrsc-001"
+            }
+          ],
+          "FailedEntryCount": 0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "scenario_name": "error_path",
+  "description": "An ICAv2 WES FAILED event is converted to a WRSC event, a failure comment is added, and the event is pushed to EventBridge with FAILED status",
+  "state_machine_template": "icav2_wes_event_to_wrsc_event_sfn_template.asl.json",
+  "test_case_name": "ErrorPath",
+  "input": {
+    "analysisId": "analysis-12345",
+    "status": "FAILED",
+    "portalRunId": "portal-run-001",
+    "workflowRunId": "wfr.ABCDEF123456",
+    "errorMessage": "Pipeline execution failed: out of memory"
+  },
+  "expected_status": "SUCCEEDED",
+  "expected_output": null,
+  "expected_states_visited": [
+    "Convert ICAv2 WES event to WRSC Event",
+    "Workflow status decision tree",
+    "Add comment for WES failure",
+    "Push WRSC Event"
+  ]
+}
