@@ -17,7 +17,7 @@ export const STACK_PREFIX = 'orca-dragen-wgts-dna';
 
 /* Workflow constants */
 export const WORKFLOW_NAME = 'dragen-wgts-dna';
-export const DEFAULT_WORKFLOW_VERSION: WorkflowVersionType = '4.4.4';
+export const DEFAULT_WORKFLOW_VERSION: WorkflowVersionType = '4.4.6';
 export const DEFAULT_PAYLOAD_VERSION = '2025.06.04';
 export const DEFAULT_ORA_VERSION: OraReferenceVersionType = '2.7.0';
 
