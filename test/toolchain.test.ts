@@ -10,7 +10,7 @@ describe('cdk-nag-stateless-toolchain-stack', () => {
 
   const statelessStack = new StatelessStack(app, 'StatelessStack', {
     env: {
-      account: '123456789',
+      account: '123456789012',
       region: 'ap-southeast-2',
     },
   });
@@ -65,7 +65,7 @@ describe('cdk-nag-stateful-toolchain-stack', () => {
 
   const statefulStack = new StatefulStack(app, 'StatefulStack', {
     env: {
-      account: '123456789',
+      account: '123456789012',
       region: 'ap-southeast-2',
     },
   });
