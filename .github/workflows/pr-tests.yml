@@ -117,10 +117,32 @@ jobs:
 
       - run: pnpm test
 
+  test-app:
+    runs-on: ubuntu-22.04-arm
+    if: >-
+      !github.event.pull_request.draft &&
+      needs.check-changes.outputs.should_test == 'true'
+    needs: check-changes
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Install test dependencies
+        run: pip install -r app/tests/requirements-test.txt --quiet
+
+      - name: Run Lambda unit tests
+        run: python -m pytest app/lambdas/tests/ -v --tb=short
+
+      - name: Run ASL validation tests
+        run: python -m pytest app/step-functions-templates/tests/test_asl_validation.py -v --tb=short
+
   # This is the job you set as "required" in branch protection
   ci-gate:
     runs-on: ubuntu-latest
-    needs: [pre-commit-lint-security, check-changes, test-iac]
+    needs: [pre-commit-lint-security, check-changes, test-iac, test-app]
     if: always()
     steps:
       - name: Check results
@@ -134,7 +156,11 @@ jobs:
             exit 1
           fi
           if [[ "${{ needs.test-iac.result }}" != "success" && "${{ needs.test-iac.result }}" != "skipped" ]]; then
-            echo "Tests did not succeed (result: ${{ needs.test-iac.result }})"
+            echo "IAC tests did not succeed (result: ${{ needs.test-iac.result }})"
             exit 1
           fi
-          echo "CI passed (tests passed or were skipped)"
+          if [[ "${{ needs.test-app.result }}" != "success" && "${{ needs.test-app.result }}" != "skipped" ]]; then
+            echo "App tests did not succeed (result: ${{ needs.test-app.result }})"
+            exit 1
+          fi
+          echo "CI passed (all checks passed or were skipped)"

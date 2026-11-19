@@ -1,0 +1,30 @@
+{
+  "scenario_name": "error_path",
+  "description": "The conversion Lambda raises a ValueError due to missing pipelineId, causing the state machine to fail",
+  "state_machine_template": "ready_event_to_icav2_wes_request_event_sfn_template.asl.json",
+  "test_case_name": "ErrorPath",
+  "input": {
+    "orcabusId": "wfr.ABCDEF123456",
+    "portalRunId": "portal-run-002",
+    "status": "READY",
+    "workflow": {
+      "workflowName": "dragen-wgts-dna",
+      "version": "4.3.6"
+    },
+    "payload": {
+      "version": "1.0",
+      "data": {
+        "inputs": {},
+        "engineParameters": {},
+        "tags": {}
+      }
+    }
+  },
+  "expected_status": "FAILED",
+  "expected_output": null,
+  "expected_states_visited": [
+    "Save inputs",
+    "Add Ready Comment",
+    "Convert Dragen WGTS DNA Ready Event to ICAv2 WES Event"
+  ]
+}

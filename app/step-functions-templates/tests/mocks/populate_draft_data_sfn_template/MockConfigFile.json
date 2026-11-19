@@ -1,0 +1,186 @@
+{
+  "StateMachines": {
+    "PopulateDraftDataSfn": {
+      "TestCases": {
+        "HappyPath": {
+          "Validate draft data": "ValidateDraftDataInvalid",
+          "Get Default Project Id": "GetDefaultProjectId",
+          "Get default pipeline id": "GetDefaultPipelineId",
+          "Get default output uri prefix": "GetDefaultOutputUriPrefix",
+          "Get default logs uri prefix": "GetDefaultLogsUriPrefix",
+          "Get primitive tags from linked libraries": "GetLibraries",
+          "Get fastq list rgids from normal libraries": "GetFastqRgidsFromLibraryId",
+          "Get metadata tags": "GetMetadataTags",
+          "Add change comment": "AddPopulateDraftComment",
+          "Get fastq ids from rgid list": "GetFastqIdListFromRgidList",
+          "Wait for fastq": "WaitForFastq",
+          "Get prefix from project id": "GetPrefixFromProjectId",
+          "Get fastq list rows from rgid list": "GetFastqListRowsFromRgidList"
+        },
+        "ErrorPath": {
+          "Validate draft data": "ValidateDraftDataInvalid",
+          "Get Default Project Id": "GetDefaultProjectIdError"
+        }
+      }
+    }
+  },
+  "MockedResponses": {
+    "ValidateDraftDataValid": {
+      "0": {
+        "Return": {
+          "Payload": {
+            "isValid": true
+          }
+        }
+      }
+    },
+    "ValidateDraftDataInvalid": {
+      "0": {
+        "Return": {
+          "Payload": {
+            "isValid": false
+          }
+        }
+      }
+    },
+    "GetDefaultProjectId": {
+      "0": {
+        "Return": {
+          "Parameter": {
+            "Value": "proj-12345"
+          }
+        }
+      }
+    },
+    "GetDefaultProjectIdError": {
+      "0": {
+        "Throw": {
+          "Error": "Ssm.ParameterNotFoundException",
+          "Cause": "Parameter /orcabus/workflows/dragen-wgts-dna/default-project-id not found"
+        }
+      }
+    },
+    "GetDefaultPipelineId": {
+      "0": {
+        "Return": {
+          "Parameter": {
+            "Value": "pipeline-abcdef-1234"
+          }
+        }
+      }
+    },
+    "GetDefaultOutputUriPrefix": {
+      "0": {
+        "Return": {
+          "Parameter": {
+            "Value": "icav2://project-id/output/"
+          }
+        }
+      }
+    },
+    "GetDefaultLogsUriPrefix": {
+      "0": {
+        "Return": {
+          "Parameter": {
+            "Value": "icav2://project-id/logs/"
+          }
+        }
+      }
+    },
+    "GetLibraries": {
+      "0": {
+        "Return": {
+          "Payload": {
+            "libraryId": "L001",
+            "tumorLibraryId": "L002",
+            "subjectId": "SBJ001",
+            "individualId": "IND001"
+          }
+        }
+      }
+    },
+    "GetFastqRgidsFromLibraryId": {
+      "0": {
+        "Return": {
+          "Payload": {
+            "fastqRgidList": ["RGID001.L001.LANE1"]
+          }
+        }
+      }
+    },
+    "GetMetadataTags": {
+      "0": {
+        "Return": {
+          "Payload": {
+            "libraryObj": {
+              "subject": {
+                "subjectId": "SBJ001",
+                "individualSet": [
+                  {
+                    "individualId": "IND001"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "AddPopulateDraftComment": {
+      "0": {
+        "Return": {
+          "Payload": {}
+        }
+      }
+    },
+    "GetFastqIdListFromRgidList": {
+      "0": {
+        "Return": {
+          "Payload": {
+            "fastqIdList": ["fq.ABCDEF12345"]
+          }
+        }
+      }
+    },
+    "WaitForFastq": {
+      "0": {
+        "Return": {
+          "fastqListRows": [
+            {
+              "rgid": "RGID001.L001.LANE1",
+              "read1FileUri": "s3://bucket/read1.fastq.gz",
+              "read2FileUri": "s3://bucket/read2.fastq.gz"
+            }
+          ]
+        }
+      }
+    },
+    "GetPrefixFromProjectId": {
+      "0": {
+        "Return": {
+          "Payload": {
+            "s3Uri": "s3://pipeline-cache/dragen-wgts-dna/"
+          }
+        }
+      }
+    },
+    "GetFastqListRowsFromRgidList": {
+      "0": {
+        "Return": {
+          "Payload": {
+            "fastqListRows": [
+              {
+                "rgid": "RGID001.L001.LANE1",
+                "rgsm": "SMP001",
+                "rglb": "L001",
+                "lane": 1,
+                "read1FileUri": "s3://pipeline-cache/dragen-wgts-dna/read1.fastq.gz",
+                "read2FileUri": "s3://pipeline-cache/dragen-wgts-dna/read2.fastq.gz"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
