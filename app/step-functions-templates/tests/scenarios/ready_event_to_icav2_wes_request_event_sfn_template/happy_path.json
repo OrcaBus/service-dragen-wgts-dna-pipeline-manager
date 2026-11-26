@@ -1,0 +1,51 @@
+{
+  "scenario_name": "happy_path",
+  "description": "A READY event is successfully converted to an ICAv2 WES request event and pushed to EventBridge",
+  "state_machine_template": "ready_event_to_icav2_wes_request_event_sfn_template.asl.json",
+  "test_case_name": "HappyPath",
+  "input": {
+    "orcabusId": "wfr.ABCDEF123456",
+    "portalRunId": "portal-run-001",
+    "status": "READY",
+    "workflow": {
+      "workflowName": "dragen-wgts-dna",
+      "version": "4.3.6"
+    },
+    "payload": {
+      "version": "1.0",
+      "data": {
+        "inputs": {
+          "fastqListRows": [
+            {
+              "rgid": "RGID001.L001.LANE1",
+              "rgsm": "SMP001",
+              "rglb": "L001",
+              "lane": 1,
+              "read1FileUri": "s3://bucket/read1.fastq.gz",
+              "read2FileUri": "s3://bucket/read2.fastq.gz"
+            }
+          ]
+        },
+        "engineParameters": {
+          "projectId": "proj-12345",
+          "pipelineId": "pipeline-abcdef-1234",
+          "outputUri": "icav2://proj-12345/output/portal-run-001/",
+          "logsUri": "icav2://proj-12345/logs/portal-run-001/"
+        },
+        "tags": {
+          "libraryId": "L001",
+          "subjectId": "SBJ001",
+          "individualId": "IND001"
+        }
+      }
+    }
+  },
+  "expected_status": "SUCCEEDED",
+  "expected_output": null,
+  "expected_states_visited": [
+    "Save inputs",
+    "Add Ready Comment",
+    "Convert Dragen WGTS DNA Ready Event to ICAv2 WES Event",
+    "Push WES Event"
+  ]
+}

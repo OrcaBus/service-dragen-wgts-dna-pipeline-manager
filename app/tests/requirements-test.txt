@@ -1,0 +1,6 @@
+orcabus-pipeline-test-utils @ git+https://github.com/OrcaBus/platform-cdk-constructs.git@test/add-pipeline-tests#subdirectory=packages/orcabus-pipeline-test-utils
+pytest>=7.4.0,<9.0.0
+moto[s3,ssm,secretsmanager,events,lambda]>=5.0.0,<6.0.0
+boto3>=1.34.0
+jsonschema>=4.20.0,<5.0.0
+deepdiff>=6.0.0,<8.0.0

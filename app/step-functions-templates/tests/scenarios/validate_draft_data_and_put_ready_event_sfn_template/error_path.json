@@ -1,0 +1,31 @@
+{
+  "scenario_name": "error_path",
+  "description": "Draft data fails schema validation (isValid=false), so the state machine exits via the Pass state without emitting a READY event",
+  "state_machine_template": "validate_draft_data_and_put_ready_event_sfn_template.asl.json",
+  "test_case_name": "ErrorPath",
+  "input": {
+    "orcabusId": "wfr.ABCDEF123456",
+    "portalRunId": "portal-run-002",
+    "workflow": {
+      "workflowName": "dragen-wgts-dna",
+      "version": "4.3.6"
+    },
+    "libraries": [
+      {
+        "libraryId": "L001"
+      }
+    ],
+    "payload": {
+      "version": "1.0",
+      "data": {}
+    }
+  },
+  "expected_status": "SUCCEEDED",
+  "expected_output": null,
+  "expected_states_visited": [
+    "Save Event Vars",
+    "Validate Draft Complete Event",
+    "Is Draft Event Complete?",
+    "Pass"
+  ]
+}

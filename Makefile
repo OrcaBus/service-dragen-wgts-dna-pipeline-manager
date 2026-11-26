@@ -1,4 +1,4 @@
-.PHONY: test deep scan
+.PHONY: test test-app test-app-all check fix install
 
 check:
 	@pnpm audit
@@ -15,3 +15,9 @@ install:
 
 test:
 	@pnpm test
+
+test-app:
+	@pytest -m "not sfn_teststate" --tb=short
+
+test-app-all:
+	@pytest --tb=short
